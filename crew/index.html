@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#c2410c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Crew">
+  <meta name="description" content="Organizza eventi con i tuoi amici">
+  <title>Crew</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange: #c2410c;
+      --orange-dark: #9a3412;
+      --orange-pale: #fff7ed;
+      --orange-100: #ffedd5;
+      --teal: #0d9488;
+      --teal-pale: #f0fdfa;
+      --amber: #d97706;
+      --red: #e11d48;
+      --bg: #faf9f7;
+      --surface: #ffffff;
+      --surface-2: #f5f4f2;
+      --text: #1c1917;
+      --text-2: #57534e;
+      --text-3: #a8a29e;
+      --border: #e7e5e4;
+      --r-sm: 8px;
+      --r: 14px;
+      --r-lg: 20px;
+      --r-xl: 28px;
+      --shadow-sm: 0 1px 3px rgba(28,25,23,.07);
+      --shadow: 0 4px 16px rgba(28,25,23,.09);
+      --shadow-lg: 0 16px 32px rgba(28,25,23,.14);
+    }
+
+    html, body { height: 100%; background: var(--bg); }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      max-width: 430px;
+      margin: 0 auto;
+    }
+
+    h1, h2, h3 { font-family: 'Fraunces', Georgia, serif; }
+
+    .hidden { display: none !important; }
+
+    /* === BUTTONS === */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 7px; padding: 12px 20px; border-radius: var(--r);
+      font-family: inherit; font-size: 15px; font-weight: 600;
+      cursor: pointer; border: none; transition: all .15s ease;
+      text-decoration: none; white-space: nowrap; line-height: 1;
+    }
+    .btn-primary { background: var(--orange); color: white; }
+    .btn-primary:hover { background: var(--orange-dark); }
+    .btn-primary:active { transform: scale(.97); }
+    .btn-secondary { background: var(--surface-2); color: var(--text); }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-sm { padding: 8px 14px; font-size: 13px; border-radius: var(--r-sm); }
+    .btn-icon { width: 40px; height: 40px; padding: 0; border-radius: 50%; }
+
+    /* === INPUTS === */
+    .input-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+    label { font-size: 12px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; }
+    input, textarea, select {
+      width: 100%; padding: 11px 13px;
+      border: 1.5px solid var(--border); border-radius: var(--r-sm);
+      font-family: inherit; font-size: 15px; color: var(--text);
+      background: var(--surface); transition: border-color .15s; outline: none;
+      -webkit-appearance: none;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--orange); }
+    textarea { resize: vertical; min-height: 72px; }
+
+    /* === LOADER === */
+    #loading-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 16px; background: var(--bg);
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border); border-top-color: var(--orange);
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* === LOGIN === */
+    #login-screen {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 40px 24px;
+      background: var(--bg);
+    }
+    .login-brand {
+      display: flex; flex-direction: column; align-items: center; margin-bottom: 48px;
+    }
+    .login-logo {
+      font-family: 'Fraunces', serif; font-size: 64px; font-weight: 700;
+      color: var(--orange); line-height: 1; margin-bottom: 10px;
+    }
+    .login-tagline { font-size: 16px; color: var(--text-2); text-align: center; max-width: 240px; line-height: 1.5; }
+    .login-card {
+      width: 100%; max-width: 320px; background: var(--surface);
+      border-radius: var(--r-xl); padding: 28px 22px; box-shadow: var(--shadow-lg);
+    }
+    .login-card h2 { font-size: 20px; text-align: center; margin-bottom: 20px; color: var(--text-2); font-weight: 600; }
+    .btn-google {
+      width: 100%; padding: 13px 20px; background: var(--surface);
+      border: 1.5px solid var(--border); border-radius: var(--r);
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      font-family: inherit; font-size: 15px; font-weight: 600;
+      color: var(--text); cursor: pointer; transition: all .15s;
+    }
+    .btn-google:hover { background: var(--surface-2); border-color: var(--orange); }
+
+    /* === APP LAYOUT === */
+    #app { display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* === HEADER === */
+    #app-header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(250,249,247,.92);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 12px; height: 58px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    #header-back {
+      width: 36px; height: 36px; border-radius: 50%; border: none;
+      background: transparent; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; color: var(--text);
+      transition: background .15s; flex-shrink: 0;
+    }
+    #header-back:hover { background: var(--surface-2); }
+    #header-title {
+      flex: 1; font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    #header-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+    .header-btn {
+      width: 40px; height: 40px; border-radius: 50%; border: none;
+      background: transparent; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-2); position: relative; transition: background .15s;
+    }
+    .header-btn:hover { background: var(--surface-2); }
+    #notif-dot {
+      position: absolute; top: 7px; right: 7px;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--orange); border: 2px solid var(--bg);
+    }
+    #header-avatar { border-radius: 50%; object-fit: cover; background: var(--border); }
+
+    /* === MAIN === */
+    #app-main { flex: 1; }
+    .view { padding: 16px; }
+
+    /* === SECTION HEADER === */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+    }
+    .section-title { font-size: 22px; font-weight: 600; }
+
+    /* === GROUP CARD === */
+    .group-card {
+      background: var(--surface); border-radius: var(--r-lg); padding: 18px;
+      margin-bottom: 10px; box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+      cursor: pointer; transition: all .15s;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .group-card:hover { transform: translateY(-1px); box-shadow: var(--shadow); border-color: var(--orange-100); }
+    .group-card:active { transform: scale(.99); }
+    .group-avatar {
+      width: 50px; height: 50px; border-radius: 14px;
+      background: var(--orange-100);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; flex-shrink: 0;
+    }
+    .group-info { flex: 1; min-width: 0; }
+    .group-name { font-weight: 700; font-size: 16px; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .group-meta { font-size: 13px; color: var(--text-3); }
+
+    /* === EVENT CARD === */
+    .event-card {
+      background: var(--surface); border-radius: var(--r-lg); margin-bottom: 12px;
+      box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+      cursor: pointer; transition: all .15s; overflow: hidden;
+    }
+    .event-card:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+    .event-card:active { transform: scale(.99); }
+    .event-cover {
+      height: 150px;
+      background: linear-gradient(135deg, var(--orange-100) 0%, #fef3c7 100%);
+      position: relative; overflow: hidden;
+    }
+    .event-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .event-cover-emoji {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center; font-size: 52px;
+    }
+    .event-date-badge {
+      position: absolute; top: 10px; right: 10px;
+      background: white; border-radius: 10px; padding: 5px 10px;
+      text-align: center; box-shadow: var(--shadow-sm);
+    }
+    .date-day { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 700; color: var(--orange); line-height: 1; }
+    .date-month { font-size: 10px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: .06em; }
+    .event-card-body { padding: 14px; }
+    .event-card-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; margin-bottom: 7px; }
+    .event-card-meta { display: flex; flex-direction: column; gap: 3px; }
+    .event-meta-row { font-size: 13px; color: var(--text-2); display: flex; align-items: center; gap: 5px; }
+
+    /* === INVITE BANNER === */
+    .invite-banner {
+      background: var(--orange-pale); border: 1.5px solid var(--orange-100);
+      border-radius: var(--r); padding: 12px 14px; margin-bottom: 16px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .invite-label { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; }
+    .invite-code { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 600; color: var(--orange); letter-spacing: .05em; }
+
+    /* === EVENT DETAIL === */
+    .event-hero {
+      height: 210px; position: relative; overflow: hidden;
+      background: linear-gradient(135deg, var(--orange-100), #fef3c7);
+    }
+    .event-hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .event-hero-emoji {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center; font-size: 88px;
+    }
+    .event-detail-body { padding: 18px 16px; }
+    .event-detail-title { font-size: 28px; font-weight: 700; margin-bottom: 14px; line-height: 1.2; }
+    .event-info-block {
+      background: var(--surface-2); border-radius: var(--r);
+      padding: 14px; margin-bottom: 22px;
+      display: flex; flex-direction: column; gap: 9px;
+    }
+    .info-row { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; }
+    .info-row svg { flex-shrink: 0; color: var(--orange); margin-top: 2px; }
+    .info-row span { color: var(--text-2); }
+
+    /* === SECTION BLOCKS === */
+    .detail-block { margin-bottom: 24px; }
+    .detail-block-title {
+      font-family: 'Fraunces', serif; font-size: 17px; font-weight: 600;
+      margin-bottom: 12px; display: flex; align-items: center; gap: 7px;
+    }
+
+    /* === RSVP === */
+    .rsvp-buttons { display: flex; gap: 8px; margin-bottom: 14px; }
+    .rsvp-btn {
+      flex: 1; padding: 11px 6px;
+      border-radius: var(--r); border: 1.5px solid var(--border); background: var(--surface);
+      cursor: pointer; text-align: center; transition: all .15s;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+    }
+    .rsvp-btn .r-emoji { font-size: 20px; }
+    .rsvp-btn .r-label { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; }
+    .rsvp-btn .r-count { font-size: 14px; font-weight: 700; color: var(--text-2); }
+    .rsvp-btn.active-yes { background: var(--teal-pale); border-color: var(--teal); }
+    .rsvp-btn.active-yes .r-label, .rsvp-btn.active-yes .r-count { color: var(--teal); }
+    .rsvp-btn.active-no { background: #fff1f2; border-color: var(--red); }
+    .rsvp-btn.active-no .r-label, .rsvp-btn.active-no .r-count { color: var(--red); }
+    .rsvp-btn.active-maybe { background: #fffbeb; border-color: var(--amber); }
+    .rsvp-btn.active-maybe .r-label, .rsvp-btn.active-maybe .r-count { color: var(--amber); }
+    .rsvp-people { display: flex; flex-wrap: wrap; gap: 6px; }
+    .rsvp-chip {
+      display: flex; align-items: center; gap: 5px;
+      padding: 4px 10px 4px 4px; border-radius: 20px; font-size: 13px; font-weight: 500;
+    }
+    .rsvp-chip.yes { background: var(--teal-pale); color: var(--teal); }
+    .rsvp-chip.no { background: #fff1f2; color: var(--red); }
+    .rsvp-chip.maybe { background: #fffbeb; color: var(--amber); }
+    .rsvp-chip img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: var(--border); }
+
+    /* === ITEMS === */
+    .items-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
+    .item-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 13px; background: var(--surface);
+      border-radius: var(--r-sm); border: 1px solid var(--border);
+    }
+    .item-text { flex: 1; font-size: 15px; }
+    .item-assigned-info { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-2); }
+    .item-assigned-info img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
+    .btn-take {
+      padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: all .15s; white-space: nowrap; border: 1.5px solid;
+    }
+    .btn-take.free { background: transparent; border-color: var(--orange); color: var(--orange); }
+    .btn-take.free:hover { background: var(--orange-pale); }
+    .btn-take.mine { background: var(--orange-100); border-color: var(--orange-100); color: var(--orange-dark); }
+    .add-item-row { display: flex; gap: 8px; }
+    .add-item-row input { flex: 1; padding: 10px 12px; }
+
+    /* === COMMENTS === */
+    .comments-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
+    .comment-row { display: flex; gap: 9px; }
+    .c-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: var(--border); }
+    .c-bubble {
+      flex: 1; background: var(--surface); border-radius: 0 var(--r) var(--r) var(--r);
+      padding: 9px 12px; border: 1px solid var(--border);
+    }
+    .c-author { font-size: 12px; font-weight: 700; color: var(--text-2); margin-bottom: 2px; }
+    .c-text { font-size: 14px; line-height: 1.5; }
+    .c-text .mention { color: var(--orange); font-weight: 600; }
+    .c-time { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+    .comment-input-wrap { display: flex; gap: 9px; align-items: flex-start; }
+    .comment-input-wrap img { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; object-fit: cover; }
+    .comment-inner { flex: 1; position: relative; }
+    #comment-input {
+      width: 100%; padding: 10px 42px 10px 12px;
+      border-radius: var(--r); min-height: 42px; max-height: 100px;
+      font-size: 14px; resize: none; line-height: 1.4;
+    }
+    #comment-send {
+      position: absolute; right: 5px; bottom: 5px;
+      width: 32px; height: 32px; border-radius: 50%; border: none;
+      background: var(--orange); color: white; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: background .15s;
+    }
+    #comment-send:hover { background: var(--orange-dark); }
+    #mention-dropdown {
+      position: absolute; bottom: calc(100% + 4px); left: 0; right: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-sm); box-shadow: var(--shadow);
+      max-height: 180px; overflow-y: auto; z-index: 200;
+    }
+    .mention-opt {
+      padding: 9px 12px; display: flex; align-items: center; gap: 9px;
+      cursor: pointer; font-size: 14px; font-weight: 500; transition: background .1s;
+    }
+    .mention-opt:hover { background: var(--surface-2); }
+    .mention-opt img { width: 26px; height: 26px; border-radius: 50%; }
+
+    /* === MODAL === */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.48);
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+      z-index: 500; display: flex; align-items: flex-end;
+    }
+    .modal-sheet {
+      background: var(--surface); border-radius: var(--r-xl) var(--r-xl) 0 0;
+      width: 100%; max-width: 430px; margin: 0 auto;
+      padding: 22px 18px 40px; max-height: 92vh; overflow-y: auto;
+      animation: slideUp .22s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .modal-title { font-size: 22px; font-weight: 600; }
+    .modal-close {
+      width: 34px; height: 34px; border-radius: 50%; border: none;
+      background: var(--surface-2); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; color: var(--text-2);
+    }
+
+    /* === COVER UPLOAD === */
+    .cover-area {
+      width: 100%; height: 130px; border: 2px dashed var(--border);
+      border-radius: var(--r); display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 7px;
+      cursor: pointer; transition: all .15s; color: var(--text-3);
+      font-size: 13px; margin-bottom: 14px; overflow: hidden; position: relative;
+    }
+    .cover-area:hover { border-color: var(--orange); color: var(--orange); }
+    .cover-area img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .cover-overlay {
+      position: absolute; inset: 0; background: rgba(0,0,0,.4);
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 600; font-size: 13px;
+    }
+
+    /* === NOTIFICATIONS === */
+    .notif-item {
+      display: flex; gap: 12px; padding: 12px 0;
+      border-bottom: 1px solid var(--border); cursor: pointer;
+    }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-item:hover { opacity: .85; }
+    .notif-icon {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--orange-pale);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; flex-shrink: 0;
+    }
+    .notif-unread .notif-icon { background: var(--orange-100); }
+    .notif-content { flex: 1; }
+    .notif-text { font-size: 14px; line-height: 1.4; }
+    .notif-time { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+    /* === TOAST === */
+    #toast-container {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%); z-index: 9999;
+      display: flex; flex-direction: column; gap: 8px;
+      pointer-events: none; align-items: center;
+    }
+    .toast {
+      background: var(--text); color: white; padding: 11px 20px;
+      border-radius: 24px; font-size: 14px; font-weight: 500;
+      box-shadow: var(--shadow-lg); animation: toastIn .22s ease;
+      white-space: nowrap; pointer-events: auto;
+    }
+    @keyframes toastIn { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* === EMPTY STATE === */
+    .empty-state { text-align: center; padding: 44px 20px; }
+    .empty-state .es-emoji { font-size: 44px; margin-bottom: 14px; }
+    .empty-state h3 { font-size: 18px; color: var(--text-2); margin-bottom: 7px; }
+    .empty-state p { font-size: 14px; color: var(--text-3); }
+  </style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading-screen">
+  <div class="spinner"></div>
+</div>
+
+<!-- Login -->
+<div id="login-screen" class="hidden">
+  <div class="login-brand">
+    <div class="login-logo">🔥 Crew</div>
+    <p class="login-tagline">Organizza eventi con il tuo gruppo di amici</p>
+  </div>
+  <div class="login-card">
+    <h2>Bentornato</h2>
+    <button class="btn-google" id="btn-login">
+      <svg width="20" height="20" viewBox="0 0 48 48">
+        <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.4 30.2 0 24 0 14.7 0 6.7 5.5 2.6 13.5l7.8 6C12.4 13.2 17.7 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.2-.4-4.7H24v9h12.7c-.6 3-2.3 5.5-4.9 7.2l7.6 5.9c4.4-4.1 7.1-10.1 7.1-17.4z"/>
+        <path fill="#FBBC05" d="M10.4 28.5c-.7-2-1-4.1-1-6.5s.3-4.5 1-6.5l-7.8-6C.9 13 0 18.4 0 24s.9 11 2.6 14.5l7.8-6z"/>
+        <path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.6-5.9c-2.1 1.4-4.8 2.2-7.6 2.2-6.3 0-11.6-3.7-13.6-9.3l-7.8 6C6.7 42.5 14.7 48 24 48z"/>
+      </svg>
+      Accedi con Google
+    </button>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app" class="hidden">
+  <header id="app-header">
+    <button id="header-back" class="hidden">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    </button>
+    <div id="header-title">🔥 Crew</div>
+    <div id="header-actions">
+      <button class="header-btn" id="btn-notifications" title="Notifiche">
+        <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div id="notif-dot" class="hidden"></div>
+      </button>
+      <button class="header-btn" id="btn-user-menu" style="padding:4px">
+        <img id="header-avatar" width="28" height="28" src="" alt="Profilo">
+      </button>
+    </div>
+  </header>
+
+  <main id="app-main">
+
+    <!-- HOME: lista gruppi -->
+    <div id="view-home" class="view">
+      <div class="section-header">
+        <h2 class="section-title">I tuoi gruppi</h2>
+        <button class="btn btn-primary btn-sm hidden" id="btn-create-group">+ Nuovo</button>
+      </div>
+      <div id="groups-list"></div>
+    </div>
+
+    <!-- GROUP: lista eventi -->
+    <div id="view-group" class="view hidden">
+      <div id="group-invite-banner"></div>
+      <div class="section-header">
+        <h2 class="section-title">Eventi</h2>
+        <button class="btn btn-primary btn-sm" id="btn-create-event">+ Evento</button>
+      </div>
+      <div id="events-list"></div>
+    </div>
+
+    <!-- EVENT DETAIL -->
+    <div id="view-event" class="hidden">
+      <div id="event-hero" class="event-hero">
+        <div class="event-hero-emoji">🎉</div>
+      </div>
+      <div class="event-detail-body">
+        <h1 id="event-detail-title" class="event-detail-title"></h1>
+        <div id="event-info-block" class="event-info-block"></div>
+
+        <!-- RSVP -->
+        <div class="detail-block">
+          <div class="detail-block-title"><span>🙋</span> Partecipazione</div>
+          <div class="rsvp-buttons">
+            <button class="rsvp-btn" id="rsvp-yes" onclick="App.setRSVP('yes')">
+              <span class="r-emoji">✅</span>
+              <span class="r-label">Ci sono</span>
+              <span class="r-count" id="rsvp-count-yes">0</span>
+            </button>
+            <button class="rsvp-btn" id="rsvp-maybe" onclick="App.setRSVP('maybe')">
+              <span class="r-emoji">🤔</span>
+              <span class="r-label">Forse</span>
+              <span class="r-count" id="rsvp-count-maybe">0</span>
+            </button>
+            <button class="rsvp-btn" id="rsvp-no" onclick="App.setRSVP('no')">
+              <span class="r-emoji">❌</span>
+              <span class="r-label">Non vengo</span>
+              <span class="r-count" id="rsvp-count-no">0</span>
+            </button>
+          </div>
+          <div id="rsvp-people" class="rsvp-people"></div>
+        </div>
+
+        <!-- Lista cose da portare -->
+        <div class="detail-block">
+          <div class="detail-block-title"><span>🎒</span> Cosa portare</div>
+          <div id="items-list" class="items-list"></div>
+          <div class="add-item-row">
+            <input type="text" id="new-item-input" placeholder="Aggiungi una cosa da portare...">
+            <button class="btn btn-primary btn-sm" onclick="App.addItem()">+</button>
+          </div>
+        </div>
+
+        <!-- Commenti -->
+        <div class="detail-block">
+          <div class="detail-block-title"><span>💬</span> Commenti</div>
+          <div id="comments-list" class="comments-list"></div>
+          <div class="comment-input-wrap">
+            <img id="comment-user-avatar" src="" alt="" class="c-avatar">
+            <div class="comment-inner">
+              <div id="mention-dropdown" class="hidden"></div>
+              <textarea id="comment-input" placeholder="Commenta... usa @ per menzionare" rows="1"></textarea>
+              <button id="comment-send" onclick="App.sendComment()">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL: Crea Gruppo -->
+<div class="modal-overlay hidden" id="modal-create-group">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <h2 class="modal-title">Nuovo gruppo</h2>
+      <button class="modal-close" onclick="App.closeModal('modal-create-group')">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="input-group">
+      <label>Nome gruppo</label>
+      <input type="text" id="group-name-input" placeholder="Es: Amici del calcetto">
+    </div>
+    <div class="input-group">
+      <label>Emoji del gruppo</label>
+      <input type="text" id="group-emoji-input" placeholder="🎉" maxlength="2" style="font-size:22px;text-align:center;letter-spacing:.1em;">
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="App.createGroup()">Crea gruppo</button>
+  </div>
+</div>
+
+<!-- MODAL: Crea Evento -->
+<div class="modal-overlay hidden" id="modal-create-event">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <h2 class="modal-title">Nuovo evento</h2>
+      <button class="modal-close" onclick="App.closeModal('modal-create-event')">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="cover-area" id="cover-area" onclick="document.getElementById('cover-file').click()">
+      <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      <span>Foto copertina (opzionale)</span>
+      <input type="file" id="cover-file" accept="image/*" style="display:none" onchange="App.handleCoverUpload(this)">
+    </div>
+    <div class="input-group">
+      <label>Titolo *</label>
+      <input type="text" id="ev-title" placeholder="Es: Cena di fine anno">
+    </div>
+    <div class="input-group">
+      <label>Data *</label>
+      <input type="date" id="ev-date">
+    </div>
+    <div class="input-group">
+      <label>Ora</label>
+      <input type="time" id="ev-time">
+    </div>
+    <div class="input-group">
+      <label>Luogo</label>
+      <input type="text" id="ev-location" placeholder="Es: Ristorante La Pergola, Roma">
+    </div>
+    <div class="input-group">
+      <label>Organizzatore</label>
+      <input type="text" id="ev-organizer" placeholder="Chi organizza?">
+    </div>
+    <div class="input-group">
+      <label>Descrizione</label>
+      <textarea id="ev-desc" placeholder="Dettagli, informazioni extra..."></textarea>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="App.createEvent()">Crea evento 🎉</button>
+  </div>
+</div>
+
+<!-- MODAL: Notifiche -->
+<div class="modal-overlay hidden" id="modal-notifications">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <h2 class="modal-title">Notifiche</h2>
+      <button class="modal-close" onclick="App.closeModal('modal-notifications')">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="notifications-list"></div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+// ============================================================
+// FIREBASE INIT
+// ============================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyD-hemzJowgkYTDuSxdrZH7SbY3-rO6aQw",
+  authDomain: "eventi-organizzati.firebaseapp.com",
+  projectId: "eventi-organizzati",
+  storageBucket: "eventi-organizzati.firebasestorage.app",
+  messagingSenderId: "645333051282",
+  appId: "1:645333051282:web:fef0e06f12283bd48c034b"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+// ============================================================
+// STATE
+// ============================================================
+const S = {
+  user: null,
+  userDoc: null,
+  currentGroupId: null,
+  currentEventId: null,
+  groupMembers: [],
+  unsubscribers: [],
+  coverDataUrl: null,
+  pendingJoin: null
+};
+
+// ============================================================
+// UTILS
+// ============================================================
+function uid8() {
+  return 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'.split('').sort(() => Math.random() - .5).join('').slice(0, 8);
+}
+
+function ital(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+}
+
+function shortDate(dateStr) {
+  if (!dateStr) return { day: '?', month: '???' };
+  const d = new Date(dateStr + 'T12:00:00');
+  return { day: d.getDate(), month: d.toLocaleDateString('it-IT', { month:'short' }).toUpperCase() };
+}
+
+function ago(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const s = Math.floor((Date.now() - d) / 1000);
+  if (s < 60) return 'adesso';
+  if (s < 3600) return Math.floor(s/60) + ' min fa';
+  if (s < 86400) return Math.floor(s/3600) + ' ore fa';
+  return Math.floor(s/86400) + ' giorni fa';
+}
+
+function av(url, name = '?') {
+  return url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=ffedd5&color=c2410c&bold=true&size=64`;
+}
+
+function $id(id) { return document.getElementById(id); }
+function show(id) { $id(id)?.classList.remove('hidden'); }
+function hide(id) { $id(id)?.classList.add('hidden'); }
+
+function toast(msg, ms = 3200) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  $id('toast-container').appendChild(el);
+  setTimeout(() => { el.style.cssText = 'opacity:0;transition:opacity .3s'; setTimeout(() => el.remove(), 300); }, ms);
+}
+
+function stopListeners() {
+  S.unsubscribers.forEach(fn => fn());
+  S.unsubscribers = [];
+}
+
+async function compressImage(file, maxW = 900, q = 0.72) {
+  return new Promise(res => {
+    const r = new FileReader();
+    r.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let { width: w, height: h } = img;
+        if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        res(c.toDataURL('image/jpeg', q));
+      };
+      img.src = e.target.result;
+    };
+    r.readAsDataURL(file);
+  });
+}
+
+// ============================================================
+// AUTH
+// ============================================================
+auth.onAuthStateChanged(async user => {
+  hide('loading-screen');
+  if (user) {
+    S.user = user;
+    await ensureUserDoc(user);
+    const params = new URLSearchParams(window.location.search);
+    const join = params.get('join');
+    if (join) { S.pendingJoin = join; window.history.replaceState({}, '', window.location.pathname); }
+    initApp();
+  } else {
+    S.user = null; S.userDoc = null;
+    hide('app'); show('login-screen');
+  }
+});
+
+async function ensureUserDoc(user) {
+  const ref = db.collection('users').doc(user.uid);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    const adminSnap = await db.collection('users').where('role', '==', 'admin').limit(1).get();
+    const role = adminSnap.empty ? 'admin' : 'member';
+    const data = { displayName: user.displayName || 'Utente', email: user.email, photoURL: user.photoURL || null, role, groups: [], createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+    await ref.set(data);
+    S.userDoc = { uid: user.uid, ...data, groups: [] };
+  } else {
+    S.userDoc = { uid: user.uid, ...snap.data() };
+  }
+}
+
+function initApp() {
+  hide('login-screen'); show('app');
+  $id('header-avatar').src = av(S.user.photoURL, S.user.displayName);
+  $id('header-avatar').alt = S.user.displayName;
+  $id('comment-user-avatar').src = av(S.user.photoURL, S.user.displayName);
+  if (S.userDoc?.role === 'admin') show('btn-create-group');
+  listenNotifications();
+  if (S.pendingJoin) { handleJoin(S.pendingJoin); S.pendingJoin = null; }
+  else goTo('home');
+}
+
+$id('btn-login').addEventListener('click', () => {
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err => toast('Errore login: ' + err.message));
+});
+
+$id('btn-user-menu').addEventListener('click', () => {
+  if (confirm('Vuoi uscire dall\'app?')) { stopListeners(); auth.signOut(); }
+});
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function goTo(view, id = null) {
+  ['view-home','view-group','view-event'].forEach(v => hide(v));
+  const back = $id('header-back');
+  const title = $id('header-title');
+
+  if (view === 'home') {
+    back.classList.add('hidden');
+    title.textContent = '🔥 Crew';
+    show('view-home');
+    loadGroups();
+  } else if (view === 'group') {
+    S.currentGroupId = id;
+    back.classList.remove('hidden');
+    show('view-group');
+    loadGroup(id);
+  } else if (view === 'event') {
+    S.currentEventId = id;
+    back.classList.remove('hidden');
+    show('view-event');
+    loadEvent(id);
+  }
+}
+
+$id('header-back').addEventListener('click', () => {
+  if (!$id('view-event').classList.contains('hidden')) goTo('group', S.currentGroupId);
+  else goTo('home');
+});
+
+// ============================================================
+// GROUPS
+// ============================================================
+async function loadGroups() {
+  stopListeners();
+  const c = $id('groups-list');
+  c.innerHTML = '<div style="display:flex;justify-content:center;padding:32px"><div class="spinner"></div></div>';
+
+  // Reload userDoc to get fresh groups list
+  const uSnap = await db.collection('users').doc(S.user.uid).get();
+  S.userDoc = { uid: S.user.uid, ...uSnap.data() };
+  if (S.userDoc?.role === 'admin') show('btn-create-group'); else hide('btn-create-group');
+
+  if (!S.userDoc?.groups?.length) {
+    c.innerHTML = `<div class="empty-state"><div class="es-emoji">👥</div><h3>Nessun gruppo ancora</h3><p>Entra tramite link invito oppure crea un nuovo gruppo</p></div>`;
+    return;
+  }
+  const unsub = db.collection('groups').where(firebase.firestore.FieldPath.documentId(), 'in', S.userDoc.groups)
+    .onSnapshot(snap => {
+      if (snap.empty) { c.innerHTML = `<div class="empty-state"><div class="es-emoji">👥</div><h3>Nessun gruppo</h3></div>`; return; }
+      c.innerHTML = '';
+      snap.forEach(doc => { c.innerHTML += renderGroupCard({ id: doc.id, ...doc.data() }); });
+    }, err => { c.innerHTML = '<p style="padding:16px;color:var(--red)">Errore caricamento gruppi</p>'; console.error(err); });
+  S.unsubscribers.push(unsub);
+}
+
+function renderGroupCard(g) {
+  const n = g.members?.length || 0;
+  return `<div class="group-card" onclick="goTo('group','${g.id}')">
+    <div class="group-avatar">${g.emoji || '👥'}</div>
+    <div class="group-info">
+      <div class="group-name">${escHtml(g.name)}</div>
+      <div class="group-meta">${n} membro${n !== 1 ? 'i' : ''}</div>
+    </div>
+    <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+  </div>`;
+}
+
+async function loadGroup(gid) {
+  stopListeners();
+  const gSnap = await db.collection('groups').doc(gid).get();
+  if (!gSnap.exists) { toast('Gruppo non trovato'); goTo('home'); return; }
+  const g = { id: gSnap.id, ...gSnap.data() };
+  S.groupMembers = g.members || [];
+  $id('header-title').textContent = (g.emoji || '') + ' ' + g.name;
+
+  // Invite banner (admin)
+  const ib = $id('group-invite-banner');
+  if (S.userDoc?.role === 'admin') {
+    const url = `${location.origin}${location.pathname}?join=${g.inviteCode}`;
+    ib.innerHTML = `<div class="invite-banner">
+      <div><div class="invite-label">Link invito</div><div class="invite-code">${g.inviteCode}</div></div>
+      <button class="btn btn-primary btn-sm" onclick="App.copyLink('${url}')">📋 Copia link</button>
+    </div>`;
+  } else { ib.innerHTML = ''; }
+
+  const ec = $id('events-list');
+  const unsub = db.collection('events').where('groupId', '==', gid).orderBy('date', 'asc')
+    .onSnapshot(snap => {
+      if (snap.empty) { ec.innerHTML = `<div class="empty-state"><div class="es-emoji">🎉</div><h3>Nessun evento</h3><p>Crea il primo evento del gruppo!</p></div>`; return; }
+      ec.innerHTML = '';
+      snap.forEach(doc => { ec.innerHTML += renderEventCard({ id: doc.id, ...doc.data() }); });
+    });
+  S.unsubscribers.push(unsub);
+}
+
+function renderEventCard(e) {
+  const d = shortDate(e.date);
+  return `<div class="event-card" onclick="goTo('event','${e.id}')">
+    <div class="event-cover">
+      ${e.coverUrl ? `<img src="${e.coverUrl}" alt="" loading="lazy">` : `<div class="event-cover-emoji">🎉</div>`}
+      <div class="event-date-badge"><div class="date-day">${d.day}</div><div class="date-month">${d.month}</div></div>
+    </div>
+    <div class="event-card-body">
+      <div class="event-card-title">${escHtml(e.title)}</div>
+      <div class="event-card-meta">
+        ${e.location ? `<div class="event-meta-row">📍 ${escHtml(e.location)}</div>` : ''}
+        ${e.time ? `<div class="event-meta-row">🕐 ${e.time}</div>` : ''}
+        <div class="event-meta-row">👤 ${escHtml(e.organizer || '')}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function handleJoin(code) {
+  const snap = await db.collection('groups').where('inviteCode', '==', code).limit(1).get();
+  if (snap.empty) { toast('Link invito non valido ❌'); goTo('home'); return; }
+  const gDoc = snap.docs[0];
+  const gid = gDoc.id;
+  if (S.userDoc?.groups?.includes(gid)) { goTo('group', gid); return; }
+  const mData = { uid: S.user.uid, displayName: S.user.displayName || 'Utente', photoURL: S.user.photoURL || null };
+  await db.collection('groups').doc(gid).update({ members: firebase.firestore.FieldValue.arrayUnion(mData) });
+  await db.collection('users').doc(S.user.uid).update({ groups: firebase.firestore.FieldValue.arrayUnion(gid) });
+  S.userDoc.groups = [...(S.userDoc.groups || []), gid];
+  toast(`✅ Sei entrato in "${gDoc.data().name}"!`);
+  goTo('group', gid);
+}
+
+// ============================================================
+// EVENTS
+// ============================================================
+async function loadEvent(eid) {
+  stopListeners();
+  const eSnap = await db.collection('events').doc(eid).get();
+  if (!eSnap.exists) { toast('Evento non trovato'); return; }
+  renderEventDetail({ id: eSnap.id, ...eSnap.data() });
+
+  const r1 = db.collection('events').doc(eid).collection('rsvp').onSnapshot(snap => {
+    const d = {}; snap.forEach(s => { d[s.id] = s.data(); }); renderRSVP(d);
+  });
+  const r2 = db.collection('events').doc(eid).collection('items').orderBy('createdAt','asc').onSnapshot(snap => {
+    const items = []; snap.forEach(s => items.push({ id: s.id, ...s.data() })); renderItems(items);
+  });
+  const r3 = db.collection('events').doc(eid).collection('comments').orderBy('createdAt','asc').onSnapshot(snap => {
+    const cc = []; snap.forEach(s => cc.push({ id: s.id, ...s.data() })); renderComments(cc);
+  });
+  S.unsubscribers.push(r1, r2, r3);
+}
+
+function renderEventDetail(e) {
+  $id('header-title').textContent = e.title;
+  $id('event-detail-title').textContent = e.title;
+  const hero = $id('event-hero');
+  hero.innerHTML = e.coverUrl ? `<img src="${e.coverUrl}" alt="">` : `<div class="event-hero-emoji">🎉</div>`;
+  $id('event-info-block').innerHTML = [
+    e.date ? `<div class="info-row"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>${ital(e.date)}${e.time ? ' alle ' + e.time : ''}</span></div>` : '',
+    e.location ? `<div class="info-row"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>${escHtml(e.location)}</span></div>` : '',
+    e.organizer ? `<div class="info-row"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Organizzato da ${escHtml(e.organizer)}</span></div>` : '',
+    e.description ? `<div class="info-row"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg><span>${escHtml(e.description)}</span></div>` : ''
+  ].join('');
+}
+
+function renderRSVP(d) {
+  let yes = [], no = [], maybe = [];
+  Object.entries(d).forEach(([uid, r]) => {
+    if (r.status === 'yes') yes.push({ uid, ...r });
+    else if (r.status === 'no') no.push({ uid, ...r });
+    else maybe.push({ uid, ...r });
+  });
+  $id('rsvp-count-yes').textContent = yes.length;
+  $id('rsvp-count-no').textContent = no.length;
+  $id('rsvp-count-maybe').textContent = maybe.length;
+  const my = d[S.user?.uid];
+  ['yes','no','maybe'].forEach(s => {
+    $id('rsvp-' + s).className = 'rsvp-btn' + (my?.status === s ? ' active-' + s : '');
+  });
+  $id('rsvp-people').innerHTML = [...yes, ...maybe, ...no].map(p =>
+    `<div class="rsvp-chip ${p.status}"><img src="${av(p.photoURL, p.name)}" alt="${p.name}">${escHtml(p.name)}</div>`
+  ).join('');
+}
+
+function renderItems(items) {
+  const c = $id('items-list');
+  if (!items.length) { c.innerHTML = '<p style="color:var(--text-3);font-size:13px;padding:4px 0">Nessun elemento. Aggiungine uno!</p>'; return; }
+  const uid = S.user?.uid;
+  c.innerHTML = items.map(it => {
+    const isMe = it.assignedTo === uid;
+    return `<div class="item-row">
+      <span class="item-text">${escHtml(it.text)}</span>
+      ${it.assignedTo
+        ? `<div class="item-assigned-info"><img src="${av(it.assignedPhoto, it.assignedName)}" alt="">${isMe ? 'Tu' : escHtml(it.assignedName || '')}</div>
+           ${isMe ? `<button class="btn-take mine" onclick="App.releaseItem('${it.id}')">Rilascia</button>` : ''}`
+        : `<button class="btn-take free" onclick="App.takeItem('${it.id}','${escAttr(it.text)}')">Lo porto io</button>`}
+    </div>`;
+  }).join('');
+}
+
+function renderComments(comments) {
+  const c = $id('comments-list');
+  if (!comments.length) { c.innerHTML = '<p style="color:var(--text-3);font-size:13px;padding:4px 0">Nessun commento ancora. Scrivi il primo!</p>'; return; }
+  c.innerHTML = comments.map(cm => {
+    const txt = escHtml(cm.text || '').replace(/@(\S+)/g, '<span class="mention">@$1</span>');
+    return `<div class="comment-row">
+      <img class="c-avatar" src="${av(cm.authorPhoto, cm.authorName)}" alt="${escAttr(cm.authorName || '')}">
+      <div class="c-bubble">
+        <div class="c-author">${escHtml(cm.authorName || '')}</div>
+        <div class="c-text">${txt}</div>
+        <div class="c-time">${ago(cm.createdAt)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  c.scrollTop = c.scrollHeight;
+}
+
+// ============================================================
+// APP ACTIONS
+// ============================================================
+const App = {
+
+  async setRSVP(status) {
+    if (!S.user || !S.currentEventId) return;
+    await db.collection('events').doc(S.currentEventId).collection('rsvp').doc(S.user.uid).set({
+      status, name: S.user.displayName || 'Utente', photoURL: S.user.photoURL || null,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    const eSnap = await db.collection('events').doc(S.currentEventId).get();
+    const ev = eSnap.data();
+    if (ev.createdBy !== S.user.uid) {
+      await notify({ toUserId: ev.createdBy, type: 'rsvp', eventId: S.currentEventId, eventTitle: ev.title,
+        text: `${S.user.displayName} ha risposto "${status === 'yes' ? 'Ci sono' : status === 'no' ? 'Non vengo' : 'Forse'}" a "${ev.title}"` });
+    }
+  },
+
+  async addItem() {
+    const inp = $id('new-item-input');
+    const text = inp.value.trim();
+    if (!text || !S.currentEventId) return;
+    await db.collection('events').doc(S.currentEventId).collection('items').add({
+      text, assignedTo: null, assignedName: null, assignedPhoto: null,
+      createdBy: S.user.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    inp.value = '';
+    const eSnap = await db.collection('events').doc(S.currentEventId).get();
+    const ev = eSnap.data();
+    const gSnap = await db.collection('groups').doc(ev.groupId).get();
+    for (const m of (gSnap.data().members || [])) {
+      if (m.uid !== S.user.uid) {
+        await notify({ toUserId: m.uid, type: 'items', eventId: S.currentEventId, eventTitle: ev.title,
+          text: `${S.user.displayName} ha aggiunto "${text}" alla lista di "${ev.title}"` });
+      }
+    }
+  },
+
+  async takeItem(itemId, itemText) {
+    if (!S.user || !S.currentEventId) return;
+    await db.collection('events').doc(S.currentEventId).collection('items').doc(itemId).update({
+      assignedTo: S.user.uid, assignedName: S.user.displayName || 'Utente', assignedPhoto: S.user.photoURL || null
+    });
+    const eSnap = await db.collection('events').doc(S.currentEventId).get();
+    const ev = eSnap.data();
+    if (ev.createdBy !== S.user.uid) {
+      await notify({ toUserId: ev.createdBy, type: 'items', eventId: S.currentEventId, eventTitle: ev.title,
+        text: `${S.user.displayName} si è assegnato "${itemText}" in "${ev.title}"` });
+    }
+  },
+
+  async releaseItem(itemId) {
+    if (!S.currentEventId) return;
+    await db.collection('events').doc(S.currentEventId).collection('items').doc(itemId).update({
+      assignedTo: null, assignedName: null, assignedPhoto: null
+    });
+  },
+
+  async sendComment() {
+    const inp = $id('comment-input');
+    const text = inp.value.trim();
+    if (!text || !S.currentEventId) return;
+    const mentions = [];
+    const rx = /@(\S+)/g; let m;
+    while ((m = rx.exec(text)) !== null) {
+      const q = m[1].toLowerCase();
+      const found = S.groupMembers.find(mb => mb.displayName?.toLowerCase().startsWith(q));
+      if (found && !mentions.includes(found.uid)) mentions.push(found.uid);
+    }
+    await db.collection('events').doc(S.currentEventId).collection('comments').add({
+      text, authorId: S.user.uid, authorName: S.user.displayName || 'Utente',
+      authorPhoto: S.user.photoURL || null, mentions,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    inp.value = ''; hide('mention-dropdown');
+    const eSnap = await db.collection('events').doc(S.currentEventId).get();
+    const ev = eSnap.data();
+    for (const uid of mentions) {
+      if (uid !== S.user.uid) {
+        await notify({ toUserId: uid, type: 'mention', eventId: S.currentEventId, eventTitle: ev.title,
+          text: `${S.user.displayName} ti ha menzionato in "${ev.title}": "${text.slice(0, 70)}${text.length > 70 ? '…' : ''}"` });
+      }
+    }
+  },
+
+  async createGroup() {
+    if (S.userDoc?.role !== 'admin') return;
+    const name = $id('group-name-input').value.trim();
+    const emoji = $id('group-emoji-input').value.trim() || '👥';
+    if (!name) { toast('Inserisci il nome del gruppo'); return; }
+    const inviteCode = uid8();
+    const uid = S.user.uid;
+    const mData = { uid, displayName: S.user.displayName || 'Utente', photoURL: S.user.photoURL || null };
+    const ref = await db.collection('groups').add({
+      name, emoji, inviteCode, createdBy: uid,
+      members: [mData], createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await db.collection('users').doc(uid).update({ groups: firebase.firestore.FieldValue.arrayUnion(ref.id) });
+    S.userDoc.groups = [...(S.userDoc.groups || []), ref.id];
+    this.closeModal('modal-create-group');
+    $id('group-name-input').value = ''; $id('group-emoji-input').value = '';
+    toast('✅ Gruppo creato!');
+    goTo('group', ref.id);
+  },
+
+  async createEvent() {
+    const title = $id('ev-title').value.trim();
+    const date  = $id('ev-date').value;
+    if (!title || !date) { toast('Titolo e data sono obbligatori'); return; }
+    const data = {
+      groupId: S.currentGroupId, title, date,
+      time: $id('ev-time').value || null,
+      location: $id('ev-location').value.trim() || null,
+      organizer: $id('ev-organizer').value.trim() || S.user.displayName,
+      description: $id('ev-desc').value.trim() || null,
+      coverUrl: S.coverDataUrl || null,
+      createdBy: S.user.uid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    const ref = await db.collection('events').add(data);
+    const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
+    for (const mb of (gSnap.data().members || [])) {
+      if (mb.uid !== S.user.uid) {
+        await notify({ toUserId: mb.uid, type: 'new_event', eventId: ref.id, eventTitle: title,
+          text: `${S.user.displayName} ha creato un nuovo evento: "${title}" — ${ital(date)}` });
+      }
+    }
+    this.closeModal('modal-create-event');
+    ['ev-title','ev-date','ev-time','ev-location','ev-organizer','ev-desc'].forEach(id => { $id(id).value = ''; });
+    S.coverDataUrl = null;
+    resetCoverArea();
+    toast('🎉 Evento creato!');
+    goTo('event', ref.id);
+  },
+
+  async handleCoverUpload(input) {
+    const file = input.files[0]; if (!file) return;
+    S.coverDataUrl = await compressImage(file);
+    const area = $id('cover-area');
+    area.innerHTML = `<img src="${S.coverDataUrl}" alt="Copertina"><div class="cover-overlay" onclick="document.getElementById('cover-file2').click()">
+      📷 Cambia<input type="file" id="cover-file2" accept="image/*" style="display:none" onchange="App.handleCoverUpload(this)">
+    </div>`;
+  },
+
+  copyLink(url) {
+    navigator.clipboard.writeText(url).then(() => toast('📋 Link copiato!')).catch(() => {
+      prompt('Copia questo link:', url);
+    });
+  },
+
+  openModal(id) { show(id); },
+  closeModal(id) { hide(id); }
+};
+
+function resetCoverArea() {
+  $id('cover-area').innerHTML = `
+    <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+    <span>Foto copertina (opzionale)</span>
+    <input type="file" id="cover-file" accept="image/*" style="display:none" onchange="App.handleCoverUpload(this)">`;
+  $id('cover-area').onclick = () => $id('cover-file').click();
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+async function notify(data) {
+  await db.collection('notifications').add({ ...data, read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+}
+
+function listenNotifications() {
+  if (!S.user) return;
+  const unsub = db.collection('notifications').where('toUserId', '==', S.user.uid).where('read', '==', false)
+    .onSnapshot(snap => {
+      snap.size > 0 ? show('notif-dot') : hide('notif-dot');
+    });
+  // Don't add to S.unsubscribers — keep this alive always
+}
+
+$id('btn-notifications').addEventListener('click', async () => {
+  show('modal-notifications');
+  const c = $id('notifications-list');
+  c.innerHTML = '<div style="display:flex;justify-content:center;padding:24px"><div class="spinner"></div></div>';
+  const snap = await db.collection('notifications').where('toUserId', '==', S.user.uid).orderBy('createdAt','desc').limit(40).get();
+  if (snap.empty) { c.innerHTML = '<div class="empty-state" style="padding:32px 0"><div class="es-emoji">🔔</div><h3>Nessuna notifica</h3></div>'; return; }
+  const icons = { new_event: '🎉', mention: '💬', items: '🎒', rsvp: '✅' };
+  c.innerHTML = '';
+  snap.forEach(doc => {
+    const n = doc.data();
+    c.innerHTML += `<div class="notif-item ${!n.read ? 'notif-unread' : ''}" onclick="App.openNotifItem('${n.eventId}')">
+      <div class="notif-icon">${icons[n.type] || '🔔'}</div>
+      <div class="notif-content">
+        <div class="notif-text">${escHtml(n.text || '')}</div>
+        <div class="notif-time">${ago(n.createdAt)}</div>
+      </div>
+    </div>`;
+    if (!n.read) db.collection('notifications').doc(doc.id).update({ read: true });
+  });
+});
+
+App.openNotifItem = function(eventId) {
+  App.closeModal('modal-notifications');
+  if (eventId) goTo('event', eventId);
+};
+
+// ============================================================
+// EVENT LISTENERS
+// ============================================================
+$id('btn-create-group').addEventListener('click', () => show('modal-create-group'));
+$id('btn-create-event').addEventListener('click', () => {
+  $id('ev-organizer').value = S.user?.displayName || '';
+  show('modal-create-event');
+});
+
+document.querySelectorAll('.modal-overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.add('hidden'); });
+});
+
+// @mention autocomplete
+$id('comment-input').addEventListener('input', e => {
+  const val = e.target.value;
+  const at = val.lastIndexOf('@');
+  if (at < 0) { hide('mention-dropdown'); return; }
+  const q = val.slice(at + 1).toLowerCase();
+  if (!q) { hide('mention-dropdown'); return; }
+  const matches = S.groupMembers.filter(m => m.uid !== S.user?.uid && m.displayName?.toLowerCase().includes(q));
+  const dd = $id('mention-dropdown');
+  if (!matches.length) { hide('mention-dropdown'); return; }
+  dd.innerHTML = matches.map(m => `<div class="mention-opt" onclick="App.insertMention('${escAttr(m.displayName || '')}')">
+    <img src="${av(m.photoURL, m.displayName)}" alt=""> ${escHtml(m.displayName || '')}
+  </div>`).join('');
+  show('mention-dropdown');
+});
+
+App.insertMention = function(name) {
+  const inp = $id('comment-input');
+  const at = inp.value.lastIndexOf('@');
+  inp.value = inp.value.slice(0, at) + '@' + name + ' ';
+  hide('mention-dropdown'); inp.focus();
+};
+
+$id('comment-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); App.sendComment(); }
+});
+
+// ============================================================
+// HTML ESCAPING
+// ============================================================
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  return String(s || '').replace(/'/g, "\\'");
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Crew v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="ios-frame.jsx"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: #E8EDF5; display: flex; align-items: center; justify-content: center; font-family: 'DM Sans', sans-serif; }
+input, textarea, select, button { font-family: inherit; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+// ─── TOKENS ─────────────────────────────────────────────────────
+const C = {
+  white: '#FFFFFF', bg: '#F6F8FF', card: '#FFFFFF',
+  blue: '#4B7BEC', blueSoft: '#EEF2FF', blueMid: '#7099F0',
+  orange: '#FFAA6B', orangeSoft: '#FFF3E8', orangeDark: '#E8893A',
+  text: '#1C1C1E', textSub: '#8E8E9A', textMid: '#4A4A58',
+  border: '#EAECF4', green: '#34C759', red: '#FF3B30',
+  fontH: "'Bricolage Grotesque', sans-serif",
+  fontB: "'DM Sans', sans-serif",
+  r: '16px', shadow: '0 4px 20px rgba(75,123,236,0.10)',
+};
+
+// ─── DATA ────────────────────────────────────────────────────────
+const ME = { id: 1, name: 'Marco', surname: 'Rossi', avatar: 'M', color: C.blue, isAdmin: true, joined: 'Gen 2024' };
+
+const MEMBERS = [
+  { id: 1, name: 'Marco',  avatar: 'M', color: C.blue },
+  { id: 2, name: 'Giulia', avatar: 'G', color: '#FF6B9D' },
+  { id: 3, name: 'Luca',   avatar: 'L', color: C.green },
+  { id: 4, name: 'Sara',   avatar: 'S', color: C.orange },
+  { id: 5, name: 'Paolo',  avatar: 'P', color: '#9B59B6' },
+  { id: 6, name: 'Anna',   avatar: 'A', color: '#FF3B30' },
+  { id: 7, name: 'Dario',  avatar: 'D', color: '#2ECC71' },
+  { id: 8, name: 'Elena',  avatar: 'E', color: '#3498DB' },
+];
+
+const GROUPS = [
+  { id: 1, name: 'Gita al lago',     members: 8,  emoji: '⛱️', color: C.blue,   bg: C.blueSoft },
+  { id: 2, name: 'Weekend Milano',   members: 5,  emoji: '🌆', color: '#9B59B6', bg: '#F4EEFF' },
+  { id: 3, name: 'Calcetto venerdì', members: 12, emoji: '⚽', color: C.green,  bg: '#EEFBF3' },
+];
+
+const EVENTS_DATA = {
+  1: [
+    {
+      id: 1, emoji: '⛱️', title: 'Gita al lago di Como',
+      date: '2025-05-10', time: '09:00', place: 'Lago di Como, CO',
+      meetingPoint: 'Parcheggio Stazione Centrale', deadline: '2025-05-06',
+      desc: 'Partenza alle 9. Pranzo al sacco, riva est, poi bagno libero.',
+      rsvp: { yes: [1,2,3,4,5], maybe: [6,7], no: [8] },
+      things: [
+        { id: 1, label: 'Pane e focacce', assigneeId: 2, type: 'comune' },
+        { id: 2, label: 'Acqua', assigneeId: 3, type: 'comune' },
+        { id: 3, label: 'Crema solare', assigneeId: null, type: 'consigliata' },
+      ],
+      thingsType: 'comune',
+      comments: [
+        { id: 1, author: 2, text: 'Ci sono! Porto le focacce 🥖', ts: '10:32' },
+        { id: 2, author: 3, text: 'Perfetto! @Giulia porta anche da bere?', ts: '11:05' },
+      ],
+    },
+    {
+      id: 2, emoji: '🍹', title: 'Aperitivo pre-lago',
+      date: '2025-05-09', time: '19:30', place: 'Bar Navigli, Milano',
+      meetingPoint: 'Ingresso del bar', deadline: '2025-05-08',
+      desc: 'Organizzare i dettagli finali!',
+      rsvp: { yes: [1,2,4], maybe: [3], no: [5,6] },
+      things: [], thingsType: 'consigliata', comments: [],
+    },
+  ],
+  2: [
+    {
+      id: 3, emoji: '🗼', title: 'Weekend a Milano',
+      date: '2025-05-18', time: '10:00', place: 'Milano, MI',
+      meetingPoint: 'Piazza Duomo', deadline: '2025-05-14',
+      desc: 'Duomo, Brera, aperitivo Navigli.',
+      rsvp: { yes: [1,2,3], maybe: [4], no: [] },
+      things: [{ id: 1, label: 'Scarpe comode', assigneeId: null, type: 'consigliata' }],
+      thingsType: 'consigliata', comments: [],
+    },
+  ],
+  3: [
+    {
+      id: 4, emoji: '⚽', title: 'Calcetto del venerdì',
+      date: '2025-05-16', time: '21:00', place: 'Centro Sportivo Arena',
+      meetingPoint: 'Parcheggio del centro sportivo', deadline: '2025-05-15',
+      desc: 'Partita 5vs5, campo sintetico.',
+      rsvp: { yes: [1,3,5,7], maybe: [2], no: [4,6,8] },
+      things: [
+        { id: 1, label: 'Scarpini', assigneeId: 1, type: 'comune' },
+        { id: 2, label: 'Pallone', assigneeId: 5, type: 'comune' },
+      ],
+      thingsType: 'comune', comments: [],
+    },
+  ],
+};
+
+const NOTIFICATIONS = [
+  { id: 1, type: 'rsvp', actor: 2, event: 'Gita al lago di Como', text: 'ha risposto Ci sono', ts: '5 min fa', read: false },
+  { id: 2, type: 'comment', actor: 3, event: 'Gita al lago di Como', text: 'ha commentato: "Porto anche da bere!"', ts: '12 min fa', read: false },
+  { id: 3, type: 'rsvp', actor: 4, event: 'Aperitivo pre-lago', text: 'ha risposto Forse', ts: '1 ora fa', read: false },
+  { id: 4, type: 'new_event', actor: 1, event: 'Weekend a Milano', text: 'ha creato un nuovo evento', ts: 'ieri', read: true },
+  { id: 5, type: 'deadline', actor: null, event: 'Gita al lago di Como', text: 'Scadenza risposta domani!', ts: 'ieri', read: true },
+  { id: 6, type: 'rsvp', actor: 6, event: 'Calcetto del venerdì', text: 'ha risposto Non vengo', ts: '2 gg fa', read: true },
+];
+
+const memberById = id => MEMBERS.find(m => m.id === Number(id));
+const fmtDate = iso => {
+  if (!iso) return '';
+  const d = new Date(iso + 'T12:00:00');
+  return d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'long' });
+};
+const EVENT_EMOJIS = ['⛱️','🎉','🍕','🎸','⚽','🏊','🌆','🗼','🎭','🍹','🏕️','🎬','🎤','🏖️','🚴','🎮','🍔','🌮','🍣','🥂','🎂','🏋️','🎯','🃏','🎨','🌍','✈️','🎡','🎪','🎭'];
+
+// ─── ATOMS ───────────────────────────────────────────────────────
+function Av({ member, size = 36 }) {
+  return (
+    <div style={{ width: size, height: size, borderRadius: size/2, background: member.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: C.fontH, fontWeight: 700, fontSize: size * 0.38, flexShrink: 0 }}>
+      {member.avatar}
+    </div>
+  );
+}
+
+function BackBtn({ onBack, label }) {
+  return (
+    <div onClick={onBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: C.blue, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: C.fontH }}>
+      <svg width="8" height="13" viewBox="0 0 8 13"><path d="M7 1L1.5 6.5L7 12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      {label}
+    </div>
+  );
+}
+
+function Pill({ label, active, color = C.blue, onClick }) {
+  return (
+    <div onClick={onClick} style={{ borderRadius: 99, padding: '6px 14px', fontSize: 13, fontWeight: 600, fontFamily: C.fontH, cursor: 'pointer', background: active ? color : C.bg, color: active ? '#fff' : C.textSub, border: `1.5px solid ${active ? color : C.border}`, transition: 'all 0.15s', userSelect: 'none' }}>
+      {label}
+    </div>
+  );
+}
+
+// ─── TAB BAR ─────────────────────────────────────────────────────
+const TAB_ICONS = {
+  home: (active) => <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? C.blue : 'none'} stroke={active ? C.blue : C.textSub} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>,
+  notif: (active, count) => (
+    <div style={{ position: 'relative' }}>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? C.blue : 'none'} stroke={active ? C.blue : C.textSub} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      {count > 0 && <div style={{ position: 'absolute', top: -3, right: -4, width: 16, height: 16, borderRadius: 8, background: C.red, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#fff', border: '2px solid #fff' }}>{count}</div>}
+    </div>
+  ),
+  profile: (active) => <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? C.blue : 'none'} stroke={active ? C.blue : C.textSub} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>,
+};
+
+function TabBar({ tab, onTab, notifCount }) {
+  return (
+    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 80, background: C.white, borderTop: `1px solid ${C.border}`, display: 'flex', alignItems: 'flex-start', paddingTop: 10, zIndex: 50 }}>
+      {[
+        { key: 'home', icon: TAB_ICONS.home },
+        { key: 'notif', icon: (a) => TAB_ICONS.notif(a, notifCount) },
+        { key: 'profile', icon: TAB_ICONS.profile },
+      ].map(t => (
+        <div key={t.key} onClick={() => onTab(t.key)}
+          style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+          {t.icon(tab === t.key)}
+          <span style={{ fontSize: 10, fontWeight: 600, color: tab === t.key ? C.blue : C.textSub, fontFamily: C.fontH }}>
+            {t.key === 'home' ? 'Home' : t.key === 'notif' ? 'Avvisi' : 'Profilo'}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── SCREEN: ONBOARDING ─────────────────────────────────────────
+const OB_STEPS = [
+  { emoji: '👥', title: 'Organizza con\nil tuo gruppo', sub: 'Crea gruppi, invita i tuoi amici e tieni tutto in un posto solo.' },
+  { emoji: '📅', title: 'Pianifica\neventi insieme', sub: 'Date, luoghi, chi porta cosa — tutto condiviso in tempo reale.' },
+  { emoji: '✅', title: 'Rispondi\nin un tap', sub: "Ci sono, forse, non vengo — tutti sanno chi partecipa, sempre." },
+];
+
+function OnboardingScreen({ onDone }) {
+  const [step, setStep] = React.useState(0);
+  const last = step === OB_STEPS.length - 1;
+  const s = OB_STEPS[step];
+  return (
+    <div style={{ background: C.white, height: '100%', display: 'flex', flexDirection: 'column', padding: '40px 28px 40px' }}>
+      {/* Skip */}
+      <div style={{ textAlign: 'right' }}>
+        <span onClick={onDone} style={{ fontSize: 14, color: C.textSub, fontWeight: 600, cursor: 'pointer' }}>Salta</span>
+      </div>
+
+      {/* Illustration placeholder */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 200, height: 200, borderRadius: 100, background: C.blueSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 80 }}>
+          {s.emoji}
+        </div>
+      </div>
+
+      {/* Dots */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 28 }}>
+        {OB_STEPS.map((_, i) => (
+          <div key={i} style={{ width: i === step ? 24 : 8, height: 8, borderRadius: 4, background: i === step ? C.blue : C.border, transition: 'all 0.3s' }}/>
+        ))}
+      </div>
+
+      {/* Text */}
+      <div style={{ marginBottom: 32, textAlign: 'center' }}>
+        <div style={{ fontFamily: C.fontH, fontWeight: 800, fontSize: 32, color: C.text, lineHeight: 1.1, marginBottom: 12, whiteSpace: 'pre-line' }}>{s.title}</div>
+        <div style={{ fontSize: 16, color: C.textMid, lineHeight: 1.5 }}>{s.sub}</div>
+      </div>
+
+      {/* CTA */}
+      <div onClick={() => last ? onDone() : setStep(p => p + 1)}
+        style={{ background: C.blue, borderRadius: C.r, padding: '16px', textAlign: 'center', fontFamily: C.fontH, fontWeight: 700, fontSize: 17, color: '#fff', cursor: 'pointer' }}>
+        {last ? 'Inizia' : 'Avanti →'}
+      </div>
+    </div>
+  );
+}
+
+// ─── SCREEN: LOGIN ───────────────────────────────────────────────
+function LoginScreen({ onLogin }) {
+  const [mode, setMode] = React.useState('login');
+  const [email, setEmail] = React.useState('');
+  const [pass, setPass] = React.useState('');
+  const inputSt = { width: '100%', background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '14px 16px', fontSize: 15, color: C.text, outline: 'none' };
+
+  return (
+    <div style={{ background: C.white, height: '100%', display: 'flex', flexDirection: 'column', padding: '32px 28px' }}>
+      {/* Logo */}
+      <div style={{ textAlign: 'center', marginBottom: 36, marginTop: 20 }}>
+        <div style={{ fontFamily: C.fontH, fontWeight: 800, fontSize: 42, color: C.text, letterSpacing: -2 }}>Crew</div>
+        <div style={{ width: 8, height: 8, borderRadius: 4, background: C.orange, margin: '6px auto 0' }}/>
+        <div style={{ fontSize: 14, color: C.textSub, marginTop: 8 }}>La tua app per gli eventi di gruppo</div>
+      </div>
+
+      {/* Toggle */}
+      <div style={{ display: 'flex', background: C.bg, borderRadius: 12, padding: 4, marginBottom: 24 }}>
+        {['login', 'signup'].map(m => (
+          <div key={m} onClick={() => setMode(m)}
+            style={{ flex: 1, textAlign: 'center', padding: '10px', borderRadius: 10, background: mode === m ? C.white : 'transparent', fontFamily: C.fontH, fontWeight: 700, fontSize: 14, color: mode === m ? C.text : C.textSub, cursor: 'pointer', boxShadow: mode === m ? '0 2px 8px rgba(0,0,0,0.08)' : 'none', transition: 'all 0.2s' }}>
+            {m === 'login' ? 'Accedi' : 'Registrati'}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, flex: 1 }}>
+        {mode === 'signup' && (
+          <input placeholder="Nome e cognome" style={inputSt}/>
+        )}
+        <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" type="email" style={inputSt}/>
+        <input value={pass} onChange={e => setPass(e.target.value)} placeholder="Password" type="password" style={inputSt}/>
+        {mode === 'login' && <div style={{ textAlign: 'right', fontSize: 13, color: C.blue, fontWeight: 600, cursor: 'pointer' }}>Password dimenticata?</div>}
+
+        <div onClick={onLogin}
+          style={{ background: C.blue, borderRadius: C.r, padding: '16px', textAlign: 'center', fontFamily: C.fontH, fontWeight: 700, fontSize: 17, color: '#fff', cursor: 'pointer', marginTop: 8 }}>
+          {mode === 'login' ? 'Accedi' : 'Crea account'}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0' }}>
+          <div style={{ flex: 1, height: 1, background: C.border }}/>
+          <span style={{ fontSize: 13, color: C.textSub }}>oppure</span>
+          <div style={{ flex: 1, height: 1, background: C.border }}/>
+        </div>
+
+        <div style={{ border: `1.5px solid ${C.border}`, borderRadius: C.r, padding: '14px', textAlign: 'center', fontFamily: C.fontH, fontWeight: 700, fontSize: 15, color: C.text, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+          <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.5 1.2 8.9 3.2l6.6-6.6C35.4 2.6 30 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.7 6C12.3 13 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.2-.4-4.7H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.4 5.8c4.4-4 6.9-10 6.9-17.3z"/><path fill="#FBBC05" d="M10.4 28.7c-.5-1.5-.8-3-.8-4.7s.3-3.2.8-4.7l-7.7-6C.9 16.3 0 20 0 24s.9 7.7 2.7 10.7l7.7-6z"/><path fill="#34A853" d="M24 48c6 0 11-2 14.7-5.3l-7.4-5.8c-2 1.4-4.6 2.2-7.3 2.2-6.3 0-11.7-4.2-13.6-10l-7.7 6C6.6 42.6 14.6 48 24 48z"/></svg>
+          Continua con Google
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── SCREEN: HOME ────────────────────────────────────────────────
+function HomeScreen({ onSelectGroup }) {
+  return (
+    <div style={{ background: C.bg, height: '100%', display: 'flex', flexDirection: 'column', paddingBottom: 80 }}>
+      {/* Header */}
+      <div style={{ background: C.white, padding: '8px 20px 16px', borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: 13, color: C.textSub, fontWeight: 500 }}>Bentornato 👋</div>
+            <div style={{ fontFamily: C.fontH, fontWeight: 800, fontSize: 26, color: C.text, letterSpacing: -0.8, marginTop: 1 }}>Marco</div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: C.blueSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            </div>
+            <Av member={ME} size={40}/>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', padding: '18px 16px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+        {/* Prossimo evento */}
+        {(() => {
+          const ev = EVENTS_DATA[1][0];
+          return (
+            <div style={{ borderRadius: 20, background: `linear-gradient(135deg, ${C.blue} 0%, #7B5FFF 100%)`, padding: '20px', position: 'relative', overflow: 'hidden', cursor: 'pointer' }}>
+              <div style={{ position: 'absolute', right: -20, top: -20, width: 120, height: 120, borderRadius: 60, background: 'rgba(255,255,255,0.08)' }}/>
+              <div style={{ position: 'absolute', right: 20, bottom: -30, width: 80, height: 80, borderRadius: 40, background: 'rgba(255,255,255,0.06)' }}/>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.65)', letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 8 }}>Prossimo evento</div>
+              <div style={{ fontSize: 36, marginBottom: 8 }}>{ev.emoji}</div>
+              <div style={{ fontFamily: C.fontH, fontWeight: 800, fontSize: 22, color: '#fff', lineHeight: 1.1, marginBottom: 10 }}>{ev.title}</div>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>📅 {fmtDate(ev.date)}</span>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>⏰ {ev.time}</span>
+              </div>
+              <div style={{ marginTop: 12, display: 'flex', gap: 6 }}>
+                <span style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', borderRadius: 99, padding: '3px 10px', fontSize: 12, fontWeight: 700 }}>✅ {ev.rsvp.yes.length}</span>
+                <span style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', borderRadius: 99, padding: '3px 10px', fontSize: 12, fontWeight: 700 }}>🤔 {ev.rsvp.maybe.length}</span>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Gruppi */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <div style={{ fontFamily: C.fontH, fontWeight: 800, fontSize: 20, color: C.text }}>I tuoi gruppi</div>
+            <div style={{ background: C.blue, color: '#fff', borderRadius: 99, padding: '5px 14px', fontSize: 12, fontWeight: 700, fontFamily: C.fontH, cursor: 'pointer' }}>+ Nuovo</div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {GROUPS.map(g => {
+              const evs = EVENTS_DATA[g.id] || [];
+              const next = evs[0];
+              return (
+                <div key={g.id} onClick={() => onSelectGroup(g)}
+                  style={{ background: C.white, borderRadius: 18, padding: '16px', border: `1.5px solid ${C.border}`, boxShadow: C.shadow, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{ width: 52, height: 52, borderRadius: 16, background: g.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0 }}>{g.emoji}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: C.fontH, fontWeight: 700, fontSize: 16, color: C.text }}>{g.name}</div>
+                    <div style={{ fontSize: 13, color: C.textSub, marginTop: 2 }}>{g.members} persone</div>
+                    {next && <div style={{ fontSize: 12, color: g.color, fontWeight: 600, marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{next.emoji} {next.title} · {fmtDate(next.date)}</div>}
+                  </div>
+                  <svg width="7" height="12" viewBox="0 0 7 12"><path d="M1 1L6 6L1 11" stroke={C.textSub} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── SCREEN: GROUP EVENTS ────────────────────────────────────────
+function GroupEventsScreen({ group, onBack, onSelectEvent, onCreateEvent }) {
+  const events = EVENTS_DATA[group.id] || [];
+  return (
+    <div style={{ background: C.bg, height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ background: C.white, padding: '8px 20px 18px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
+        <div style={{ marginBottom: 14 }}><BackBtn onBack={onBack} label="Home"/></div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ width: 54, height: 54, borderRadius: 16, background: group.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>{group.emoji}</div>
+          <div>
+            <div style={{ fontFamily: C.fontH, fontWeight: 800, fontSize: 22, color: C.text }}>{group.name}</div>
+            <div style={{ fontSize: 13, color: C.textSub, marginTop: 2 }}>{group.members} partecipanti · {events.length} eventi</div>
+          </div>
+        </div>
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+        {events.map((ev, i) => (
+          <div key={ev.id} style={{ display: 'flex', gap: 14, marginBottom: 16 }}>
+            {/* Timeline */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: 40 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: group.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{ev.emoji}</div>
+              {i < events.length - 1 && <div style={{ width: 2, flex: 1, background: C.border, marginTop: 6, minHeight: 24 }}/>}
+            </div>
+            <div onClick={() => onSelectEvent(ev)} style={{ flex: 1, background: C.white, borderRadius: 16, padding: '14px 16px', border: `1.5px solid ${C.border}`, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+              <div style={{ fontFamily: C.fontH, fontWeight: 700, fontSize: 15, color: C.text, marginBottom: 4 }}>{ev.title}</div>
+              <div style={{ fontSize: 12, color: C.textSub, marginBottom: 8 }}>📅 {fmtDate(ev.date)} · {ev.time}</div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {[['✅', ev.rsvp.yes.length, '#E8F8F0', C.green], ['🤔', ev.rsvp.maybe.length, '#FFF6E8', C.orange], ['❌', ev.rsvp.no.length, '#FFEEEE', C.red]].map(([icon, n, bg, col]) => (
+                  <span key={icon} style={{ background: bg, color: col, borderRadius: 99, padding: '3px 9px', fontSize: 11, fontWeight: 700 }}>{icon} {n}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ padding: '12px 16px 24px', background: C.white, borderTop: `1px solid ${C.border}` }}>
+        <div onClick={onCreateEvent} style={{ background: group.color, borderRadius: C.r, padding: '15px', textAlign: 'center', fontFamily: C.fontH, fontWeight: 700, fontSize: 16, color: '#fff', cursor: 'pointer' }}>
+          + Nuovo evento
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── SCREEN: EVENT DETAIL ────────────────────────────────────────
+function EventScreen({ event, group, onBack, onDelete }) {
+  const [myRsvp, setMyRsvp] = React.useState('yes');
+  const [showWho, setShowWho] = React.useState(false);
+  const [comment, setComment] = React.useState('');
+  const [comments, setComments] = React.useState(event.comments);
+  const [mentioning, setMentioning] = React.useState(false);
+  const [things, setThings] = React.useState(event.things);
+  const [thingsType, setThingsType] = React.useState(event.thingsType || 'comune');
+  const [addingThing, setAddingThing] = React.useState(false);
+  const [newThing, setNewThing] = React.useState('');
+  const [assignees, setAssignees] = React.useState(Object.fromEntries(event.things.map(t => [t.id, t.assigneeId ? String(t.assigneeId) : ''])));
+  const [showDelete, setShowDelete] = React.useState(false);
+
+  const rsvpData = [
+    { key: 'yes', label: 'Ci sono', color: C.green, ids: event.rsvp.yes },
+    { key: 'maybe', label: 'Forse', color: C.orange, ids: event.rsvp.maybe },
+    { key: 'no', label: 'Non vengo', color: C.red, ids: event.rsvp.no },
+  ];
+
+  const handleCommentChange = e => {
+    setComment(e.target.value);
+    const last = e.target.value.split(' ').pop();
+    setMentioning(last.startsWith('@') && last.length > 1);
+  };
+  const addMention = name => {
+    const w = comment.split(' '); w[w.length-1] = '@'+name+' ';
+    setComment(w.join(' ')); setMentioning(false);
+  };
+  const submitComment = () => {
+    if (!comment.trim()) return;
+    setComments(p => [...p, { id: Date.now(), author: 1, text: comment.trim(), ts: 'adesso' }]);
+    setComment(''); setMentioning(false);
+  };
+  const addThing = () => {
+    if (!newThing.trim()) return;
+    const id = Date.now();
+    setThings(p => [...p, { id, label: newThing.trim() }]);
+    setAssignees(p => ({ ...p, [id]: '' }));
+    setNewThing(''); setAddingThing(false);
+  };
+
+  const Card = ({ children, style }) => (
+    <div style={{ background: C.white, borderRadius: 18, border: `1.5px solid ${C.border}`, overflow: 'hidden', ...style }}>{children}</div>
+  );
+  const CardHead = ({ title, action }) => (
+    <div style={{ padding: '14px 16px', borderBottom: `1px solid ${C.border}`, fontFamily: C.fontH, fontWeight: 700, fontSize: 13, color: C.text, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <span>{title}</span>{action}
+    </div>
+  );
+
+  return (
+    <div style={{ background: C.bg, height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      {/* Hero */}
+      <div style={{ background: C.white, padding: '8px 20px 18px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
+        <div style={{ marginBottom: 14 }}><BackBtn onBack={onBack} label={group.name}/></div>
+        <div style={{ display: 'flex', gap: 14 }}>
+          <div style={{ width: 64, height: 64, borderRadius: 20, background: group.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, flexShrink: 0 }}>{event.emoji}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: C.fontH, fontWeight: 800, fontSize: 20, color: C.text, letterSpacing: -0.3, lineHeight: 1.2 }}>{event.title}</div>
+            <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ fontSize: 13, color: C.textMid }}>📅 {fmtDate(event.date)} · {event.time}</div>
+              <div style={{ fontSize: 13, color: C.textMid }}>📍 {event.place}</div>
+              <div onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.meetingPoint)}`)}
+                style={{ fontSize: 13, color: C.blue, fontWeight: 600, cursor: 'pointer' }}>🚩 {event.meetingPoint} ↗</div>
+              {event.deadline && <div style={{ fontSize: 12, color: C.orange, fontWeight: 600 }}>⏰ Rispondi entro {fmtDate(event.deadline)}</div>}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', padding: '14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+        {/* RSVP */}
+        <Card>
+          <CardHead title="Partecipazione" action={
+            <div onClick={() => setShowWho(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, background: C.blueSoft, borderRadius: 99, padding: '4px 10px', cursor: 'pointer' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2.5" strokeLinecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+              <span style={{ fontSize: 11, color: C.blue, fontWeight: 700 }}>Vedi chi partecipa</span>
+            </div>
+          }/>
+          <div style={{ padding: '14px 14px 12px', display: 'flex', gap: 8 }}>
+            {rsvpData.map(r => (
+              <div key={r.key} onClick={() => setMyRsvp(r.key)}
+                style={{ flex: 1, borderRadius: 14, padding: '12px 4px', textAlign: 'center', cursor: 'pointer', background: myRsvp === r.key ? r.color : C.bg, border: `2px solid ${myRsvp === r.key ? r.color : C.border}`, transition: 'all 0.15s' }}>
+                <div style={{ fontSize: 20, fontWeight: 800, color: myRsvp === r.key ? '#fff' : C.text, fontFamily: C.fontH }}>{r.ids.length}</div>
+                <div style={{ fontSize: 10, color: myRsvp === r.key ? 'rgba(255,255,255,0.85)' : C.textSub, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3, marginTop: 3 }}>{r.label}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: '0 14px 12px', fontSize: 11, color: C.textSub, textAlign: 'center' }}>La tua risposta — tocca per cambiarla</div>
+        </Card>
+
+        {/* Chi porta cosa */}
+        <Card>
+          <CardHead title={
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span>Chi porta cosa</span>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {[['consigliata','Consigliata'],['comune','Comune']].map(([v, l]) => (
+                  <Pill key={v} label={l} active={thingsType===v} color={v==='comune' ? C.blue : C.orange} onClick={() => ME.isAdmin && setThingsType(v)}/>
+                ))}
+              </div>
+            </div>
+          } action={ME.isAdmin && (
+            <div onClick={() => { setAddingThing(p => !p); setNewThing(''); }}
+              style={{ width: 30, height: 30, borderRadius: 15, background: addingThing ? C.blue : C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: addingThing ? '#fff' : C.textSub, fontSize: 20, fontWeight: 700, flexShrink: 0, alignSelf: 'flex-start', transition: 'background 0.15s' }}>
+              {addingThing ? '×' : '+'}
+            </div>
+          )}/>
+          <div style={{ padding: '8px 0' }}>
+            {thingsType === 'consigliata' && <div style={{ margin: '0 14px 8px', background: '#FFF6E8', borderRadius: 10, padding: '8px 12px', fontSize: 12, color: C.orangeDark }}>📋 Lista consigliata — ognuno porta quello che vuole</div>}
+            {thingsType === 'comune' && <div style={{ margin: '0 14px 8px', background: C.blueSoft, borderRadius: 10, padding: '8px 12px', fontSize: 12, color: C.blue }}>🤝 Lista comune — ogni voce è assegnata a una persona</div>}
+            {things.length === 0 && !addingThing && <div style={{ padding: '8px 16px', fontSize: 13, color: C.textSub }}>Nessuna voce ancora.</div>}
+            {things.map((th, i) => {
+              const aId = assignees[th.id] || (th.assigneeId ? String(th.assigneeId) : '');
+              const assignee = aId ? memberById(aId) : null;
+              return (
+                <div key={th.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderTop: i>0 ? `1px solid ${C.border}` : 'none' }}>
+                  <div style={{ flex: 1, fontSize: 14, color: C.text }}>{th.label}</div>
+                  <select value={aId} onChange={e => setAssignees(p => ({ ...p, [th.id]: e.target.value }))}
+                    style={{ fontSize: 12, color: assignee ? C.blue : C.textSub, background: assignee ? C.blueSoft : C.bg, border: `1px solid ${C.border}`, borderRadius: 99, padding: '4px 10px', outline: 'none', cursor: 'pointer', fontFamily: C.fontB }}>
+                    <option value="">Non assegnato</option>
+                    {MEMBERS.map(m => <option key={m.id} value={String(m.id)}>{m.name}{m.id===ME.id?' (tu)':''}</option>)}
+                  </select>
+                  {ME.isAdmin && <div onClick={() => setThings(p => p.filter(t => t.id !== th.id))} style={{ color: C.textSub, cursor: 'pointer', fontSize: 18 }}>×</div>}
+                </div>
+              );
+            })}
+            {addingThing && (
+              <div style={{ display: 'flex', gap: 8, padding: '10px 14px', borderTop: things.length>0?`1px solid ${C.border}`:'none', alignItems: 'center' }}>
+                <input value={newThing} onChange={e => setNewThing(e.target.value)} onKeyDown={e => e.key==='Enter'&&addThing()} placeholder="Es. Pane, Acqua…" autoFocus
+                  style={{ flex: 1, background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: '9px 12px', fontSize: 13, color: C.text, outline: 'none' }}/>
+                <div onClick={addThing} style={{ width: 38, height: 38, borderRadius: 10, background: newThing.trim() ? C.blue : C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: newThing.trim() ? '#fff' : C.textSub, fontSize: 20, fontWeight: 700, flexShrink: 0, transition: 'background 0.15s' }}>+</div>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* Descrizione */}
+        {event.desc && <Card><div style={{ padding: '14px 16px', fontSize: 14, color: C.textMid, lineHeight: 1.6 }}>{event.desc}</div></Card>}
+
+        {/* Commenti */}
+        <Card>
+          <CardHead title={`Commenti · ${comments.length}`}/>
+          {comments.length===0 && <div style={{ padding: '14px 16px', fontSize: 13, color: C.textSub }}>Nessun commento ancora.</div>}
+          {comments.map((c, i) => {
+            const author = memberById(c.author); if (!author) return null;
+            return (
+              <div key={c.id} style={{ padding: '10px 14px', borderTop: i>0?`1px solid ${C.border}`:'none', display: 'flex', gap: 10 }}>
+                <Av member={author} size={28}/>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'baseline' }}>
+                    <span style={{ fontFamily: C.fontH, fontWeight: 700, fontSize: 13, color: C.text }}>{author.name}</span>
+                    <span style={{ fontSize: 11, color: C.textSub }}>{c.ts}</span>
+                  </div>
+                  <div style={{ marginTop: 3, fontSize: 14, color: C.textMid, lineHeight: 1.4 }}>
+                    {c.text.split(/(@\w+)/g).map((p, j) => p.startsWith('@') ? <span key={j} style={{ color: C.blue, fontWeight: 600 }}>{p}</span> : p)}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {mentioning && (
+            <div style={{ margin: '0 12px 6px', borderRadius: 10, overflow: 'hidden', border: `1.5px solid ${C.border}` }}>
+              {MEMBERS.filter(m => m.id!==ME.id).slice(0,4).map((m, i) => (
+                <div key={m.id} onClick={() => addMention(m.name)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: C.white, borderBottom: i<3?`1px solid ${C.border}`:'none', cursor: 'pointer' }}>
+                  <Av member={m} size={22}/><span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{m.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ padding: '10px 12px', borderTop: `1px solid ${C.border}`, display: 'flex', gap: 8, alignItems: 'center' }}>
+            <Av member={ME} size={26}/>
+            <div style={{ flex: 1, background: C.bg, borderRadius: 99, padding: '9px 16px', display: 'flex', alignItems: 'center' }}>
+              <input value={comment} onChange={handleCommentChange} placeholder="Commenta… usa @ per taggare"
+                style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontSize: 13, color: C.text, width: '100%' }}/>
+            </div>
+            <div onClick={submitComment} style={{ width: 34, height: 34, borderRadius: 17, background: comment.trim() ? C.blue : C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.15s', flexShrink: 0 }}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7H13M13 7L7 1.5M13 7L7 12.5" stroke={comment.trim()?'#fff':C.textSub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </div>
+          </div>
+        </Card>
+
+        {ME.isAdmin && (
+          <div onClick={() => setShowDelete(true)} style={{ borderRadius: C.r, border: `1.5px solid #FFCDD2`, background: '#FFF5F5', padding: '14px', textAlign: 'center', fontFamily: C.fontH, fontWeight: 700, fontSize: 14, color: C.red, cursor: 'pointer' }}>
+            🗑 Elimina evento
+          </div>
+        )}
+        <div style={{ height: 8 }}/>
+      </div>
+
+      {/* Who sheet */}
+      {showWho && (
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(28,28,30,0.4)', display: 'flex', alignItems: 'flex-end', zIndex: 60 }} onClick={() => setShowWho(false)}>
+          <div style={{ background: C.white, borderRadius: '24px 24px 0 0', padding: '20px 20px 36px', width: '100%', maxHeight: '70%', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: C.border, margin: '0 auto 20px' }}/>
+            <div style={{ fontFamily: C.fontH, fontWeight: 800, fontSize: 20, color: C.text, marginBottom: 18 }}>Chi partecipa</div>
+            {rsvpData.map(r => (
+              <div key={r.key} style={{ marginBottom: 18 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: 5, background: r.color }}/>
+                  <span style={{ fontFamily: C.fontH, fontWeight: 700, fontSize: 14, color: C.text }}>{r.label}</span>
+                  <span style={{ fontSize: 13, color: C.textSub }}>· {r.ids.length}</span>
+                </div>
+                {r.ids.length === 0
+                  ? <div style={{ fontSize: 13, color: C.textSub, paddingLeft: 18 }}>Nessuno</div>
+                  : r.ids.map(id => {
+                      const m = memberById(id); if (!m) return null;
+                      return (
+                        <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0 6px 18px' }}>
+                          <Av member={m} size={30}/><span style={{ fontSize: 14, color: C.text, fontWeight: m.id===ME.id?700:400 }}>{m.name}{m.id===ME.id?' · tu':''}</span>
+                        </div>
+                      );
+                    })
+                }
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {showDelete && (
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(28,28,30,0.5)', display: 'flex', alignItems: 'flex-end', zIndex: 100 }}>
+          <div style={{ background: C.white, borderRadius: '24px 24px 0 0', padding: '24px 20px 36px', width: '100%' }}>
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: C.border, margin: '0 auto 20px' }}/>
+            <div style={{ fontFamily: C.fontH, fontWeight: 800, fontSize: 20, color: C.text, marginBottom: 8 }}>Elimina evento?</div>
+            <div style={{ fontSize: 14, color: C.textMid, marginBottom: 24, lineHeight: 1.5 }}>Questa azione è irreversibile. Tutti perderanno l'accesso.</div>
+            <div onClick={onDelete} style={{ background: C.red, borderRadius: C.r, padding: '15px', textAlign: 'center', fontFamily: C.fontH, fontWeight: 700, fontSize: 16, color: '#fff', cursor: 'pointer', marginBottom: 10 }}>Sì, elimina</div>
+            <div onClick={() => setShowDelete(false)} style={{ borderRadius: C.r, padding: '15px', textAlign: 'center', fontFamily: C.fontH, fontWeight: 600, fontSize: 16, color: C.textMid, cursor: 'pointer', background: C.bg }}>Annulla</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── SCREEN: CREATE (WIZARD) ─────────────────────────────────────
+const WIZARD_STEPS = ['Dettagli', 'Luogo', 'Lista'];
+function CreateScreen({ group, onBack }) {
+  const [step, setStep] = React.useState(0);
+  const [vals, setVals] = React.useState({ emoji: '🎉', title: '', date: '', time: '', place: '', meetingPoint: '', deadline: '', desc: '', thingsType: 'comune' });
+  const [things, setThings] = React.useState([]);
+  const [newThing, setNewThing] = React.useState('');
+  const [assignees, setAssignees] = React.useState({});
+  const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
+
+  const set = k => e => setVals(p => ({ ...p, [k]: e.target.value }));
+  const addThing = () => {
+    if (!newThing.trim()) return;
+    const id = Date.now();
+    setThings(p => [...p, { id, label: newThing.trim() }]);
+    setNewThing('');
+  };
+
+  const inputSt = { width: '100%', background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 14, padding: '14px 16px', fontSize: 15, color: C.text, outline: 'none' };
+  const labelSt = { fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 6, display: 'block', fontFamily: C.fontH };
+
+  const steps = [
+    // Step 0: Dettagli
+    <div key="0" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div>
+        <label style={labelSt}>Immagine evento</label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div onClick={() => setShowEmojiPicker(p => !p)}
+            style={{ width: 64, height: 64, borderRadius: 20, background: group ? group.bg : C.blueSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, cursor: 'pointer', border: `2px dashed ${C.border}` }}>
+            {vals.emoji}
+          </div>
+          <span style={{ fontSize: 13, color: C.textSub }}>Tocca per cambiare emoji</span>
+        </div>
+        {showEmojiPicker && (
+          <div style={{ marginTop: 10, background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 16, padding: '12px', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            {EVENT_EMOJIS.map(e => (
+              <div key={e} onClick={() => { setVals(p => ({...p, emoji: e})); setShowEmojiPicker(false); }}
+                style={{ width: 42, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, borderRadius: 10, background: vals.emoji===e ? C.blueSoft : 'transparent', border: `1.5px solid ${vals.emoji===e ? C.blue : 'transparent'}`, cursor: 'pointer' }}>
+                {e}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div><label style={labelSt}>Titolo *</label><input value={vals.title} onChange={set('title')} placeholder="Es. Gita al mare" style={inputSt}/></div>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ flex: 2 }}><label style={labelSt}>Data *</label><input type="date" value={vals.date} onChange={set('date')} style={inputSt}/></div>
+        <div style={{ flex: 1 }}><label style={labelSt}>Ora</label><input type="time" value={vals.time} onChange={set('time')} style={inputSt}/></div>
+      </div>
+      <div><label style={labelSt}>Descrizione</label><textarea value={vals.desc} onChange={set('desc')} placeholder="Dettagli sull'evento…" rows={3} style={{ ...inputSt, resize: 'none' }}/></div>
+    </div>,
+
+    // Step 1: Luogo
+    <div key="1" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div>
+        <label style={labelSt}>Luogo</label>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input value={vals.place} onChange={set('place')} placeholder="Es. Spiaggia di Rimini" style={{ ...inputSt, flex: 1 }}/>
+          {vals.place.trim() && (
+            <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vals.place)}`} target="_blank" rel="noreferrer"
+              style={{ width: 50, height: 50, borderRadius: 14, background: C.blueSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', flexShrink: 0 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill={C.blue}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            </a>
+          )}
+        </div>
+      </div>
+      <div>
+        <label style={labelSt}>Punto di ritrovo</label>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input value={vals.meetingPoint} onChange={set('meetingPoint')} placeholder="Es. Parcheggio della stazione" style={{ ...inputSt, flex: 1 }}/>
+          {vals.meetingPoint.trim() && (
+            <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vals.meetingPoint)}`} target="_blank" rel="noreferrer"
+              style={{ width: 50, height: 50, borderRadius: 14, background: C.blueSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', flexShrink: 0 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill={C.blue}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            </a>
+          )}
+        </div>
+      </div>
+      <div>
+        <label style={labelSt}>Scadenza risposta</label>
+        <input type="date" value={vals.deadline} onChange={set('deadline')} style={inputSt}/>
+        <div style={{ fontSize: 12, color: C.textSub, marginTop: 5 }}>I partecipanti riceveranno un promemoria</div>
+      </div>
+    </div>,
+
+    // Step 2: Lista
+    <div key="2" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div>
+        <label style={labelSt}>Tipo di lista</label>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {[['consigliata','📋 Consigliata'],['comune','🤝 Comune']].map(([v,l]) => (
+            <div key={v} onClick={() => setVals(p => ({...p, thingsType: v}))}
+              style={{ flex: 1, borderRadius: 14, padding: '12px 8px', textAlign: 'center', background: vals.thingsType===v ? (v==='comune' ? C.blueSoft : '#FFF6E8') : C.bg, border: `2px solid ${vals.thingsType===v ? (v==='comune' ? C.blue : C.orange) : C.border}`, cursor: 'pointer', transition: 'all 0.15s' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, fontFamily: C.fontH, color: vals.thingsType===v ? (v==='comune' ? C.blue : C.orangeDark) : C.textSub }}>{l}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize: 12, color: C.textSub, marginTop: 8 }}>
+          {vals.thingsType === 'consigliata' ? '📋 Lista suggerita — ognuno porta quello che vuole' : '🤝 Ogni voce viene assegnata a una persona specifica'}
+        </div>
+      </div>
+      <div>
+        <label style={labelSt}>Aggiungi voci</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {things.map(th => (
+            <div key={th.id} style={{ background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ flex: 1, fontSize: 14, color: C.text }}>{th.label}</span>
+              <select value={assignees[th.id]||''} onChange={e => setAssignees(p => ({...p, [th.id]: e.target.value}))}
+                style={{ fontSize: 12, color: C.textMid, background: C.bg, border: 'none', borderRadius: 99, padding: '3px 10px', outline: 'none', cursor: 'pointer', fontFamily: C.fontB }}>
+                <option value="">Nessuno</option>
+                {MEMBERS.map(m => <option key={m.id} value={m.id}>{m.name}{m.id===ME.id?' (tu)':''}</option>)}
+              </select>
+              <div onClick={() => setThings(p => p.filter(t => t.id!==th.id))} style={{ color: C.textSub, cursor: 'pointer', fontSize: 18 }}>×</div>
+            </div>
+          ))}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input value={newThing} onChange={e => setNewThing(e.target.value)} onKeyDown={e => e.key==='Enter'&&addThing()} placeholder="Es. Pane, Acqua, Pallone…" style={{ ...inputSt, flex: 1 }}/>
+            <div onClick={addThing} style={{ width: 50, height: 50, borderRadius: 14, background: newThing.trim() ? C.blue : C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, transition: 'background 0.15s', fontSize: 24, color: newThing.trim() ? '#fff' : C.textSub, fontWeight: 700 }}>+</div>
+          </div>
+        </div>
+      </div>
+    </div>,
+  ];
+
+  return (
+    <div style={{ background: C.bg, height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* Nav */}
+      <div style={{ background: C.white, padding: '8px 20px 16px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div onClick={() => step === 0 ? onBack() : setStep(p => p-1)} style={{ color: C.blue, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: C.fontH }}>
+            {step === 0 ? 'Annulla' : '← Indietro'}
+          </div>
+          <div style={{ fontFamily: C.fontH, fontWeight: 700, fontSize: 15, color: C.text }}>Nuovo evento</div>
+          <div style={{ fontSize: 13, color: C.textSub }}>{step+1}/{WIZARD_STEPS.length}</div>
+        </div>
+        {/* Progress */}
+        <div style={{ display: 'flex', gap: 6 }}>
+          {WIZARD_STEPS.map((s, i) => (
+            <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= step ? C.blue : C.border, transition: 'background 0.3s' }}/>
+          ))}
+        </div>
+        <div style={{ fontFamily: C.fontH, fontWeight: 700, fontSize: 20, color: C.text, marginTop: 14 }}>{WIZARD_STEPS[step]}</div>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', padding: '18px 16px' }}>
+        {steps[step]}
+        <div style={{ height: 20 }}/>
+      </div>
+
+      <div style={{ padding: '12px 16px 28px', background: C.white, borderTop: `1px solid ${C.border}` }}>
+        {step < WIZARD_STEPS.length - 1
+          ? <div onClick={() => setStep(p => p+1)} style={{ background: C.blue, borderRadius: C.r, padding: '16px', textAlign: 'center', fontFamily: C.fontH, fontWeight: 700, fontSize: 16, color: '#fff', cursor: 'pointer' }}>Avanti →</div>
+          : <div onClick={onBack} style={{ background: group ? group.color : C.blue, borderRadius: C.r, padding: '16px', textAlign: 'center', fontFamily: C.fontH, fontWeight: 700, fontSize: 16, color: '#fff', cursor: 'pointer' }}>Crea evento 🎉</div>
+        }
+      </div>
+    </div>
+  );
+}
+
+// ─── SCREEN: NOTIFICATIONS ───────────────────────────────────────
+function NotificationsScreen({ onMarkAll }) {
+  const [notifs, setNotifs] = React.useState(NOTIFICATIONS);
+  const unread = notifs.filter(n => !n.read).length;
+  const TYPE_ICON = { rsvp: '👋', comment: '💬', new_event: '📅', deadline: '⏰' };
+
+  return (
+    <div style={{ background: C.bg, height: '100%', display: 'flex', flexDirection: 'column', paddingBottom: 80 }}>
+      <div style={{ background: C.white, padding: '8px 20px 16px', borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ fontFamily: C.fontH, fontWeight: 800, fontSize: 24, color: C.text }}>Avvisi</div>
+          {unread > 0 && <div onClick={() => setNotifs(p => p.map(n => ({...n, read: true})))} style={{ fontSize: 13, color: C.blue, fontWeight: 600, cursor: 'pointer' }}>Segna tutti letti</div>}
+        </div>
+        {unread > 0 && <div style={{ fontSize: 13, color: C.textSub, marginTop: 4 }}>{unread} non lett{unread===1?'o':'i'}</div>}
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {['Non letti', 'Precedenti'].map(group => {
+          const items = notifs.filter(n => group === 'Non letti' ? !n.read : n.read);
+          if (items.length === 0) return null;
+          return (
+            <div key={group}>
+              <div style={{ fontFamily: C.fontH, fontWeight: 700, fontSize: 13, color: C.textSub, marginBottom: 8, marginTop: 4 }}>{group}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {items.map(n => {
+                  const actor = n.actor ? memberById(n.actor) : null;
+                  return (
+                    <div key={n.id} onClick={() => setNotifs(p => p.map(x => x.id===n.id ? {...x, read: true} : x))}
+                      style={{ background: n.read ? C.white : C.blueSoft, borderRadius: 14, padding: '12px 14px', border: `1.5px solid ${n.read ? C.border : '#C7D9FF'}`, cursor: 'pointer', display: 'flex', gap: 12 }}>
+                      <div style={{ width: 44, height: 44, borderRadius: 22, background: C.white, border: `1.5px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
+                        {TYPE_ICON[n.type]}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, color: C.text, lineHeight: 1.4 }}>
+                          {actor && <span style={{ fontWeight: 700 }}>{actor.name} </span>}
+                          <span style={{ color: C.textMid }}>{n.text}</span>
+                        </div>
+                        <div style={{ fontSize: 12, color: n.read ? C.textSub : C.blue, fontWeight: 600, marginTop: 4 }}>{n.event}</div>
+                        <div style={{ fontSize: 11, color: C.textSub, marginTop: 2 }}>{n.ts}</div>
+                      </div>
+                      {!n.read && <div style={{ width: 8, height: 8, borderRadius: 4, background: C.blue, flexShrink: 0, marginTop: 4 }}/>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── SCREEN: PROFILE ─────────────────────────────────────────────
+function ProfileScreen() {
+  const allEvents = Object.values(EVENTS_DATA).flat();
+  return (
+    <div style={{ background: C.bg, height: '100%', display: 'flex', flexDirection: 'column', paddingBottom: 80 }}>
+      {/* Header */}
+      <div style={{ background: C.white, padding: '8px 20px 20px', borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ fontFamily: C.fontH, fontWeight: 800, fontSize: 24, color: C.text, marginBottom: 18 }}>Profilo</div>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <div style={{ width: 72, height: 72, borderRadius: 22, background: C.blue, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: C.fontH, fontWeight: 800, fontSize: 28, color: '#fff' }}>M</div>
+          <div>
+            <div style={{ fontFamily: C.fontH, fontWeight: 800, fontSize: 20, color: C.text }}>{ME.name} {ME.surname}</div>
+            <div style={{ fontSize: 13, color: C.textSub, marginTop: 3 }}>marco.rossi@email.com</div>
+            <div style={{ marginTop: 6, display: 'flex', gap: 6 }}>
+              <span style={{ background: C.text, color: '#fff', borderRadius: 6, padding: '2px 8px', fontSize: 10, fontFamily: C.fontH, fontWeight: 700 }}>ADMIN</span>
+              <span style={{ background: C.blueSoft, color: C.blue, borderRadius: 6, padding: '2px 8px', fontSize: 10, fontFamily: C.fontH, fontWeight: 700 }}>Da {ME.joined}</span>
+            </div>
+          </div>
+        </div>
+        {/* Stats */}
+        <div style={{ display: 'flex', gap: 0, marginTop: 18, background: C.bg, borderRadius: 14, overflow: 'hidden' }}>
+          {[['3', 'Gruppi'], ['6', 'Eventi'], ['32', 'Ci sono']].map(([n, l], i) => (
+            <div key={l} style={{ flex: 1, textAlign: 'center', padding: '12px 0', borderLeft: i > 0 ? `1px solid ${C.border}` : 'none' }}>
+              <div style={{ fontFamily: C.fontH, fontWeight: 800, fontSize: 22, color: C.blue }}>{n}</div>
+              <div style={{ fontSize: 12, color: C.textSub, marginTop: 2 }}>{l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+        {/* Gruppi */}
+        <div style={{ fontFamily: C.fontH, fontWeight: 700, fontSize: 16, color: C.text, marginBottom: 12 }}>I miei gruppi</div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+          {GROUPS.map(g => (
+            <div key={g.id} style={{ background: C.white, borderRadius: 14, padding: '12px', textAlign: 'center', border: `1.5px solid ${C.border}`, flex: 1 }}>
+              <div style={{ fontSize: 24 }}>{g.emoji}</div>
+              <div style={{ fontFamily: C.fontH, fontWeight: 700, fontSize: 11, color: C.text, marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.name}</div>
+              <div style={{ fontSize: 11, color: C.textSub }}>{g.members}p</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Events grid */}
+        <div style={{ fontFamily: C.fontH, fontWeight: 700, fontSize: 16, color: C.text, marginBottom: 12 }}>Attività recente</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          {allEvents.map(ev => (
+            <div key={ev.id} style={{ background: C.white, borderRadius: 14, padding: '14px 12px', border: `1.5px solid ${C.border}` }}>
+              <div style={{ fontSize: 28, marginBottom: 6 }}>{ev.emoji}</div>
+              <div style={{ fontFamily: C.fontH, fontWeight: 700, fontSize: 13, color: C.text, lineHeight: 1.2 }}>{ev.title}</div>
+              <div style={{ fontSize: 11, color: C.textSub, marginTop: 4 }}>{fmtDate(ev.date)}</div>
+              <div style={{ fontSize: 11, color: C.green, fontWeight: 700, marginTop: 4 }}>✅ {ev.rsvp.yes.length} partecipanti</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Settings */}
+        <div style={{ fontFamily: C.fontH, fontWeight: 700, fontSize: 16, color: C.text, margin: '20px 0 12px' }}>Impostazioni</div>
+        <div style={{ background: C.white, borderRadius: 16, border: `1.5px solid ${C.border}`, overflow: 'hidden' }}>
+          {['Modifica profilo', 'Notifiche', 'Privacy', 'Esci'].map((item, i) => (
+            <div key={item} style={{ padding: '15px 16px', borderTop: i > 0 ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+              <span style={{ fontSize: 15, color: item === 'Esci' ? C.red : C.text, fontWeight: item === 'Esci' ? 600 : 400 }}>{item}</span>
+              {item !== 'Esci' && <svg width="7" height="12" viewBox="0 0 7 12"><path d="M1 1L6 6L1 11" stroke={C.textSub} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+            </div>
+          ))}
+        </div>
+        <div style={{ height: 16 }}/>
+      </div>
+    </div>
+  );
+}
+
+// ─── APP ─────────────────────────────────────────────────────────
+function App() {
+  const [phase, setPhase] = React.useState('onboarding'); // onboarding | login | app
+  const [tab, setTab] = React.useState('home');
+  const [screen, setScreen] = React.useState('home');
+  const [group, setGroup] = React.useState(null);
+  const [event, setEvent] = React.useState(null);
+  const unreadCount = NOTIFICATIONS.filter(n => !n.read).length;
+
+  const handleTab = t => {
+    setTab(t);
+    setScreen(t === 'home' ? 'home' : t === 'notif' ? 'notif' : 'profile');
+  };
+
+  const showTabBar = ['home', 'notif', 'profile'].includes(screen);
+
+  if (phase === 'onboarding') return <IOSDevice dark={false}><OnboardingScreen onDone={() => setPhase('login')}/></IOSDevice>;
+  if (phase === 'login') return <IOSDevice dark={false}><LoginScreen onLogin={() => setPhase('app')}/></IOSDevice>;
+
+  return (
+    <IOSDevice dark={false}>
+      <div style={{ height: '100%', position: 'relative' }}>
+        {screen === 'home'        && <HomeScreen onSelectGroup={g => { setGroup(g); setScreen('groupEvents'); }}/>}
+        {screen === 'groupEvents' && group && <GroupEventsScreen group={group} onBack={() => setScreen('home')} onSelectEvent={ev => { setEvent(ev); setScreen('event'); }} onCreateEvent={() => setScreen('create')}/>}
+        {screen === 'event'       && event && group && <EventScreen event={event} group={group} onBack={() => setScreen('groupEvents')} onDelete={() => { setScreen('groupEvents'); setEvent(null); }}/>}
+        {screen === 'create'      && <CreateScreen group={group} onBack={() => setScreen(group ? 'groupEvents' : 'home')}/>}
+        {screen === 'notif'       && <NotificationsScreen/>}
+        {screen === 'profile'     && <ProfileScreen/>}
+        {showTabBar && <TabBar tab={tab} onTab={handleTab} notifCount={unreadCount}/>}
+      </div>
+    </IOSDevice>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

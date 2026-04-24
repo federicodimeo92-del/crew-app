@@ -318,6 +318,24 @@
     .chevron-r { color:var(--text-3); flex-shrink:0; }
     .section-subtext { font-size:12px; color:var(--text-3); margin-top:5px; }
     .maps-btn { width:50px; height:50px; border-radius:14px; background:var(--orange-soft); display:flex; align-items:center; justify-content:center; text-decoration:none; flex-shrink:0; }
+
+    .items-scroll-box { max-height: 250px; overflow-y: auto; }
+    .open-items-btn { display:flex; align-items:center; gap:4px; background:var(--surface-2); border-radius:99px; padding:5px 11px; cursor:pointer; border:none; }
+    .open-items-btn span { font-size:11px; color:var(--text-2); font-weight:700; }
+    .item-full-row { display:flex; align-items:center; gap:10px; padding:12px 16px; background:var(--surface); border-radius:var(--r-sm); border:1.5px solid var(--border); margin-bottom:8px; }
+    .item-delete-btn { width:28px; height:28px; border-radius:50%; border:none; background:var(--surface-2); color:var(--text-3); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+    .member-card { display:flex; align-items:center; gap:12px; padding:12px; background:var(--surface); border-radius:var(--r-sm); border:1.5px solid var(--border); margin-bottom:8px; }
+    .member-card img { width:44px; height:44px; border-radius:14px; object-fit:cover; flex-shrink:0; }
+    .countdown-badge { display:inline-block; margin-top:8px; background:var(--orange-soft); color:var(--orange-dark); border-radius:99px; padding:4px 12px; font-size:12px; font-weight:700; font-family:var(--font-h); }
+    .countdown-badge.today { background:#dcfce7; color:#16a34a; }
+    .countdown-badge.tomorrow { background:#fef3c7; color:#92400e; }
+    .countdown-badge.past { background:var(--surface-2); color:var(--text-3); }
+    .views-row { display:flex; align-items:center; gap:8px; margin-top:10px; }
+    .views-avatars { display:flex; }
+    .views-avatars img { width:22px; height:22px; border-radius:50%; object-fit:cover; border:2px solid var(--surface); margin-left:-6px; }
+    .views-avatars img:first-child { margin-left:0; }
+    .views-label { font-size:12px; color:var(--text-3); }
+    .past-tag { background:var(--surface-2); color:var(--text-3); border-radius:99px; padding:2px 8px; font-size:10px; font-weight:700; font-family:var(--font-h); }
   </style>
 </head>
 <body>
@@ -435,6 +453,10 @@
       </div>
       <div class="view" id="group-body" style="flex:1;">
         <div id="group-invite-banner"></div>
+        <div style="display:flex;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:14px;">
+          <div style="flex:1;text-align:center;padding:8px;border-radius:8px;font-family:var(--font-h);font-weight:700;font-size:13px;cursor:pointer;background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.08);" id="gtab-prossimi" onclick="App.showGroupTab('prossimi')">Prossimi</div>
+          <div style="flex:1;text-align:center;padding:8px;border-radius:8px;font-family:var(--font-h);font-weight:700;font-size:13px;cursor:pointer;color:var(--text-3);" id="gtab-passati" onclick="App.showGroupTab('passati')">Passati</div>
+        </div>
         <div id="events-list"></div>
       </div>
       <div style="padding:12px 16px calc(24px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--border);">
@@ -446,6 +468,7 @@
     <div id="view-event" class="view-full hidden" style="display:flex;flex-direction:column;">
       <div class="event-header">
         <div style="margin-bottom:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
           <span id="event-back-btn" style="display:inline-flex;align-items:center;gap:4px;color:var(--orange);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-h)">
             <svg width="8" height="13" viewBox="0 0 8 13"><path d="M7 1L1.5 6.5L7 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span id="event-back-label">Gruppo</span>
@@ -454,6 +477,23 @@
         <div style="display:flex;gap:14px;" id="event-hero-row"></div>
       </div>
       <div class="view" id="event-body" style="flex:1;"></div>
+    </div>
+
+
+    <!-- ITEMS PAGE -->
+    <div id="view-items" class="hidden" style="display:flex;flex-direction:column;height:100%;background:var(--bg);">
+      <div style="background:var(--surface);padding:8px 20px 18px;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <span id="items-back-btn" style="display:inline-flex;align-items:center;gap:4px;color:var(--orange);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-h);">
+          <svg width="8" height="13" viewBox="0 0 8 13"><path d="M7 1L1.5 6.5L7 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Evento
+        </span>
+        <div style="font-family:var(--font-h);font-weight:800;font-size:22px;color:var(--text);margin-top:14px;">&#127956; Cosa portare</div>
+        <div style="display:flex;gap:6px;margin-top:10px;" id="items-page-tipo"></div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:16px;" id="items-page-body"></div>
+      <div style="display:flex;gap:8px;padding:12px 16px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;" id="items-add-row">
+        <input type="text" id="items-page-input" placeholder="Aggiungi una voce..." style="flex:1;padding:10px 12px;">
+        <button class="btn btn-primary btn-sm" onclick="App.addItemFromPage()">+</button>
+      </div>
     </div>
 
     <!-- WIZARD -->
@@ -588,6 +628,19 @@
   </div>
 </div>
 
+
+<!-- MODAL: Membri -->
+<div class="modal-overlay hidden" id="modal-members">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 class="modal-title">Membri</h2>
+      <button class="modal-close" onclick="App.closeModal('modal-members')"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div id="members-list"></div>
+  </div>
+</div>
+
 <div id="toast-container"></div>
 
 <script>
@@ -665,6 +718,7 @@ async function getUserPrefs(uid) {
 // UTILS
 // ============================================================
 function uid8() { return 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'.split('').sort(()=>Math.random()-.5).join('').slice(0,8); }
+function dName(doc){return doc?.nickname||doc?.displayName||'Utente';}
 function $id(id) { return document.getElementById(id); }
 function show(id) { $id(id)?.classList.remove('hidden'); }
 function hide(id) { $id(id)?.classList.add('hidden'); }
@@ -1276,14 +1330,26 @@ function handleMentionInput(e) {
   const val = e.target.value;
   const at = val.lastIndexOf('@');
   if (at < 0) { hide('mention-dropdown'); return; }
-  const q = val.slice(at+1).toLowerCase();
-  if (!q) { hide('mention-dropdown'); return; }
-  const matches = S.groupMembers.filter(m=>m.uid!==S.user?.uid&&m.displayName?.toLowerCase().includes(q));
-  const dd = $id('mention-dropdown'); if(!dd) return;
+  const q = val.slice(at + 1).toLowerCase();
+  // Mostra tutti i membri appena digiti @, filtra man mano che scrivi
+  const matches = S.groupMembers.filter(m =>
+    m.uid !== S.user?.uid && (!q || m.displayName?.toLowerCase().includes(q))
+  );
+  const dd = $id('mention-dropdown'); if (!dd) return;
   if (!matches.length) { hide('mention-dropdown'); return; }
-  dd.innerHTML = matches.map(m=>`<div class="mention-opt" onclick="App.insertMention('${escAttr(m.displayName||'')}')">
-    <img src="${av(m.photoURL,m.displayName)}" alt=""> ${escHtml(m.displayName||'')}
-  </div>`).join('');
+  dd.innerHTML = matches.map(m => {
+    // Evidenzia la parte che corrisponde alla query
+    const name = m.displayName || '';
+    const highlighted = q
+      ? name.replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi'),
+          '<strong style="color:var(--orange);">$1</strong>')
+      : escHtml(name);
+    return `<div class="mention-opt" onclick="App.insertMention('${escAttr(name)}')">
+      <img src="${av(m.photoURL, name)}" alt="">
+      <span>${highlighted}</span>
+      ${!q ? '<span style="font-size:11px;color:var(--text-3);margin-left:auto;">↵</span>' : ''}
+    </div>`;
+  }).join('');
   show('mention-dropdown');
 }
 
@@ -1760,6 +1826,115 @@ const App = {
     navigator.clipboard.writeText(url).then(()=>toast('📋 Link copiato!')).catch(()=>prompt('Copia il link:',url));
   },
 
+
+  showGroupTab(tab) {
+    S.currentGroupTab = tab;
+    loadGroupEvents(S.currentGroupId, tab);
+  },
+
+  openEditEvent() {
+    if (!S.currentEventData) return;
+    S.wizard = {
+      editMode: true, eventId: S.currentEventData.id, step: 0,
+      emoji: S.currentEventData.emoji || '🎉',
+      title: S.currentEventData.title || '',
+      date: S.currentEventData.date || '',
+      time: S.currentEventData.time || '',
+      desc: S.currentEventData.description || '',
+      place: S.currentEventData.place || '',
+      meetingPoint: S.currentEventData.meetingPoint || '',
+      deadline: S.currentEventData.deadline || '',
+      thingsType: S.currentEventData.thingsType || 'comune',
+      things: [], showEmojiPicker: false
+    };
+    goTo('create');
+  },
+
+  async saveEditEvent() {
+    const w = S.wizard;
+    if (!w.title.trim() || !w.date) { toast('Titolo e data obbligatori'); return; }
+    await db.collection('events').doc(w.eventId).update({
+      emoji: w.emoji, title: w.title.trim(), date: w.date,
+      time: w.time || null, description: w.desc.trim() || null,
+      place: w.place.trim() || null, meetingPoint: w.meetingPoint.trim() || null,
+      deadline: w.deadline || null, thingsType: w.thingsType
+    });
+    Object.assign(S.currentEventData, { emoji:w.emoji, title:w.title.trim(), date:w.date, time:w.time||null, description:w.desc.trim()||null, place:w.place.trim()||null, meetingPoint:w.meetingPoint.trim()||null, deadline:w.deadline||null, thingsType:w.thingsType });
+    toast('✅ Evento aggiornato!');
+    goTo('event', w.eventId);
+  },
+
+  async addItemFromPage() {
+    const inp = $id('items-page-input');
+    const text = inp?.value?.trim();
+    if (!text || !S.currentEventId) return;
+    await db.collection('events').doc(S.currentEventId).collection('items').add({
+      text, assignedTo:null, assignedName:null, assignedPhoto:null,
+      createdBy: S.user.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    inp.value = '';
+    const eSnap = await db.collection('events').doc(S.currentEventId).get();
+    const ev = eSnap.data();
+    const gSnap = await db.collection('groups').doc(ev.groupId).get();
+    for (const m of (gSnap.data().members || [])) {
+      if (m.uid !== S.user.uid) {
+        await notify({ toUserId: m.uid, type:'items', eventId: S.currentEventId, eventTitle: ev.title,
+          text: dName(S.userDoc) + ' ha aggiunto "' + text + '" alla lista di "' + ev.title + '"' });
+      }
+    }
+  },
+
+  async deleteItem(itemId) {
+    if (!S.currentEventId) return;
+    await db.collection('events').doc(S.currentEventId).collection('items').doc(itemId).delete();
+  },
+
+  async changeTipoFromPage(tipo) {
+    if (!S.currentEventId || S.userDoc?.role !== 'admin') return;
+    S.currentEventData.thingsType = tipo;
+    await db.collection('events').doc(S.currentEventId).update({ thingsType: tipo });
+    loadItemsPage();
+  },
+
+  async openMembers() {
+    show('modal-members');
+    const c = $id('members-list');
+    c.innerHTML = '<div style="display:flex;justify-content:center;padding:24px"><div class="spinner"></div></div>';
+    const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
+    const members = gSnap.data().members || [];
+    const isAdmin = S.userDoc?.role === 'admin';
+    c.innerHTML = members.map(m =>
+      '<div class="member-card">' +
+      '<img src="' + av(m.photoURL, m.displayName) + '" alt="">' +
+      '<div style="flex:1;"><div style="font-family:var(--font-h);font-weight:700;font-size:15px;color:var(--text);">' + escHtml(m.displayName||'') + '</div>' +
+      '<div style="font-size:12px;color:var(--text-3);margin-top:2px;">' + (m.uid===gSnap.data().createdBy?'Admin':'Membro') + '</div></div>' +
+      (isAdmin && m.uid !== S.user.uid ? '<button class="btn btn-danger btn-xs" onclick="App.removeMember('' + m.uid + '','' + escAttr(m.displayName||'') + '')">Rimuovi</button>' : '') +
+      '</div>'
+    ).join('');
+  },
+
+  async removeMember(uid, name) {
+    if (!confirm('Rimuovere ' + name + ' dal gruppo?')) return;
+    const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
+    const members = gSnap.data().members.filter(m => m.uid !== uid);
+    await db.collection('groups').doc(S.currentGroupId).update({ members });
+    await db.collection('users').doc(uid).update({ groups: firebase.firestore.FieldValue.arrayRemove(S.currentGroupId) });
+    toast(name + ' rimosso');
+    this.openMembers();
+    loadGroup(S.currentGroupId);
+  },
+
+  async leaveGroup() {
+    if (!confirm('Vuoi lasciare questo gruppo?')) return;
+    const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
+    const members = gSnap.data().members.filter(m => m.uid !== S.user.uid);
+    await db.collection('groups').doc(S.currentGroupId).update({ members });
+    await db.collection('users').doc(S.user.uid).update({ groups: firebase.firestore.FieldValue.arrayRemove(S.currentGroupId) });
+    S.userDoc.groups = (S.userDoc.groups || []).filter(g => g !== S.currentGroupId);
+    toast('Hai lasciato il gruppo');
+    goTo('home');
+  },
+
   copyLink(url) {
     navigator.clipboard.writeText(url).then(()=>toast('📋 Link copiato!')).catch(()=>prompt('Copia il link:',url));
   },
@@ -1890,6 +2065,128 @@ document.querySelectorAll('.modal-overlay').forEach(ov => {
   ov.addEventListener('click', e => { if(e.target===ov) ov.classList.add('hidden'); });
 });
 $id('sheet-who').addEventListener('click', e => { if(e.target===$id('sheet-who')) App.closeWho(); });
+
+// ── COUNTDOWN ──────────────────────────────────────────────
+function countdownLabel(dateStr) {
+  if (!dateStr) return { label: '', cls: '' };
+  const today = new Date(); today.setHours(0,0,0,0);
+  const ev = new Date(dateStr + 'T00:00:00'); ev.setHours(0,0,0,0);
+  const diff = Math.round((ev - today) / 86400000);
+  if (diff < 0) return { label: Math.abs(diff) + ' giorni fa', cls: 'past' };
+  if (diff === 0) return { label: 'Oggi! 🎉', cls: 'today' };
+  if (diff === 1) return { label: 'Domani! 📅', cls: 'tomorrow' };
+  return { label: 'Mancano ' + diff + ' giorni', cls: '' };
+}
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+function tomorrowStr() { const d = new Date(); d.setDate(d.getDate()+1); return d.toISOString().split('T')[0]; }
+
+// ── DAY-BEFORE REMINDERS ──────────────────────────────────
+async function checkDayBeforeReminders() {
+  if (!S.userDoc?.groups?.length) return;
+  const checkKey = 'crew_reminder_' + todayStr();
+  if (localStorage.getItem(checkKey)) return;
+  const tom = tomorrowStr();
+  try {
+    const evSnap = await db.collection('events').where('groupId','in',S.userDoc.groups.slice(0,10)).where('date','==',tom).get();
+    for (const evDoc of evSnap.docs) {
+      const ev = evDoc.data();
+      const iSnap = await db.collection('events').doc(evDoc.id).collection('items').where('assignedTo','==',S.user.uid).get();
+      for (const iDoc of iSnap.docs) {
+        const remKey = 'crew_rem_sent_' + evDoc.id + '_' + iDoc.id;
+        if (localStorage.getItem(remKey)) continue;
+        await notify({ toUserId: S.user.uid, type: 'reminder_item', eventId: evDoc.id, eventTitle: ev.title,
+          itemText: iDoc.data().text, eventDate: ev.date,
+          text: 'Domani è "' + ev.title + '"! Ricorda di portare: "' + iDoc.data().text + '"' });
+        localStorage.setItem(remKey, '1');
+      }
+    }
+    localStorage.setItem(checkKey, '1');
+  } catch(e) {}
+}
+
+// ── GROUP TABS (prossimi / passati) ──────────────────────
+S._eventsUnsub = null;
+function loadGroupEvents(gid, tab) {
+  if (S._eventsUnsub) { S._eventsUnsub(); S._eventsUnsub = null; }
+  const gtabP = $id('gtab-prossimi'), gtabA = $id('gtab-passati');
+  if (gtabP) { gtabP.style.background = tab==='prossimi' ? 'var(--surface)' : 'transparent'; gtabP.style.color = tab==='prossimi' ? 'var(--text)' : 'var(--text-3)'; gtabP.style.boxShadow = tab==='prossimi' ? '0 1px 4px rgba(0,0,0,.08)' : 'none'; }
+  if (gtabA) { gtabA.style.background = tab==='passati' ? 'var(--surface)' : 'transparent'; gtabA.style.color = tab==='passati' ? 'var(--text)' : 'var(--text-3)'; gtabA.style.boxShadow = tab==='passati' ? '0 1px 4px rgba(0,0,0,.08)' : 'none'; }
+  const ec = $id('events-list');
+  ec.innerHTML = '<div style="display:flex;justify-content:center;padding:24px"><div class="spinner"></div></div>';
+  let q;
+  if (tab === 'prossimi') q = db.collection('events').where('groupId','==',gid).where('date','>=',todayStr()).orderBy('date','asc');
+  else q = db.collection('events').where('groupId','==',gid).where('date','<',todayStr()).orderBy('date','desc');
+  const unsub = q.onSnapshot(snap => {
+    if (snap.empty) { ec.innerHTML = '<div class="empty-state"><div class="empty-emoji">' + (tab==='prossimi'?'🎉':'📦') + '</div><div class="empty-title">' + (tab==='prossimi'?'Nessun evento in programma':'Nessun evento passato') + '</div></div>'; return; }
+    ec.innerHTML = '';
+    const evs = []; snap.forEach(doc => evs.push({id:doc.id,...doc.data()}));
+    evs.forEach((ev,i) => { ec.innerHTML += renderTimelineEventNew(ev, i, evs.length, tab==='passati'); });
+  });
+  S._eventsUnsub = unsub;
+}
+
+function renderTimelineEventNew(ev, i, total, isPast) {
+  const cd = countdownLabel(ev.date);
+  return '<div class="timeline-item">' +
+    '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:42px;">' +
+    '<div class="timeline-dot" style="' + (isPast?'opacity:.6;':'') + '">' + escHtml(ev.emoji||'🎉') + '</div>' +
+    (i<total-1?'<div class="timeline-line"></div>':'') + '</div>' +
+    '<div class="timeline-card" onclick="goTo('event','' + ev.id + '')">' +
+    '<div class="timeline-title">' + escHtml(ev.title) + '</div>' +
+    '<div class="timeline-meta">📅 ' + ital(ev.date) + (ev.time?' · '+ev.time:'') + '</div>' +
+    '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">' +
+    '<div class="rsvp-pill yes">✅ ' + (ev.rsvp_yes_ids||[]).length + '</div>' +
+    '<div class="rsvp-pill maybe">🤔 ' + (ev.rsvp_maybe_ids||[]).length + '</div>' +
+    '<div class="rsvp-pill no">❌ ' + (ev.rsvp_no_ids||[]).length + '</div>' +
+    (isPast?'<span class="past-tag">Passato</span>':(cd.label?'<span style="font-size:11px;color:var(--text-3);">'+cd.label+'</span>':'')) +
+    '</div></div></div>';
+}
+
+// ── VIEWS (chi ha visto l'evento) ──────────────────────────
+function renderViews(views) {
+  const el = $id('views-row'); if (!el) return;
+  if (!views.length) { el.innerHTML = '<span class="views-label">👁 Nessuna visualizzazione</span>'; return; }
+  el.innerHTML = '<div class="views-avatars">' +
+    views.slice(0,4).map(v => '<img src="' + av(v.photoURL, v.name) + '" alt="' + escAttr(v.name||'') + '" title="' + escAttr(v.name||'') + '">').join('') +
+    '</div><span class="views-label">Visto da ' +
+    views.slice(0,2).map(v => escHtml(v.name||'')).join(', ') +
+    (views.length>2?' e altri '+(views.length-2):'') + '</span>';
+}
+
+// ── ITEMS PAGE ───────────────────────────────────────────
+function loadItemsPage() {
+  $id('app-header').style.display = 'none';
+  $id('tab-bar').style.display = 'none';
+  const ev = S.currentEventData; if (!ev) return;
+  const tipo = ev.thingsType || 'comune';
+  const tipoEl = $id('items-page-tipo');
+  if (tipoEl) tipoEl.innerHTML = ['consigliata','comune'].map(v =>
+    '<div onclick="' + (S.userDoc?.role==='admin' ? 'App.changeTipoFromPage(''+v+'')' : 'void(0)') + '" style="border-radius:99px;padding:4px 12px;font-size:11px;font-weight:700;font-family:var(--font-h);cursor:' + (S.userDoc?.role==='admin'?'pointer':'default') + ';background:' + (v===tipo?(v==='comune'?'var(--orange-100)':'#fef3c7'):'var(--surface-2)') + ';color:' + (v===tipo?(v==='comune'?'var(--orange-dark)':'#92400e'):'var(--text-3)') + ';">' + (v==='comune'?'🤝 Comune':'📋 Consigliata') + '</div>'
+  ).join('');
+  const addRow = $id('items-add-row');
+  if (addRow) addRow.style.display = S.userDoc?.role==='admin' ? '' : 'none';
+  const unsub = db.collection('events').doc(S.currentEventId).collection('items').orderBy('createdAt','asc').onSnapshot(snap => {
+    const items = []; snap.forEach(s => items.push({id:s.id,...s.data()})); renderItemsPage(items);
+  });
+  S.unsubscribers.push(unsub);
+}
+
+function renderItemsPage(items) {
+  const body = $id('items-page-body'); if (!body) return;
+  const uid = S.user?.uid;
+  if (!items.length) { body.innerHTML = '<div class="empty-state"><div class="empty-emoji">🎒</div><div class="empty-title">Lista vuota</div><div class="empty-sub">Aggiungi la prima voce!</div></div>'; return; }
+  body.innerHTML = items.map(it => {
+    const isMe = it.assignedTo === uid;
+    return '<div class="item-full-row">' +
+      '<span style="flex:1;font-size:14px;color:var(--text);">' + escHtml(it.text) + '</span>' +
+      (it.assignedTo
+        ? '<div class="item-assigned"><img src="' + av(it.assignedPhoto,it.assignedName) + '" alt="">' + (isMe?'Tu':escHtml(it.assignedName||'')) + '</div>' + (isMe?'<button class="btn-take mine" onclick="App.releaseItem(''+it.id+'')">Rilascia</button>':'')
+        : '<button class="btn-take free" onclick="App.takeItem(''+it.id+'',''+escAttr(it.text)+'')">Porto io</button>') +
+      (S.userDoc?.role==='admin' ? '<button class="item-delete-btn" onclick="App.deleteItem(''+it.id+'')">×</button>' : '') +
+      '</div>';
+  }).join('');
+}
+
 </script>
 </body>
 </html>

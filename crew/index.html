@@ -528,7 +528,7 @@
     </div>
 
     <!-- PROFILE -->
-    <div id="view-profile" class="hidden" style="height:100%;overflow-y:auto;padding-bottom:calc(80px + env(safe-area-inset-bottom));">
+    <div id="view-profile" class="hidden" style="height:100%;overflow-y:auto;padding:0 0 calc(80px + env(safe-area-inset-bottom));">
       <div class="profile-header">
         <div style="font-family:var(--font-h);font-weight:800;font-size:26px;color:var(--text);margin-bottom:18px;">Profilo</div>
         <div style="display:flex;gap:16px;align-items:center;">
@@ -799,7 +799,6 @@ async function notifyMany(members, data) {
 // ONBOARDING
 // ============================================================
 const OB_STEPS = [
-  { emoji:'👥', title:'Organizza con\nil tuo gruppo', sub:'Crea gruppi, invita i tuoi amici e tieni tutto in un posto.' },
   { emoji:'📅', title:'Pianifica\neventi insieme', sub:'Date, luoghi, chi porta cosa — tutto condiviso in tempo reale.' },
   { emoji:'✅', title:'Rispondi\nin un tap', sub:"Ci sono, forse, non vengo — tutti sanno chi c'è, sempre." },
 ];
@@ -933,7 +932,7 @@ $id('btn-user-menu').addEventListener('click', () => {
 // ============================================================
 // NAVIGATION
 // ============================================================
-const VIEWS = ['view-home','view-group','view-event','view-create','view-profile'];
+const VIEWS = ['view-home','view-group','view-event','view-create','view-profile','view-items'];
 function showView(id) {
   VIEWS.forEach(v => {
     const el = $id(v); if (!el) return;
@@ -944,8 +943,9 @@ function showView(id) {
 
 function goTo(view, id=null) {
   stopListeners();
-  $id('tab-bar').style.display = ['home','profile'].includes(view) ? '' : 'none';
-  $id('app-header').style.display = view === 'create' ? 'none' : '';
+  // Tab bar always visible except in wizard
+  $id('tab-bar').style.display = view === 'create' ? 'none' : '';
+  $id('app-header').style.display = (view === 'create' || view === 'items') ? 'none' : '';
 
   if (view === 'home') {
     $id('header-back').classList.add('hidden');
@@ -957,6 +957,8 @@ function goTo(view, id=null) {
   } else if (view === 'event') {
     S.currentEventId = id;
     showView('view-event'); loadEvent(id);
+  } else if (view === 'items') {
+    showView('view-items'); loadItemsPage();
   } else if (view === 'create') {
     showView('view-create'); initWizard();
   } else if (view === 'profile') {
@@ -1066,9 +1068,9 @@ async function loadGroup(gid) {
   if (S.userDoc?.role === 'admin') {
     adminActions.classList.remove('hidden');
     adminActions.innerHTML = `
+      <button class="btn btn-secondary btn-xs" onclick="App.openMembers()">👥 Membri</button>
       <button class="btn btn-secondary btn-xs" onclick="App.openInviteSettings()">⚙️ Invito</button>
-      <button class="btn btn-secondary btn-xs" id="btn-requests" onclick="App.openRequests()">👥 Richieste <span id="requests-count"></span></button>`;
-    // Listen for pending requests
+      <button class="btn btn-secondary btn-xs" id="btn-requests" onclick="App.openRequests()">Richieste <span id="requests-count"></span></button>`;
     const rUnsub = db.collection('groups').doc(gid).collection('requests')
       .where('status','==','pending').onSnapshot(snap => {
         const el = $id('requests-count');
@@ -1079,7 +1081,7 @@ async function loadGroup(gid) {
     adminActions.classList.add('hidden');
   }
 
-  // Invite banner
+  // Invite banner + group actions
   const ib = $id('group-invite-banner');
   if (S.userDoc?.role === 'admin') {
     const expired = isExpired(g.inviteExpiresAt);
@@ -1094,8 +1096,15 @@ async function loadGroup(gid) {
         ${!expired?`<button class="btn btn-primary btn-sm" onclick="App.copyLink('${url}')">📋 Copia</button>`:''}
         <button class="btn btn-secondary btn-sm" onclick="App.openInviteSettings()">⚙️</button>
       </div>
+    </div>
+    <div style="text-align:right;padding:4px 0 8px;">
+      <button class="btn btn-danger btn-sm" onclick="App.deleteGroup()">🗑 Elimina gruppo</button>
     </div>`;
-  } else ib.innerHTML = '';
+  } else {
+    ib.innerHTML = `<div style="text-align:right;padding:4px 0 8px;">
+      <button class="btn btn-danger btn-sm" onclick="App.leaveGroup()">🚪 Lascia gruppo</button>
+    </div>`;
+  }
 
   const ec = $id('events-list');
   const unsub = db.collection('events').where('groupId','==',gid).orderBy('date','asc')
@@ -1229,13 +1238,13 @@ function renderEventBody(ev) {
           <div class="card-head-title">🎒 Cosa portare</div>
           <div style="display:flex;gap:6px;margin-top:6px;" id="items-tipo-pills"></div>
         </div>
-        ${S.userDoc?.role==='admin'?`<button id="btn-add-item-toggle" onclick="App.toggleAddItem()" style="width:30px;height:30px;border-radius:15px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;font-size:20px;font-weight:700;color:var(--text-2);flex-shrink:0;align-self:flex-start;">+</button>`:''}
+        <button class="open-items-btn" onclick="goTo('items')">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span>Lista completa</span>
+        </button>
       </div>
       <div id="items-tipo-info"></div>
-      <div id="items-list-body"></div>
-      <div id="add-item-area" class="hidden">
-        <div class="add-item-row"><input type="text" id="new-item-input" placeholder="Aggiungi una cosa da portare..."><button class="btn btn-primary btn-sm" onclick="App.addItem()">+</button></div>
-      </div>
+      <div class="items-scroll-box" id="items-list-body"></div>
     </div>
     ${ev.description?`<div class="card"><div style="padding:14px 16px;font-size:14px;color:var(--text-2);line-height:1.6;">${escHtml(ev.description)}</div></div>`:''}
     <div class="card">
@@ -1621,11 +1630,7 @@ const App = {
       await notify({ toUserId:ev.createdBy, type:'items', eventId:S.currentEventId, eventTitle:ev.title,
         text:`${displayName(S.userDoc)} si è assegnato "${itemText}" in "${ev.title}"` });
     }
-    // Reminder personale
-    await notify({ toUserId:S.user.uid, type:'reminder_item', eventId:S.currentEventId, eventTitle:ev.title,
-      itemText, eventDate:ev.date||null,
-      text:`Ricorda: devi portare "${itemText}" per "${ev.title}"${ev.date?' il '+ital(ev.date):''}` });
-    toast(`🎒 "${itemText}" aggiunto ai tuoi promemoria`);
+    toast(`🎒 "${itemText}" assegnato a te`);
   },
 
   async releaseItem(itemId) {
@@ -1950,6 +1955,26 @@ const App = {
     goTo('home');
   },
 
+  async deleteGroup() {
+    if (!confirm('Eliminare il gruppo? Tutti gli eventi e i dati verranno cancellati. Azione irreversibile.')) return;
+    const gid = S.currentGroupId;
+    // Remove group from all members' user docs
+    const gSnap = await db.collection('groups').doc(gid).get();
+    for (const m of (gSnap.data().members || [])) {
+      await db.collection('users').doc(m.uid).update({ groups: firebase.firestore.FieldValue.arrayRemove(gid) });
+    }
+    // Delete all events in group
+    const evSnap = await db.collection('events').where('groupId','==',gid).get();
+    for (const evDoc of evSnap.docs) {
+      await evDoc.ref.delete();
+    }
+    // Delete group doc
+    await db.collection('groups').doc(gid).delete();
+    S.userDoc.groups = (S.userDoc.groups || []).filter(g => g !== gid);
+    toast('Gruppo eliminato');
+    goTo('home');
+  },
+
   copyLink(url) {
     navigator.clipboard.writeText(url).then(()=>toast('📋 Link copiato!')).catch(()=>prompt('Copia il link:',url));
   },
@@ -2170,8 +2195,6 @@ function renderViews(views) {
 
 // ── ITEMS PAGE ───────────────────────────────────────────
 function loadItemsPage() {
-  $id('app-header').style.display = 'none';
-  $id('tab-bar').style.display = 'none';
   const ev = S.currentEventData; if (!ev) return;
   const tipo = ev.thingsType || 'comune';
   const tipoEl = $id('items-page-tipo');

@@ -474,7 +474,7 @@
         </div>
         <div id="events-list"></div>
       </div>
-      <div style="padding:12px 16px calc(24px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--border);">
+      <div style="padding:12px 16px;padding-bottom:calc(76px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--border);">
         <button class="btn btn-primary btn-full" id="btn-create-event">+ Nuovo evento</button>
       </div>
     </div>
@@ -933,11 +933,18 @@ $id('btn-user-menu').addEventListener('click', () => {
 // NAVIGATION
 // ============================================================
 const VIEWS = ['view-home','view-group','view-event','view-create','view-profile','view-items'];
+// Views that need display:flex instead of block
+const FLEX_VIEWS = { 'view-group':true, 'view-event':true, 'view-items':true, 'view-create':true };
 function showView(id) {
   VIEWS.forEach(v => {
     const el = $id(v); if (!el) return;
-    if (v === id) { el.classList.remove('hidden'); el.style.display=''; }
-    else { el.classList.add('hidden'); }
+    if (v === id) {
+      el.classList.remove('hidden');
+      el.style.display = FLEX_VIEWS[v] ? 'flex' : '';
+    } else {
+      el.classList.add('hidden');
+      el.style.display = '';
+    }
   });
 }
 
@@ -1262,7 +1269,7 @@ function renderEventBody(ev) {
       </div>
     </div>
     ${S.userDoc?.role==='admin'?`<div style="margin-bottom:8px;"><button class="btn btn-danger btn-full" onclick="App.openDeleteSheet()">🗑 Elimina evento</button></div>`:''}
-    <div style="height:16px;"></div>`;
+    <div style="height:calc(72px + env(safe-area-inset-bottom));"></div>`;
 
   const ci = $id('comment-input');
   if (ci) {
@@ -1492,52 +1499,59 @@ document.addEventListener('input', e => {
 // PROFILE
 // ============================================================
 async function loadProfile() {
-  $id('profile-avatar').src = av(S.user?.photoURL, displayName(S.userDoc));
-  $id('profile-name').textContent = displayName(S.userDoc);
-  $id('profile-email').textContent = S.user?.email || '';
-  $id('profile-badges').innerHTML = `<span class="badge badge-admin">${S.userDoc?.role==='admin'?'ADMIN':'MEMBER'}</span>`;
-  const groupCount = S.userDoc?.groups?.length || 0;
-  $id('profile-stats').innerHTML = `
-    <div class="stat-item"><div class="stat-num">${groupCount}</div><div class="stat-label">Gruppi</div></div>
-    <div class="stat-item"><div class="stat-num" id="stat-events">—</div><div class="stat-label">Eventi</div></div>
-    <div class="stat-item"><div class="stat-num" id="stat-yes">—</div><div class="stat-label">Ci sono</div></div>`;
   try {
-    if(S.userDoc?.groups?.length){
-      const evSnap=await db.collection('events').where('groupId','in',S.userDoc.groups.slice(0,10)).get();
-      if($id('stat-events')) $id('stat-events').textContent=evSnap.size;
+    $id('profile-avatar').src = av(S.user?.photoURL, displayName(S.userDoc));
+    $id('profile-name').textContent = displayName(S.userDoc);
+    $id('profile-email').textContent = S.user?.email || '';
+    $id('profile-badges').innerHTML = `<span class="badge badge-admin">${S.userDoc?.role==='admin'?'ADMIN':'MEMBER'}</span>`;
+    const groupCount = S.userDoc?.groups?.length || 0;
+    $id('profile-stats').innerHTML = `
+      <div class="stat-item"><div class="stat-num">${groupCount}</div><div class="stat-label">Gruppi</div></div>
+      <div class="stat-item"><div class="stat-num" id="stat-events">—</div><div class="stat-label">Eventi</div></div>
+      <div class="stat-item"><div class="stat-num" id="stat-yes">—</div><div class="stat-label">Ci sono</div></div>`;
+    try {
+      if (S.userDoc?.groups?.length) {
+        const evSnap = await db.collection('events').where('groupId','in',S.userDoc.groups.slice(0,10)).get();
+        if ($id('stat-events')) $id('stat-events').textContent = evSnap.size;
+      }
+    } catch(e) {}
+
+    const prefs = { ...DEFAULT_NOTIF_PREFS, ...(S.userDoc?.notifPrefs||{}) };
+    const body = $id('profile-body');
+    body.innerHTML = `
+      <div style="font-family:var(--font-h);font-weight:700;font-size:16px;color:var(--text);margin-bottom:10px;">Preferenze notifiche</div>
+      <div class="settings-list" id="notif-prefs-list"></div>
+      <div style="font-family:var(--font-h);font-weight:700;font-size:16px;color:var(--text);margin:18px 0 10px;">Account</div>
+      <div class="settings-list">
+        <div class="settings-item" onclick="App.changeNickname()">
+          <span style="font-size:15px;">Modifica nickname</span>
+          <svg width="7" height="12" viewBox="0 0 7 12"><path d="M1 1L6 6L1 11" stroke="var(--text-3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="settings-item" onclick="if(confirm('Vuoi uscire?')){stopListeners();auth.signOut();}">
+          <span style="color:var(--red);font-weight:600;">Esci</span>
+        </div>
+      </div>`;
+
+    const prefList = $id('notif-prefs-list');
+    if (prefList && NOTIF_LABELS) {
+      prefList.innerHTML = Object.entries(NOTIF_LABELS).map(([key,info]) =>
+        `<div class="toggle-row">
+          <div>
+            <div class="toggle-label">${info.label}</div>
+            <div class="toggle-sub">${info.sub}</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" ${prefs[key]?'checked':''} onchange="App.saveNotifPref('${key}',this.checked)">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>`).join('');
     }
-  } catch(e){}
-
-  // Notif prefs
-  const prefs = { ...DEFAULT_NOTIF_PREFS, ...(S.userDoc?.notifPrefs||{}) };
-  const body = $id('profile-body');
-  body.innerHTML = `
-    <div style="font-family:var(--font-h);font-weight:700;font-size:16px;color:var(--text);margin-bottom:10px;">Preferenze notifiche</div>
-    <div class="settings-list" id="notif-prefs-list"></div>
-    <div style="font-family:var(--font-h);font-weight:700;font-size:16px;color:var(--text);margin:18px 0 10px;">Account</div>
-    <div class="settings-list">
-      <div class="settings-item" onclick="App.changeNickname()">
-        <span style="font-size:15px;">Modifica nickname</span>
-        <svg width="7" height="12" viewBox="0 0 7 12"><path d="M1 1L6 6L1 11" stroke="var(--text-3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <div class="settings-item" onclick="if(confirm('Vuoi uscire?')){stopListeners();auth.signOut();}">
-        <span style="color:var(--red);font-weight:600;">Esci</span>
-      </div>
-    </div>`;
-
-  const prefList = $id('notif-prefs-list');
-  prefList.innerHTML = Object.entries(NOTIF_LABELS).map(([key,info]) => `
-    <div class="toggle-row">
-      <div>
-        <div class="toggle-label">${info.label}</div>
-        <div class="toggle-sub">${info.sub}</div>
-      </div>
-      <label class="toggle">
-        <input type="checkbox" ${prefs[key]?'checked':''} onchange="App.saveNotifPref('${key}',this.checked)">
-        <div class="toggle-track"></div>
-        <div class="toggle-thumb"></div>
-      </label>
-    </div>`).join('');
+  } catch(err) {
+    console.error('loadProfile error:', err);
+    const body = $id('profile-body');
+    if (body) body.innerHTML = `<div style="padding:20px;color:var(--red);">Errore caricamento profilo: ${err.message}</div>`;
+  }
 }
 
 // ============================================================

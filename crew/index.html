@@ -222,7 +222,7 @@
     .mention-opt img { width:26px; height:26px; border-radius:50%; }
 
     /* WIZARD */
-    #view-create { display:flex; flex-direction:column; height:100%; }
+    #view-create { position:fixed; inset:0; display:flex; flex-direction:column; background:var(--bg); z-index:150; }
     .wizard-header { background:var(--surface); padding:8px 20px 16px; border-bottom:1px solid var(--border); flex-shrink:0; }
     .wizard-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
     .wizard-back { font-family:var(--font-h); font-weight:700; font-size:14px; color:var(--blue); cursor:pointer; }
@@ -496,7 +496,7 @@
 
 
     <!-- ITEMS PAGE -->
-    <div id="view-items" class="hidden" style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg);">
+    <div id="view-items" class="hidden" style="position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);z-index:150;">
       <div style="background:var(--surface);padding:8px 20px 18px;border-bottom:1px solid var(--border);flex-shrink:0;">
         <span id="items-back-btn" style="display:inline-flex;align-items:center;gap:4px;color:var(--blue);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-h);">
           <svg width="8" height="13" viewBox="0 0 8 13"><path d="M7 1L1.5 6.5L7 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Evento

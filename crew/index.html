@@ -1509,13 +1509,8 @@ async function loadProfile() {
       <div class="stat-item"><div class="stat-num">${groupCount}</div><div class="stat-label">Gruppi</div></div>
       <div class="stat-item"><div class="stat-num" id="stat-events">—</div><div class="stat-label">Eventi</div></div>
       <div class="stat-item"><div class="stat-num" id="stat-yes">—</div><div class="stat-label">Ci sono</div></div>`;
-    try {
-      if (S.userDoc?.groups?.length) {
-        const evSnap = await db.collection('events').where('groupId','in',S.userDoc.groups.slice(0,10)).get();
-        if ($id('stat-events')) $id('stat-events').textContent = evSnap.size;
-      }
-    } catch(e) {}
 
+    // Render body immediately — no blocking awaits
     const prefs = { ...DEFAULT_NOTIF_PREFS, ...(S.userDoc?.notifPrefs||{}) };
     const body = $id('profile-body');
     body.innerHTML = `
@@ -1547,10 +1542,18 @@ async function loadProfile() {
           </label>
         </div>`).join('');
     }
+
+    // Load stats async without blocking render
+    if (S.userDoc?.groups?.length) {
+      db.collection('events').where('groupId','in',S.userDoc.groups.slice(0,10)).get()
+        .then(snap => { const el=$id('stat-events'); if(el) el.textContent=snap.size; })
+        .catch(()=>{});
+    }
+
   } catch(err) {
     console.error('loadProfile error:', err);
     const body = $id('profile-body');
-    if (body) body.innerHTML = `<div style="padding:20px;color:var(--red);">Errore caricamento profilo: ${err.message}</div>`;
+    if (body) body.innerHTML = `<div style="padding:20px;color:var(--red);">Errore: ${err.message}</div>`;
   }
 }
 

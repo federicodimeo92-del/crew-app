@@ -482,12 +482,16 @@
     <!-- EVENT DETAIL -->
     <div id="view-event" class="view-full hidden" style="display:flex;flex-direction:column;">
       <div class="event-header">
-        <div style="margin-bottom:14px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
           <span id="event-back-btn" style="display:inline-flex;align-items:center;gap:4px;color:var(--blue);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-h)">
             <svg width="8" height="13" viewBox="0 0 8 13"><path d="M7 1L1.5 6.5L7 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span id="event-back-label">Gruppo</span>
           </span>
+          <div id="event-edit-btn" class="hidden">
+            <button class="icon-btn" onclick="App.openEditEvent()">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </div>
         </div>
         <div style="display:flex;gap:14px;" id="event-hero-row"></div>
       </div>
@@ -2212,8 +2216,24 @@ function renderViews(views) {
 
 // ── ITEMS PAGE ───────────────────────────────────────────
 function loadItemsPage() {
-  const ev = S.currentEventData; if (!ev) return;
-  const tipo = ev.thingsType || 'comune';
+  // Show spinner immediately
+  const body = $id('items-page-body');
+  if (body) body.innerHTML = '<div class="spinner" style="margin:32px auto;"></div>';
+
+  // If we don't have event data, load it first
+  if (!S.currentEventData) {
+    db.collection('events').doc(S.currentEventId).get().then(snap => {
+      if (snap.exists) { S.currentEventData = {id:snap.id,...snap.data()}; }
+      _doLoadItemsPage();
+    }).catch(() => _doLoadItemsPage());
+  } else {
+    _doLoadItemsPage();
+  }
+}
+
+function _doLoadItemsPage() {
+  const ev = S.currentEventData;
+  const tipo = ev?.thingsType || 'comune';
   const tipoEl = $id('items-page-tipo');
   if (tipoEl) tipoEl.innerHTML = ['consigliata','comune'].map(v =>
     '<div onclick="' + (S.userDoc?.role==='admin' ? 'App.changeTipoFromPage(\''+v+'\')' : 'void(0)') + '" style="border-radius:99px;padding:4px 12px;font-size:11px;font-weight:700;font-family:var(--font-h);cursor:' + (S.userDoc?.role==='admin'?'pointer':'default') + ';background:' + (v===tipo?(v==='comune'?'var(--blue-soft)':'#FFF3E8'):'var(--surface-2)') + ';color:' + (v===tipo?(v==='comune'?'var(--blue-dark)':'#E8893A'):'var(--text-3)') + ';">' + (v==='comune'?'🤝 Comune':'📋 Consigliata') + '</div>'

@@ -1491,18 +1491,24 @@ function renderWizardStep1() {
   return `<div class="field">
     <label class="field-label">Luogo</label>
     <div style="display:flex;gap:8px;">
-      <input type="text" id="w-place" value="${escHtml(S.wizard.place)}" placeholder="Es. Lago di Como" style="flex:1" oninput="S.wizard.place=this.value">
-      <a id="w-place-map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(S.wizard.place)}" target="_blank" rel="noreferrer" class="maps-btn" style="${S.wizard.place?'':'display:none'}">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--blue)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      <input type="text" id="w-place" value="${escHtml(S.wizard.place)}" placeholder="Es. Via Roma 1, Milano" style="flex:1" oninput="S.wizard.place=this.value">
+    </div>
+    <div style="margin-top:6px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:12px;color:var(--text-3);">Scrivi l'indirizzo completo</span>
+      <a id="w-place-map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(S.wizard.place)}" target="_blank" rel="noreferrer" style="font-size:12px;font-weight:700;font-family:var(--font-h);color:var(--blue);text-decoration:none;display:${S.wizard.place?'inline-flex':'none'};align-items:center;gap:3px;">
+        Verifica su Maps ↗
       </a>
     </div>
   </div>
   <div class="field">
     <label class="field-label">Punto di ritrovo</label>
     <div style="display:flex;gap:8px;">
-      <input type="text" id="w-meeting" value="${escHtml(S.wizard.meetingPoint)}" placeholder="Es. Parcheggio stazione" style="flex:1" oninput="S.wizard.meetingPoint=this.value">
-      <a id="w-meeting-map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(S.wizard.meetingPoint)}" target="_blank" rel="noreferrer" class="maps-btn" style="${S.wizard.meetingPoint?'':'display:none'}">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--blue)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      <input type="text" id="w-meeting" value="${escHtml(S.wizard.meetingPoint)}" placeholder="Es. Parcheggio della stazione" style="flex:1" oninput="S.wizard.meetingPoint=this.value">
+    </div>
+    <div style="margin-top:6px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:12px;color:var(--text-3);">Dove ci si trova prima di partire</span>
+      <a id="w-meeting-map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(S.wizard.meetingPoint)}" target="_blank" rel="noreferrer" style="font-size:12px;font-weight:700;font-family:var(--font-h);color:var(--blue);text-decoration:none;display:${S.wizard.meetingPoint?'inline-flex':'none'};align-items:center;gap:3px;">
+        Verifica su Maps ↗
       </a>
     </div>
   </div>
@@ -1545,8 +1551,14 @@ $id('wizard-back-btn').addEventListener('click', () => {
   else { S.wizard.step--; renderWizardStep(); }
 });
 document.addEventListener('input', e => {
-  if(e.target.id==='w-place'){ const a=$id('w-place-map'); if(a){a.href=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.target.value)}`;a.style.display=e.target.value?'':'none';} }
-  if(e.target.id==='w-meeting'){ const a=$id('w-meeting-map'); if(a){a.href=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.target.value)}`;a.style.display=e.target.value?'':'none';} }
+  if(e.target.id==='w-place'){
+    const a=$id('w-place-map');
+    if(a){ a.href=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.target.value)}`; a.style.display=e.target.value?'inline-flex':'none'; }
+  }
+  if(e.target.id==='w-meeting'){
+    const a=$id('w-meeting-map');
+    if(a){ a.href=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.target.value)}`; a.style.display=e.target.value?'inline-flex':'none'; }
+  }
 });
 
 // ============================================================

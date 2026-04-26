@@ -217,7 +217,7 @@
     .comment-input-wrap { flex:1; background:var(--bg); border-radius:99px; padding:9px 16px; display:flex; align-items:center; position:relative; }
     #comment-input { flex:1; background:none; border:none; outline:none; font-size:13px; color:var(--text); width:100%; }
     #comment-send { width:34px; height:34px; border-radius:50%; background:var(--blue); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-    #mention-dropdown { position:absolute; bottom:calc(100% + 6px); left:0; right:0; background:var(--surface); border:1.5px solid var(--border); border-radius:var(--r-sm); box-shadow:var(--shadow); overflow:hidden; z-index:200; }
+    #mention-dropdown { position:fixed; background:var(--surface); border:1.5px solid var(--border); border-radius:var(--r-sm); box-shadow:var(--shadow); overflow-y:auto; max-height:200px; z-index:9000; }
     .mention-opt { padding:9px 12px; display:flex; align-items:center; gap:9px; cursor:pointer; font-size:14px; font-weight:600; font-family:var(--font-h); }
     .mention-opt:hover { background:var(--surface-2); }
     .mention-opt img { width:26px; height:26px; border-radius:50%; }
@@ -286,7 +286,7 @@
 
     /* MODALS */
     .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.48); backdrop-filter:blur(4px); z-index:500; display:flex; align-items:flex-end; }
-    .modal-sheet { background:var(--surface); border-radius:var(--r-xl) var(--r-xl) 0 0; width:100%; max-width:430px; margin:0 auto; padding:22px 18px calc(36px + env(safe-area-inset-bottom)); max-height:92vh; overflow-y:auto; animation:slideUp .22s ease; }
+    .modal-sheet { background:var(--surface); border-radius:var(--r-xl) var(--r-xl) 0 0; width:100%; max-width:430px; margin:0 auto; padding:22px 18px calc(36px + env(safe-area-inset-bottom)); max-height:92vh; overflow-y:auto; animation:slideUp .22s ease; transition:transform .3s ease; touch-action:pan-y; }
     .modal-handle { width:36px; height:4px; border-radius:2px; background:var(--border); margin:0 auto 20px; }
     .modal-title { font-family:var(--font-h); font-weight:800; font-size:22px; color:var(--text); margin-bottom:20px; }
     .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
@@ -1222,15 +1222,51 @@ async function loadEvent(eid) {
   S.unsubscribers.push(r1, r2, r3);
 }
 
+function buildGCalUrl(ev) {
+  if (!ev.date) return null;
+  // Format: YYYYMMDDTHHmmss
+  const dateStr = ev.date.replace(/-/g, '');
+  let start, end;
+  if (ev.time) {
+    const [h, m] = ev.time.split(':');
+    start = `${dateStr}T${h}${m}00`;
+    // Default duration: 2 hours
+    const endH = String(parseInt(h) + 2).padStart(2, '0');
+    end = `${dateStr}T${endH}${m}00`;
+  } else {
+    start = dateStr;
+    end = dateStr;
+  }
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: ev.title || '',
+    dates: `${start}/${end}`,
+    details: ev.description || '',
+    location: ev.place || ev.meetingPoint || '',
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
 function renderEventHeader(ev) {
+  const cd = countdownLabel(ev.date);
+  const gcalUrl = buildGCalUrl(ev);
   $id('event-hero-row').innerHTML = `
     <div class="event-emoji-box">${escHtml(ev.emoji||'🎉')}</div>
     <div style="flex:1;min-width:0;">
       <div class="event-hero-title">${escHtml(ev.title)}</div>
+      ${ev.description?`<div style="font-size:13px;color:var(--text-3);margin-top:4px;line-height:1.4;">${escHtml(ev.description)}</div>`:''}
       ${ev.date?`<div class="event-meta-item">📅 ${ital(ev.date)}${ev.time?' alle '+ev.time:''}</div>`:''}
-      ${ev.place?`<div class="event-meta-item">📍 ${escHtml(ev.place)}</div>`:''}
+      ${cd.label?`<div class="countdown-badge ${cd.cls}" style="margin-top:6px;">${cd.label}</div>`:''}
+      ${ev.place?`<div class="event-meta-link" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.place)}')">📍 ${escHtml(ev.place)} ↗</div>`:''}
       ${ev.meetingPoint?`<div class="event-meta-link" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.meetingPoint)}')">🚩 ${escHtml(ev.meetingPoint)} ↗</div>`:''}
       ${ev.deadline?`<div class="event-deadline">⏰ Rispondi entro ${ital(ev.deadline)}</div>`:''}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
+        <div class="views-row" id="views-row"><span class="views-label">👁 …</span></div>
+        ${gcalUrl?`<a href="${gcalUrl}" target="_blank" rel="noreferrer" style="display:inline-flex;align-items:center;gap:5px;background:#EEF2FF;border-radius:99px;padding:5px 11px;text-decoration:none;font-size:11px;font-weight:700;font-family:var(--font-h);color:#4B7BEC;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          Aggiungi a Calendar
+        </a>`:''}
+      </div>
     </div>`;
 }
 
@@ -1283,7 +1319,10 @@ function renderEventBody(ev) {
   if (ci) {
     ci.addEventListener('input', handleMentionInput);
     ci.addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();App.sendComment();} });
+    ci.addEventListener('blur', () => setTimeout(() => hide('mention-dropdown'), 150));
   }
+  // Close dropdown on scroll
+  $id('event-body')?.addEventListener('scroll', () => hide('mention-dropdown'), {passive:true});
   renderTipoPills(ev.thingsType||'comune');
 }
 
@@ -1334,14 +1373,17 @@ function renderItems(items, tipo) {
   const body = $id('items-list-body'); if(!body) return;
   if (!items.length) { body.innerHTML='<p style="padding:12px 16px;font-size:13px;color:var(--text-3);">Nessuna voce ancora.</p>'; return; }
   const uid = S.user?.uid;
+  const isComune = tipo === 'comune';
   body.innerHTML = items.map((it,i) => {
     const isMe = it.assignedTo === uid;
     return `<div class="item-row" style="${i===0?'border-top:none':''}">
       <span class="item-text">${escHtml(it.text)}</span>
-      ${it.assignedTo
-        ? `<div class="item-assigned"><img src="${av(it.assignedPhoto,it.assignedName)}" alt="">${isMe?'Tu':escHtml(it.assignedName||'')}</div>
-           ${isMe?`<button class="btn-take mine" onclick="App.releaseItem('${it.id}')">Rilascia</button>`:''}`
-        : `<button class="btn-take free" onclick="App.takeItem('${it.id}','${escAttr(it.text)}')">Lo porto io</button>`}
+      ${isComune
+        ? (it.assignedTo
+          ? `<div class="item-assigned"><img src="${av(it.assignedPhoto,it.assignedName)}" alt="">${isMe?'Tu':escHtml(it.assignedName||'')}</div>
+             ${isMe?`<button class="btn-take mine" onclick="App.releaseItem('${it.id}')">Rilascia</button>`:''}`
+          : `<button class="btn-take free" onclick="App.takeItem('${it.id}','${escAttr(it.text)}')">Lo porto io</button>`)
+        : ''}
     </div>`;
   }).join('');
 }
@@ -1370,14 +1412,12 @@ function handleMentionInput(e) {
   const at = val.lastIndexOf('@');
   if (at < 0) { hide('mention-dropdown'); return; }
   const q = val.slice(at + 1).toLowerCase();
-  // Mostra tutti i membri appena digiti @, filtra man mano che scrivi
   const matches = S.groupMembers.filter(m =>
     m.uid !== S.user?.uid && (!q || m.displayName?.toLowerCase().includes(q))
   );
   const dd = $id('mention-dropdown'); if (!dd) return;
   if (!matches.length) { hide('mention-dropdown'); return; }
   dd.innerHTML = matches.map(m => {
-    // Evidenzia la parte che corrisponde alla query
     const name = m.displayName || '';
     const highlighted = q
       ? name.replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi'),
@@ -1389,6 +1429,12 @@ function handleMentionInput(e) {
       ${!q ? '<span style="font-size:11px;color:var(--text-3);margin-left:auto;">↵</span>' : ''}
     </div>`;
   }).join('');
+  // Position above the input using fixed coords
+  const rect = e.target.closest('.comment-input-wrap')?.getBoundingClientRect() || e.target.getBoundingClientRect();
+  const ddH = Math.min(matches.length * 46, 200);
+  dd.style.left = rect.left + 'px';
+  dd.style.width = rect.width + 'px';
+  dd.style.top = (rect.top - ddH - 8) + 'px';
   show('mention-dropdown');
 }
 
@@ -2131,6 +2177,50 @@ document.querySelectorAll('.modal-overlay').forEach(ov => {
 });
 $id('sheet-who').addEventListener('click', e => { if(e.target===$id('sheet-who')) App.closeWho(); });
 
+// ── SWIPE DOWN TO DISMISS modals ────────────────────────────
+(function setupSwipeDismiss() {
+  let startY = 0, startScrollTop = 0, dragging = false;
+
+  document.addEventListener('touchstart', e => {
+    const sheet = e.target.closest('.modal-sheet');
+    if (!sheet) return;
+    startY = e.touches[0].clientY;
+    startScrollTop = sheet.scrollTop;
+    dragging = true;
+    sheet.style.transition = 'none';
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    const sheet = e.target.closest('.modal-sheet');
+    if (!sheet) return;
+    // Only drag if sheet is scrolled to top
+    if (startScrollTop > 0) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 0) sheet.style.transform = `translateY(${dy}px)`;
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (!dragging) return;
+    const sheet = e.target.closest('.modal-sheet');
+    if (!sheet) { dragging = false; return; }
+    const dy = e.changedTouches[0].clientY - startY;
+    sheet.style.transition = 'transform .3s ease';
+    if (dy > 100) {
+      // Animate out then hide
+      sheet.style.transform = `translateY(110%)`;
+      setTimeout(() => {
+        sheet.style.transform = '';
+        const overlay = sheet.closest('.modal-overlay');
+        if (overlay) overlay.classList.add('hidden');
+      }, 300);
+    } else {
+      sheet.style.transform = '';
+    }
+    dragging = false;
+  }, { passive: true });
+})();
+
 // ── COUNTDOWN ──────────────────────────────────────────────
 function countdownLabel(dateStr) {
   if (!dateStr) return { label: '', cls: '' };
@@ -2253,14 +2343,17 @@ function _doLoadItemsPage() {
 function renderItemsPage(items) {
   const body = $id('items-page-body'); if (!body) return;
   const uid = S.user?.uid;
+  const isComune = (S.currentEventData?.thingsType || 'comune') === 'comune';
   if (!items.length) { body.innerHTML = '<div class="empty-state"><div class="empty-emoji">🎒</div><div class="empty-title">Lista vuota</div><div class="empty-sub">Aggiungi la prima voce!</div></div>'; return; }
   body.innerHTML = items.map(it => {
     const isMe = it.assignedTo === uid;
     return '<div class="item-full-row">' +
       '<span style="flex:1;font-size:14px;color:var(--text);">' + escHtml(it.text) + '</span>' +
-      (it.assignedTo
-        ? '<div class="item-assigned"><img src="' + av(it.assignedPhoto,it.assignedName) + '" alt="">' + (isMe?'Tu':escHtml(it.assignedName||'')) + '</div>' + (isMe?'<button class="btn-take mine" onclick="App.releaseItem(\''+it.id+'\')">Rilascia</button>':'')
-        : '<button class="btn-take free" onclick="App.takeItem(\''+it.id+'\',\''+escAttr(it.text)+'\')">Porto io</button>') +
+      (isComune
+        ? (it.assignedTo
+          ? '<div class="item-assigned"><img src="' + av(it.assignedPhoto,it.assignedName) + '" alt="">' + (isMe?'Tu':escHtml(it.assignedName||'')) + '</div>' + (isMe?'<button class="btn-take mine" onclick="App.releaseItem(\''+it.id+'\')">Rilascia</button>':'')
+          : '<button class="btn-take free" onclick="App.takeItem(\''+it.id+'\',\''+escAttr(it.text)+'\')">Porto io</button>')
+        : '') +
       (S.userDoc?.role==='admin' ? '<button class="item-delete-btn" onclick="App.deleteItem(\''+it.id+'\')">×</button>' : '') +
       '</div>';
   }).join('');

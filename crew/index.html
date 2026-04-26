@@ -1020,6 +1020,12 @@ async function loadHome() {
   S.userDoc = { uid: S.user.uid, ...uSnap.data() };
   if (S.userDoc?.role === 'admin') show('btn-create-group'); else hide('btn-create-group');
 
+  // Update home greeting + avatar
+  const hg = $id('home-greeting-name');
+  if (hg) hg.textContent = displayName(S.userDoc);
+  const ha = $id('home-avatar');
+  if (ha) ha.src = av(S.user?.photoURL || S.userDoc?.photoURL, displayName(S.userDoc));
+
   if (!S.userDoc?.groups?.length) {
     c.innerHTML = `<div class="empty-state"><div class="empty-emoji">👥</div><div class="empty-title">Nessun gruppo ancora</div><div class="empty-sub">Entra tramite link invito o crea un nuovo gruppo</div></div>`;
     return;
@@ -1254,7 +1260,6 @@ function renderEventHeader(ev) {
     <div class="event-emoji-box">${escHtml(ev.emoji||'🎉')}</div>
     <div style="flex:1;min-width:0;">
       <div class="event-hero-title">${escHtml(ev.title)}</div>
-      ${ev.description?`<div style="font-size:13px;color:var(--text-3);margin-top:4px;line-height:1.4;">${escHtml(ev.description)}</div>`:''}
       ${ev.date?`<div class="event-meta-item">📅 ${ital(ev.date)}${ev.time?' alle '+ev.time:''}</div>`:''}
       ${cd.label?`<div class="countdown-badge ${cd.cls}" style="margin-top:6px;">${cd.label}</div>`:''}
       ${ev.place?`<div class="event-meta-link" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.place)}')">📍 ${escHtml(ev.place)} ↗</div>`:''}
@@ -1272,6 +1277,7 @@ function renderEventHeader(ev) {
 
 function renderEventBody(ev) {
   $id('event-body').innerHTML = `
+    ${ev.description?`<div class="card"><div style="padding:14px 16px;font-size:14px;color:var(--text-2);line-height:1.6;">${escHtml(ev.description)}</div></div>`:''}
     <div class="card">
       <div class="card-head">
         <div class="card-head-title">🙋 Partecipazione</div>
@@ -1297,7 +1303,6 @@ function renderEventBody(ev) {
       <div id="items-tipo-info"></div>
       <div class="items-scroll-box" id="items-list-body"></div>
     </div>
-    ${ev.description?`<div class="card"><div style="padding:14px 16px;font-size:14px;color:var(--text-2);line-height:1.6;">${escHtml(ev.description)}</div></div>`:''}
     <div class="card">
       <div class="card-head"><div class="card-head-title" id="comments-title">💬 Commenti</div></div>
       <div id="comments-list"></div>
@@ -1423,7 +1428,7 @@ function handleMentionInput(e) {
       ? name.replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi'),
           '<strong style="color:var(--blue);">$1</strong>')
       : escHtml(name);
-    return `<div class="mention-opt" onclick="App.insertMention('${escAttr(name)}')">
+    return `<div class="mention-opt" onmousedown="event.preventDefault();App.insertMention('${escAttr(name)}')">
       <img src="${av(m.photoURL, name)}" alt="">
       <span>${highlighted}</span>
       ${!q ? '<span style="font-size:11px;color:var(--text-3);margin-left:auto;">↵</span>' : ''}

@@ -1216,6 +1216,22 @@ async function loadEvent(eid) {
   renderEventBody(ev);
   $id('event-back-label').textContent = S.currentGroupData?.name || 'Gruppo';
 
+  // Show edit button for creator or admin
+  const editBtn = $id('event-edit-btn');
+  if (editBtn) {
+    if (ev.createdBy === S.user?.uid || S.userDoc?.role === 'admin') {
+      editBtn.classList.remove('hidden');
+    } else {
+      editBtn.classList.add('hidden');
+    }
+  }
+
+  // Record view
+  db.collection('events').doc(eid).collection('views').doc(S.user.uid).set({
+    name: displayName(S.userDoc), photoURL: S.user.photoURL||null,
+    ts: firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(()=>{});
+
   const r1 = db.collection('events').doc(eid).collection('rsvp').onSnapshot(snap => {
     const d={}; snap.forEach(s=>{d[s.id]=s.data();}); renderRSVP(d, ev);
   });
@@ -1225,7 +1241,10 @@ async function loadEvent(eid) {
   const r3 = db.collection('events').doc(eid).collection('comments').orderBy('createdAt','asc').onSnapshot(snap => {
     const cc=[]; snap.forEach(s=>cc.push({id:s.id,...s.data()})); renderComments(cc);
   });
-  S.unsubscribers.push(r1, r2, r3);
+  const r4 = db.collection('events').doc(eid).collection('views').onSnapshot(snap => {
+    const views=[]; snap.forEach(s=>views.push({uid:s.id,...s.data()})); renderViews(views);
+  });
+  S.unsubscribers.push(r1, r2, r3, r4);
 }
 
 function buildGCalUrl(ev) {
@@ -1940,19 +1959,24 @@ const App = {
     loadGroupEvents(S.currentGroupId, tab);
   },
 
-  openEditEvent() {
-    if (!S.currentEventData) return;
+  async openEditEvent() {
+    if (!S.currentEventData) {
+      const snap = await db.collection('events').doc(S.currentEventId).get();
+      if (!snap.exists) { toast('Evento non trovato'); return; }
+      S.currentEventData = { id:snap.id, ...snap.data() };
+    }
+    const ev = S.currentEventData;
     S.wizard = {
-      editMode: true, eventId: S.currentEventData.id, step: 0,
-      emoji: S.currentEventData.emoji || '🎉',
-      title: S.currentEventData.title || '',
-      date: S.currentEventData.date || '',
-      time: S.currentEventData.time || '',
-      desc: S.currentEventData.description || '',
-      place: S.currentEventData.place || '',
-      meetingPoint: S.currentEventData.meetingPoint || '',
-      deadline: S.currentEventData.deadline || '',
-      thingsType: S.currentEventData.thingsType || 'comune',
+      editMode: true, eventId: ev.id, step: 0,
+      emoji: ev.emoji || '🎉',
+      title: ev.title || '',
+      date: ev.date || '',
+      time: ev.time || '',
+      desc: ev.description || '',
+      place: ev.place || '',
+      meetingPoint: ev.meetingPoint || '',
+      deadline: ev.deadline || '',
+      thingsType: ev.thingsType || 'comune',
       things: [], showEmojiPicker: false
     };
     goTo('create');

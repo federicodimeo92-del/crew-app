@@ -1467,14 +1467,19 @@ function handleMentionInput(e) {
 // ============================================================
 const WIZARD_STEPS = ['Dettagli','Luogo','Lista'];
 function initWizard() {
-  S.wizard = { step:0, emoji:'🎉', title:'', date:'', time:'', desc:'', place:'', meetingPoint:'', deadline:'', thingsType:'comune', things:[], showEmojiPicker:false };
+  // If editMode is already set (from openEditEvent), don't reset
+  if (!S.wizard.editMode) {
+    S.wizard = { editMode:false, step:0, emoji:'🎉', title:'', date:'', time:'', desc:'', place:'', meetingPoint:'', deadline:'', thingsType:'comune', things:[], showEmojiPicker:false };
+  } else {
+    S.wizard.step = 0; S.wizard.showEmojiPicker = false;
+  }
   renderWizardStep();
 }
 function renderWizardStep() {
   const step = S.wizard.step;
   $id('wizard-step-label').textContent = `${step+1}/${WIZARD_STEPS.length}`;
   $id('wizard-step-title').textContent = WIZARD_STEPS[step];
-  $id('wizard-next-btn').textContent = step<WIZARD_STEPS.length-1?'Avanti →':'Crea evento 🎉';
+  $id('wizard-next-btn').textContent = step<WIZARD_STEPS.length-1?'Avanti →':(S.wizard.editMode?'Salva modifiche ✓':'Crea evento 🎉');
   $id('wizard-back-btn').textContent = step===0?'Annulla':'← Indietro';
   $id('wizard-progress').innerHTML = WIZARD_STEPS.map((_,i)=>`<div class="wizard-bar${i<=step?' done':''}"></div>`).join('');
   const body = $id('wizard-body');

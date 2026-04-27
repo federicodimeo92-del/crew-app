@@ -1572,12 +1572,14 @@ $id('wizard-next-btn').addEventListener('click', () => {
   const step = S.wizard.step;
   if(step===0){ if(!S.wizard.title.trim()||!S.wizard.date){toast('Titolo e data obbligatori');return;} S.wizard.step=1; }
   else if(step===1) { S.wizard.step=2; }
-  else { App.createEvent(); return; }
+  else { if(S.wizard.editMode) App.saveEditEvent(); else App.createEvent(); return; }
   renderWizardStep();
 });
 $id('wizard-back-btn').addEventListener('click', () => {
-  if(S.wizard.step===0) goTo('group',S.currentGroupId);
-  else { S.wizard.step--; renderWizardStep(); }
+  if(S.wizard.step===0) {
+    if(S.wizard.editMode) goTo('event', S.currentEventId);
+    else goTo('group', S.currentGroupId);
+  } else { S.wizard.step--; renderWizardStep(); }
 });
 document.addEventListener('input', e => {
   if(e.target.id==='w-place'){

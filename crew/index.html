@@ -645,6 +645,29 @@
   </div>
 </div>
 
+<!-- MODAL: Modifica gruppo -->
+<div class="modal-overlay hidden" id="modal-edit-group">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Modifica gruppo</div>
+      <button class="modal-close" onclick="App.closeModal('modal-edit-group')">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="field">
+      <label class="field-label">Emoji</label>
+      <input type="text" id="edit-group-emoji" maxlength="2" style="font-size:28px;text-align:center;letter-spacing:.1em;">
+    </div>
+    <div class="field">
+      <label class="field-label">Nome gruppo</label>
+      <input type="text" id="edit-group-name" placeholder="Es: Amici del calcetto">
+    </div>
+    <input type="hidden" id="edit-group-id">
+    <button class="btn btn-primary btn-full" onclick="App.saveEditGroup()">Salva modifiche</button>
+  </div>
+</div>
+
 <!-- MODAL: Impostazioni invito -->
 <div class="modal-overlay hidden" id="modal-invite-settings">
   <div class="modal-sheet">
@@ -1116,10 +1139,14 @@ function renderNextEventBanner(ev) {
 
 function renderGroupCard(g) {
   const n = g.members?.length || 0;
+  const isAdmin = S.userDoc?.role === 'admin';
   return `<div class="group-card" onclick="goTo('group','${g.id}')">
     <div class="group-avatar">${escHtml(g.emoji||'👥')}</div>
     <div style="flex:1;min-width:0;">
-      <div class="group-name">${escHtml(g.name)}</div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div class="group-name">${escHtml(g.name)}</div>
+        ${isAdmin ? `<span onclick="event.stopPropagation();App.openEditGroup('${g.id}','${escAttr(g.name)}','${escAttr(g.emoji||'👥')}')" style="color:var(--text-3);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:6px;flex-shrink:0;" title="Modifica">✏️</span>` : ''}
+      </div>
       <div class="group-meta">${n} ${n!==1?'membri':'membro'}</div>
     </div>
     <svg class="chevron-r" width="7" height="12" viewBox="0 0 7 12"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1967,6 +1994,24 @@ const App = {
       await notify({ toUserId:uid, type:'comment', eventId:S.currentEventId, eventTitle:ev.title,
         text:`${displayName(S.userDoc)} ha commentato "${ev.title}": "${text.slice(0,60)}${text.length>60?'…':''}"` });
     }
+  },
+
+  openEditGroup(gid, name, emoji) {
+    $id('edit-group-id').value = gid;
+    $id('edit-group-name').value = name;
+    $id('edit-group-emoji').value = emoji;
+    App.openModal('modal-edit-group');
+  },
+
+  async saveEditGroup() {
+    const gid = $id('edit-group-id').value;
+    const name = $id('edit-group-name').value.trim();
+    const emoji = $id('edit-group-emoji').value.trim() || '👥';
+    if (!name) { toast('Inserisci un nome'); return; }
+    await db.collection('groups').doc(gid).update({ name, emoji });
+    App.closeModal('modal-edit-group');
+    toast('✅ Gruppo aggiornato!');
+    loadHome();
   },
 
   async createGroup() {

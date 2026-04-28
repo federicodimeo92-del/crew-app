@@ -1663,6 +1663,10 @@ async function loadProfile() {
           <span style="font-size:15px;">Modifica nickname</span>
           <svg width="7" height="12" viewBox="0 0 7 12"><path d="M1 1L6 6L1 11" stroke="var(--text-3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
+        <div class="settings-item" id="notif-enable-btn" onclick="App.enableNotifications()">
+          <span style="font-size:15px;" id="notif-btn-label">${Notification.permission === 'granted' ? '✅ Notifiche attive' : '🔔 Attiva notifiche push'}</span>
+          ${Notification.permission !== 'granted' ? '<svg width="7" height="12" viewBox="0 0 7 12"><path d="M1 1L6 6L1 11" stroke="var(--text-3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
+        </div>
         <div class="settings-item" onclick="if(confirm('Vuoi uscire?')){stopListeners();auth.signOut();}">
           <span style="color:var(--red);font-weight:600;">Esci</span>
         </div>
@@ -1837,6 +1841,33 @@ const App = {
   skipPassword() {
     hide('set-password-screen'); show('app');
     initApp();
+  },
+
+  async enableNotifications() {
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') { toast('Notifiche non autorizzate'); return; }
+      const messaging = firebase.messaging();
+      const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      const token = await messaging.getToken({
+        vapidKey: 'BBXUoAtQnTv7U1CaYSvzFYnNKFJJaiawDUAkdzibvk4F2_IT0PiaCoFGJ6uD-AIA5_lZxH8yBhrr1weg8tYnE6I',
+        serviceWorkerRegistration: swReg
+      });
+      if (!token) { toast('Token non ottenuto'); return; }
+      const userRef = db.collection('users').doc(S.user.uid);
+      const snap = await userRef.get();
+      const existing = snap.data()?.fcmTokens || [];
+      if (!existing.includes(token)) {
+        await userRef.update({ fcmTokens: firebase.firestore.FieldValue.arrayUnion(token) });
+      }
+      messaging.onMessage(payload => {
+        const n = payload.notification || {};
+        toast((n.title || 'Crew') + (n.body ? ' — ' + n.body : ''));
+      });
+      const btn = $id('notif-enable-btn');
+      if (btn) btn.innerHTML = '<span style="font-size:15px;color:var(--green);">✅ Notifiche attive</span>';
+      toast('✅ Notifiche push attivate!');
+    } catch(err) { toast('Errore: ' + err.message); }
   },
 
   async sendMagicLink() {

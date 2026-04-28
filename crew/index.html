@@ -501,31 +501,32 @@
     <!-- GROUP EVENTS -->
     <div id="view-group" class="view-full hidden" style="display:flex;flex-direction:column;">
       <div class="group-header">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <!-- Back + Admin actions -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <span id="group-back-btn" style="display:inline-flex;align-items:center;gap:4px;color:var(--blue);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-h)">
             <svg width="8" height="13" viewBox="0 0 8 13"><path d="M7 1L1.5 6.5L7 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Home
           </span>
-          <div id="group-admin-actions" class="hidden" style="display:flex;gap:6px;"></div>
+          <div id="group-admin-actions" style="display:flex;gap:6px;"></div>
         </div>
-        <div style="display:flex;align-items:center;gap:14px;">
-          <div class="group-avatar" id="group-header-emoji" style="width:54px;height:54px;border-radius:16px;font-size:28px;background:var(--blue-soft);display:flex;align-items:center;justify-content:center;"></div>
-          <div>
-            <div style="font-family:var(--font-h);font-weight:800;font-size:22px;color:var(--text);" id="group-header-name"></div>
-            <div style="font-size:13px;color:var(--text-3);margin-top:2px;" id="group-header-meta"></div>
+        <!-- Emoji + Nome + Meta + Leave/Delete -->
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
+          <div class="group-avatar" id="group-header-emoji" style="width:48px;height:48px;border-radius:14px;font-size:24px;background:var(--blue-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-family:var(--font-h);font-weight:800;font-size:20px;color:var(--text);" id="group-header-name"></div>
+            <div style="font-size:12px;color:var(--text-3);margin-top:1px;" id="group-header-meta"></div>
           </div>
+          <div id="group-leave-delete-btn"></div>
         </div>
+        <!-- + Nuovo evento per tutti -->
+        <button class="btn btn-primary btn-full" id="btn-create-event" style="margin-top:2px;">+ Nuovo evento</button>
       </div>
       <div class="inner-view" id="group-body">
-        <div id="group-invite-banner"></div>
         <div style="display:flex;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:14px;">
           <div style="flex:1;text-align:center;padding:8px;border-radius:8px;font-family:var(--font-h);font-weight:700;font-size:13px;cursor:pointer;background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.08);" id="gtab-prossimi" onclick="App.showGroupTab('prossimi')">Prossimi</div>
           <div style="flex:1;text-align:center;padding:8px;border-radius:8px;font-family:var(--font-h);font-weight:700;font-size:13px;cursor:pointer;color:var(--text-3);" id="gtab-passati" onclick="App.showGroupTab('passati')">Passati</div>
         </div>
         <div id="events-list"></div>
-        <div style="padding:4px 0 8px;">
-          <button class="btn btn-primary btn-full" id="btn-create-event">+ Nuovo evento</button>
-        </div>
       </div>
     </div>
 
@@ -1136,51 +1137,26 @@ async function loadGroup(gid) {
 
   $id('group-header-emoji').textContent = g.emoji || '👥';
   $id('group-header-name').textContent = g.name;
-  $id('group-header-meta').textContent = `${g.members?.length||0} partecipanti · ${Object.keys(g).includes('inviteExpiresAt')?formatExpiry(g.inviteExpiresAt):''}`;
+  $id('group-header-meta').textContent = `${g.members?.length||0} partecipanti`;
 
-  // Admin actions
+  // Admin actions — solo Membri e Invito
   const adminActions = $id('group-admin-actions');
   if (S.userDoc?.role === 'admin') {
-    adminActions.classList.remove('hidden');
     adminActions.innerHTML = `
       <button class="btn btn-secondary btn-xs" onclick="App.openMembers()">👥 Membri</button>
-      <button class="btn btn-secondary btn-xs" onclick="App.openInviteSettings()">⚙️ Invito</button>
-      <button class="btn btn-secondary btn-xs" id="btn-requests" onclick="App.openRequests()">Richieste <span id="requests-count"></span></button>`;
-    const rUnsub = db.collection('groups').doc(gid).collection('requests')
-      .where('status','==','pending').onSnapshot(snap => {
-        const el = $id('requests-count');
-        if (el) el.innerHTML = snap.size > 0 ? `<span class="requests-badge">${snap.size}</span>` : '';
-      });
-    S.unsubscribers.push(rUnsub);
+      <button class="btn btn-secondary btn-xs" onclick="App.openInviteSettings()">⚙️ Invito</button>`;
   } else {
-    // Members can see the members list but not admin actions
-    adminActions.classList.remove('hidden');
     adminActions.innerHTML = `<button class="btn btn-secondary btn-xs" onclick="App.openMembers()">👥 Membri</button>`;
   }
 
-  // Invite banner + group actions
-  const ib = $id('group-invite-banner');
-  if (S.userDoc?.role === 'admin') {
-    const expired = isExpired(g.inviteExpiresAt);
-    const url = buildInviteUrl(g.inviteCode);
-    ib.innerHTML = `<div class="invite-banner">
-      <div style="flex:1;">
-        <div class="invite-label">Link invito</div>
-        <div class="invite-code">${g.inviteCode}</div>
-        <div class="${expired?'invite-expired':'invite-expiry'}">${formatExpiry(g.inviteExpiresAt)}</div>
-      </div>
-      <div style="display:flex;gap:6px;flex-shrink:0;">
-        ${!expired?`<button class="btn btn-primary btn-sm" onclick="App.copyLink('${url}')">📋 Copia</button>`:''}
-        <button class="btn btn-secondary btn-sm" onclick="App.openInviteSettings()">⚙️</button>
-      </div>
-    </div>
-    <div style="text-align:right;padding:4px 0 8px;">
-      <button class="btn btn-danger btn-sm" onclick="App.deleteGroup()">🗑 Elimina gruppo</button>
-    </div>`;
-  } else {
-    ib.innerHTML = `<div style="text-align:right;padding:4px 0 8px;">
-      <button class="btn btn-danger btn-sm" onclick="App.leaveGroup()">🚪 Lascia gruppo</button>
-    </div>`;
+  // Lascia / Elimina gruppo in header
+  const ldb = $id('group-leave-delete-btn');
+  if (ldb) {
+    if (S.userDoc?.role === 'admin') {
+      ldb.innerHTML = `<button class="btn btn-danger btn-xs" onclick="App.deleteGroup()">🗑 Elimina</button>`;
+    } else {
+      ldb.innerHTML = `<button class="btn btn-danger btn-xs" onclick="App.leaveGroup()">🚪 Lascia</button>`;
+    }
   }
 
   const ec = $id('events-list');

@@ -1120,7 +1120,7 @@ function renderGroupCard(g) {
     <div class="group-avatar">${escHtml(g.emoji||'👥')}</div>
     <div style="flex:1;min-width:0;">
       <div class="group-name">${escHtml(g.name)}</div>
-      <div class="group-meta">${n} membro${n!==1?'i':''}</div>
+      <div class="group-meta">${n} ${n!==1?'membri':'membro'}</div>
     </div>
     <svg class="chevron-r" width="7" height="12" viewBox="0 0 7 12"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </div>`;

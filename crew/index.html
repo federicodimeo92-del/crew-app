@@ -1240,7 +1240,7 @@ async function handleJoin(code, gated=false) {
     hide('app'); show('pending-screen');
   } else {
     // Direct entry
-    await db.collection('groups').doc(gid).update({ members:firebase.firestore.FieldValue.arrayUnion(mData) });
+    await db.collection('groups').doc(gid).update({ members:firebase.firestore.FieldValue.arrayUnion(mData), memberUids:firebase.firestore.FieldValue.arrayUnion(S.user.uid) });
     await db.collection('users').doc(S.user.uid).update({ groups:firebase.firestore.FieldValue.arrayUnion(gid) });
     S.userDoc.groups = [...(S.userDoc.groups||[]), gid];
     toast(`✅ Sei entrato in "${gData.name}"!`);
@@ -1979,7 +1979,7 @@ const App = {
     const mData = { uid, displayName:displayName(S.userDoc), photoURL:S.user.photoURL||null };
     const expiresAt = addDays(new Date(), 7);
     const ref = await db.collection('groups').add({
-      name, emoji, inviteCode, createdBy:uid, members:[mData],
+      name, emoji, inviteCode, createdBy:uid, members:[mData], memberUids:[uid],
       inviteDurationDays:7,
       inviteExpiresAt: firebase.firestore.Timestamp.fromDate(expiresAt),
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2266,7 +2266,8 @@ const App = {
   async addMemberToGroup(uid, displayNameVal, photoURL) {
     const mData = { uid, displayName: displayNameVal, photoURL: photoURL || null };
     await db.collection('groups').doc(S.currentGroupId).update({
-      members: firebase.firestore.FieldValue.arrayUnion(mData)
+      members: firebase.firestore.FieldValue.arrayUnion(mData),
+      memberUids: firebase.firestore.FieldValue.arrayUnion(uid)
     });
     await db.collection('users').doc(uid).update({
       groups: firebase.firestore.FieldValue.arrayUnion(S.currentGroupId)
@@ -2286,7 +2287,8 @@ const App = {
     if (!confirm('Rimuovere ' + name + ' dal gruppo?')) return;
     const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
     const members = gSnap.data().members.filter(m => m.uid !== uid);
-    await db.collection('groups').doc(S.currentGroupId).update({ members });
+    const memberUids = members.map(m => m.uid);
+    await db.collection('groups').doc(S.currentGroupId).update({ members, memberUids });
     await db.collection('users').doc(uid).update({ groups: firebase.firestore.FieldValue.arrayRemove(S.currentGroupId) });
     toast(name + ' rimosso');
     this.openMembers();
@@ -2297,7 +2299,8 @@ const App = {
     if (!confirm('Vuoi lasciare questo gruppo?')) return;
     const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
     const members = gSnap.data().members.filter(m => m.uid !== S.user.uid);
-    await db.collection('groups').doc(S.currentGroupId).update({ members });
+    const memberUids = members.map(m => m.uid);
+    await db.collection('groups').doc(S.currentGroupId).update({ members, memberUids });
     await db.collection('users').doc(S.user.uid).update({ groups: firebase.firestore.FieldValue.arrayRemove(S.currentGroupId) });
     S.userDoc.groups = (S.userDoc.groups || []).filter(g => g !== S.currentGroupId);
     toast('Hai lasciato il gruppo');
@@ -2358,7 +2361,7 @@ const App = {
 
   async approveRequest(uid, displayNameVal, photoURL) {
     const mData = { uid, displayName:displayNameVal, photoURL:photoURL||null };
-    await db.collection('groups').doc(S.currentGroupId).update({ members:firebase.firestore.FieldValue.arrayUnion(mData) });
+    await db.collection('groups').doc(S.currentGroupId).update({ members:firebase.firestore.FieldValue.arrayUnion(mData), memberUids:firebase.firestore.FieldValue.arrayUnion(uid) });
     await db.collection('users').doc(uid).update({ groups:firebase.firestore.FieldValue.arrayUnion(S.currentGroupId) });
     await db.collection('groups').doc(S.currentGroupId).collection('requests').doc(uid).update({ status:'approved' });
     await notify({ toUserId:uid, type:'join_approved', eventId:null, eventTitle:null,

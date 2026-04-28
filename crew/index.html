@@ -376,20 +376,54 @@
       </button>
     </div>
     <div id="magic-login-section" class="hidden">
-      <div id="magic-form">
+      <!-- Step 1: inserisci email -->
+      <div id="email-step">
         <div class="field" style="margin-bottom:12px;">
           <label class="field-label">La tua email</label>
-          <input type="email" id="magic-email-input" placeholder="nome@email.com">
+          <input type="email" id="magic-email-input" placeholder="nome@email.com" onkeydown="if(event.key==='Enter')App.checkEmail()">
         </div>
-        <button class="btn btn-primary btn-full" onclick="App.sendMagicLink()">Invia link di accesso</button>
+        <button class="btn btn-primary btn-full" onclick="App.checkEmail()">Continua →</button>
       </div>
+      <!-- Step 2a: ha già una password -->
+      <div id="password-step" class="hidden">
+        <div style="font-size:13px;color:var(--text-3);margin-bottom:14px;" id="email-display"></div>
+        <div class="field" style="margin-bottom:12px;">
+          <label class="field-label">Password</label>
+          <input type="password" id="password-input" placeholder="La tua password" onkeydown="if(event.key==='Enter')App.loginWithPassword()">
+        </div>
+        <button class="btn btn-primary btn-full" onclick="App.loginWithPassword()">Accedi</button>
+        <div style="text-align:center;margin-top:12px;">
+          <span style="font-size:13px;color:var(--blue);cursor:pointer;font-weight:600;" onclick="App.resetPassword()">Password dimenticata?</span>
+        </div>
+        <div style="text-align:center;margin-top:8px;">
+          <span style="font-size:12px;color:var(--text-3);cursor:pointer;" onclick="App.backToEmail()">← Cambia email</span>
+        </div>
+      </div>
+      <!-- Step 2b: prima volta, magic link -->
       <div id="magic-sent" class="magic-sent hidden">
         <div class="magic-sent-icon">📬</div>
         <div class="magic-sent-title">Link inviato!</div>
-        <div class="magic-sent-sub">Controlla la tua email e clicca il link per accedere. Puoi chiudere questa schermata.</div>
+        <div class="magic-sent-sub">Controlla la tua email e clicca il link per accedere. Dopo il primo accesso potrai impostare una password.</div>
       </div>
     </div>
   </div>
+</div>
+
+<!-- SET PASSWORD SCREEN (dopo primo login) -->
+<div id="set-password-screen" class="hidden" style="min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;background:var(--surface);">
+  <div style="font-size:48px;margin-bottom:16px;">🔐</div>
+  <div style="font-family:var(--font-h);font-weight:800;font-size:26px;color:var(--text);text-align:center;margin-bottom:8px;">Imposta una password</div>
+  <div style="font-size:15px;color:var(--text-3);text-align:center;margin-bottom:32px;line-height:1.5;max-width:280px;">Così la prossima volta puoi accedere direttamente senza aspettare l'email</div>
+  <div class="field" style="width:100%;max-width:280px;margin-bottom:12px;">
+    <label class="field-label">Password</label>
+    <input type="password" id="new-password-input" placeholder="Minimo 6 caratteri">
+  </div>
+  <div class="field" style="width:100%;max-width:280px;">
+    <label class="field-label">Conferma password</label>
+    <input type="password" id="confirm-password-input" placeholder="Ripeti la password" onkeydown="if(event.key==='Enter')App.setPassword()">
+  </div>
+  <button class="btn btn-primary" style="margin-top:8px;min-width:200px;" onclick="App.setPassword()">Salva password</button>
+  <div style="margin-top:16px;"><span style="font-size:13px;color:var(--text-3);cursor:pointer;" onclick="App.skipPassword()">Salta per ora</span></div>
 </div>
 
 <!-- NICKNAME SCREEN -->
@@ -841,7 +875,8 @@ function switchLoginTab(tab) {
     firebase.auth().signInWithEmailLink(email, window.location.href)
       .then(() => {
         localStorage.removeItem('crew_magic_email');
-        window.history.replaceState({}, '', window.location.pathname + window.location.search.replace(/[?&]?(apiKey|oobCode|mode|lang)=[^&]*/g,'').replace(/^&/,'?'));
+        localStorage.setItem('crew_show_set_password', '1');
+        window.history.replaceState({}, '', window.location.pathname);
       })
       .catch(err => { console.error(err); toast('Link non valido o scaduto'); });
   }
@@ -863,12 +898,17 @@ auth.onAuthStateChanged(async user => {
     // Check if nickname is set
     if (!S.userDoc?.nickname) {
       showNicknameScreen();
+    } else if (localStorage.getItem('crew_show_set_password')) {
+      // First magic link login — prompt to set password
+      localStorage.removeItem('crew_show_set_password');
+      hide('login-screen'); hide('onboarding-screen');
+      show('set-password-screen');
     } else {
       initApp();
     }
   } else {
     S.user = null; S.userDoc = null;
-    hide('app'); hide('nickname-screen'); hide('pending-screen');
+    hide('app'); hide('nickname-screen'); hide('pending-screen'); hide('set-password-screen');
     if (localStorage.getItem('crew_ob')) show('login-screen');
     else { renderOBStep(); show('onboarding-screen'); }
   }
@@ -1722,6 +1762,83 @@ const App = {
     hide('app'); show('nickname-screen');
   },
 
+  async checkEmail() {
+    const email = $id('magic-email-input')?.value?.trim();
+    if (!email) { toast('Inserisci la tua email'); return; }
+    // Check if user has a password set (try to fetch sign-in methods)
+    try {
+      const methods = await auth.fetchSignInMethodsForEmail(email);
+      if (methods.includes('password')) {
+        // Has password — show password field
+        $id('email-display').textContent = email;
+        hide('email-step'); show('password-step');
+      } else {
+        // First time or magic link only — send magic link
+        const actionCodeSettings = {
+          url: window.location.origin + window.location.pathname,
+          handleCodeInApp: true,
+        };
+        await auth.sendSignInLinkToEmail(email, actionCodeSettings);
+        localStorage.setItem('crew_magic_email', email);
+        hide('email-step'); show('magic-sent');
+      }
+    } catch(err) { toast('Errore: ' + err.message); }
+  },
+
+  async loginWithPassword() {
+    const email = $id('magic-email-input')?.value?.trim();
+    const password = $id('password-input')?.value;
+    if (!email || !password) { toast('Inserisci email e password'); return; }
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+    } catch(err) {
+      if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        toast('Password errata ❌');
+      } else {
+        toast('Errore: ' + err.message);
+      }
+    }
+  },
+
+  async resetPassword() {
+    const email = $id('magic-email-input')?.value?.trim();
+    if (!email) { toast('Email non trovata'); return; }
+    try {
+      await auth.sendPasswordResetEmail(email);
+      toast('📬 Email di reset inviata!');
+    } catch(err) { toast('Errore: ' + err.message); }
+  },
+
+  backToEmail() {
+    hide('password-step'); show('email-step');
+    const pi = $id('password-input'); if (pi) pi.value = '';
+  },
+
+  async setPassword() {
+    const p1 = $id('new-password-input')?.value;
+    const p2 = $id('confirm-password-input')?.value;
+    if (!p1 || p1.length < 6) { toast('Password di almeno 6 caratteri'); return; }
+    if (p1 !== p2) { toast('Le password non coincidono ❌'); return; }
+    try {
+      await S.user.updatePassword(p1);
+      toast('✅ Password impostata!');
+      hide('set-password-screen'); show('app');
+      initApp();
+    } catch(err) {
+      if (err.code === 'auth/requires-recent-login') {
+        toast('Sessione scaduta, effettua di nuovo il login');
+        auth.signOut();
+      } else {
+        toast('Errore: ' + err.message);
+      }
+    }
+  },
+
+  skipPassword() {
+    hide('set-password-screen'); show('app');
+    initApp();
+  },
+
   async sendMagicLink() {
     const email = $id('magic-email-input')?.value?.trim();
     if (!email) { toast('Inserisci la tua email'); return; }
@@ -1730,9 +1847,9 @@ const App = {
       handleCodeInApp: true,
     };
     try {
-      await firebase.auth().sendSignInLinkToEmail(email, actionCodeSettings);
+      await auth.sendSignInLinkToEmail(email, actionCodeSettings);
       localStorage.setItem('crew_magic_email', email);
-      hide('magic-form'); show('magic-sent');
+      hide('email-step'); show('magic-sent');
     } catch(err) { toast('Errore: ' + err.message); }
   },
 

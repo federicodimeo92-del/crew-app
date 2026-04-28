@@ -2222,8 +2222,9 @@ const App = {
     c.innerHTML = '<div style="display:flex;justify-content:center;padding:24px"><div class="spinner"></div></div>';
     const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
     const members = gSnap.data().members || [];
+    const memberUids = members.map(m => m.uid);
     const isAdmin = S.userDoc?.role === 'admin';
-    c.innerHTML = members.map(m =>
+    let html = members.map(m =>
       '<div class="member-card">' +
       '<img src="' + av(m.photoURL, m.displayName) + '" alt="">' +
       '<div style="flex:1;"><div style="font-family:var(--font-h);font-weight:700;font-size:15px;color:var(--text);">' + escHtml(m.displayName||'') + '</div>' +
@@ -2231,6 +2232,54 @@ const App = {
       (isAdmin && m.uid !== S.user.uid ? '<button class="btn btn-danger btn-xs" onclick="App.removeMember(\'' + m.uid + '\',\'' + escAttr(m.displayName||'') + '\')">Rimuovi</button>' : '') +
       '</div>'
     ).join('');
+    // Admin: add member section
+    if (isAdmin) {
+      html += '<div style="margin-top:18px;border-top:1px solid var(--border);padding-top:14px;">' +
+        '<div style="font-family:var(--font-h);font-weight:700;font-size:14px;color:var(--text);margin-bottom:10px;">➕ Aggiungi utente</div>' +
+        '<div id="add-member-list"><div style="display:flex;justify-content:center;padding:12px"><div class="spinner"></div></div></div>' +
+        '</div>';
+    }
+    c.innerHTML = html;
+    // Load all users not already in group
+    if (isAdmin) {
+      const usersSnap = await db.collection('users').get();
+      const addList = $id('add-member-list');
+      const available = [];
+      usersSnap.forEach(doc => {
+        if (!memberUids.includes(doc.id)) available.push({uid:doc.id,...doc.data()});
+      });
+      if (!available.length) {
+        addList.innerHTML = '<div style="font-size:13px;color:var(--text-3);">Tutti gli utenti sono già nel gruppo</div>';
+        return;
+      }
+      addList.innerHTML = available.map(u =>
+        '<div class="member-card" style="margin-bottom:8px;">' +
+        '<img src="' + av(u.photoURL, u.displayName) + '" alt="">' +
+        '<div style="flex:1;"><div style="font-family:var(--font-h);font-weight:700;font-size:15px;color:var(--text);">' + escHtml(u.nickname||u.displayName||'') + '</div>' +
+        '<div style="font-size:12px;color:var(--text-3);">' + escHtml(u.email||'') + '</div></div>' +
+        '<button class="btn btn-primary btn-xs" onclick="App.addMemberToGroup(\'' + u.uid + '\',\'' + escAttr(u.nickname||u.displayName||'') + '\',\'' + escAttr(u.photoURL||'') + '\')">Aggiungi</button>' +
+        '</div>'
+      ).join('');
+    }
+  },
+
+  async addMemberToGroup(uid, displayNameVal, photoURL) {
+    const mData = { uid, displayName: displayNameVal, photoURL: photoURL || null };
+    await db.collection('groups').doc(S.currentGroupId).update({
+      members: firebase.firestore.FieldValue.arrayUnion(mData)
+    });
+    await db.collection('users').doc(uid).update({
+      groups: firebase.firestore.FieldValue.arrayUnion(S.currentGroupId)
+    });
+    const gData = S.currentGroupData;
+    await notify({
+      toUserId: uid, type: 'join_approved',
+      groupId: S.currentGroupId, groupName: gData?.name || '',
+      text: 'Sei stato aggiunto al gruppo "' + (gData?.name||'') + '"! 🎉'
+    });
+    toast('✅ ' + displayNameVal + ' aggiunto!');
+    this.openMembers();
+    loadGroup(S.currentGroupId);
   },
 
   async removeMember(uid, name) {

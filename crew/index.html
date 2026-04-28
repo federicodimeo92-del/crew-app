@@ -1336,8 +1336,8 @@ function renderEventHeader(ev) {
       <div class="event-hero-title">${escHtml(ev.title)}</div>
       ${ev.date?`<div class="event-meta-item">📅 ${ital(ev.date)}${ev.time?' alle '+ev.time:''}</div>`:''}
       ${cd.label?`<div class="countdown-badge ${cd.cls}" style="margin-top:6px;">${cd.label}</div>`:''}
-      ${ev.place?`<div class="event-meta-link" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.place)}')">📍 ${escHtml(ev.place)} ↗</div>`:''}
-      ${ev.meetingPoint?`<div class="event-meta-link" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.meetingPoint)}')">🚩 ${escHtml(ev.meetingPoint)} ↗</div>`:''}
+      ${ev.place?`<div class="event-meta-link" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.place)}')">📍 <span style="color:var(--text-3);font-weight:400;">Luogo:</span> ${escHtml(ev.place)} ↗</div>`:''}
+      ${ev.meetingPoint?`<div class="event-meta-link" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.meetingPoint)}')">🚩 <span style="color:var(--text-3);font-weight:400;">Ritrovo:</span> ${escHtml(ev.meetingPoint)} ↗</div>`:''}
       ${ev.deadline?`<div class="event-deadline">⏰ Rispondi entro ${ital(ev.deadline)}</div>`:''}
       <div class="views-row" style="margin-top:8px;">
         <div id="views-row"><span class="views-label">👁 …</span></div>

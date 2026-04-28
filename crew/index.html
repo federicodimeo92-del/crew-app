@@ -733,21 +733,19 @@ const S = {
 const EVENT_EMOJIS = ['🎉','⛱️','🍕','🎸','⚽','🏊','🌆','🗼','🎭','🍹','🏕️','🎬','🎤','🏖️','🚴','🎮','🍔','🌮','🍣','🥂','🎂','🏋️','🎯','🃏','🎨','🌍','✈️','🎡','🎪','🏔️'];
 
 const DEFAULT_NOTIF_PREFS = {
-  new_event: true, rsvp: true, items: true, comment: true,
-  mention: true, reminder_item: true,
-  join_request: true, join_approved: true, join_rejected: true
+  new_event: true,
+  comment: true,
+  mention: true,
+  deadline_reminder: true,
+  day_before: true,
 };
 
 const NOTIF_LABELS = {
-  new_event:     { label: 'Nuovo evento', sub: 'Quando viene creato un evento nel gruppo' },
-  rsvp:          { label: 'Risposte partecipazione', sub: 'Quando qualcuno risponde a un tuo evento' },
-  items:         { label: 'Lista cose', sub: 'Quando viene aggiunta o assegnata una voce' },
-  comment:       { label: 'Commenti', sub: 'Quando qualcuno commenta un evento' },
-  mention:       { label: 'Menzioni', sub: 'Quando qualcuno ti menziona con @' },
-  reminder_item: { label: 'Promemoria cose', sub: 'Cosa devi portare agli eventi' },
-  join_request:  { label: 'Richieste di ingresso', sub: 'Solo per admin' },
-  join_approved: { label: 'Approvazione richiesta', sub: 'Se la tua richiesta viene accettata' },
-  join_rejected: { label: 'Rifiuto richiesta', sub: 'Se la tua richiesta viene rifiutata' },
+  new_event:         { label: 'Nuovo evento', sub: 'Quando viene creato un evento nel gruppo' },
+  comment:           { label: 'Commenti', sub: 'Quando qualcuno commenta un evento' },
+  mention:           { label: 'Menzioni', sub: 'Quando qualcuno ti menziona con @' },
+  deadline_reminder: { label: 'Scadenza risposta', sub: 'Reminder l\'ultimo giorno utile per rispondere' },
+  day_before:        { label: 'Giorno prima', sub: 'Reminder il giorno prima dell\'evento' },
 };
 
 const INVITE_DURATIONS = [
@@ -1232,10 +1230,6 @@ async function handleJoin(code, gated=false) {
     // Notify group creator/admin
     const adminUid = gData.createdBy;
     if (adminUid) {
-      await notify({ toUserId:adminUid, type:'join_request', eventId:null, eventTitle:null,
-        groupId:gid, groupName:gData.name, requesterName:displayName(S.userDoc),
-        requesterUid:S.user.uid,
-        text:`${displayName(S.userDoc)} ha chiesto di entrare in "${gData.name}"` });
     }
     hide('app'); show('pending-screen');
   } else {
@@ -1893,8 +1887,6 @@ const App = {
     const eSnap = await db.collection('events').doc(S.currentEventId).get();
     const ev = eSnap.data();
     if (ev.createdBy !== S.user.uid) {
-      await notify({ toUserId:ev.createdBy, type:'rsvp', eventId:S.currentEventId, eventTitle:ev.title,
-        text:`${displayName(S.userDoc)} ha risposto "${status==='yes'?'Ci sono':status==='no'?'Non vengo':'Forse'}" a "${ev.title}"` });
     }
   },
 
@@ -1910,8 +1902,6 @@ const App = {
     const eSnap = await db.collection('events').doc(S.currentEventId).get();
     const ev = eSnap.data();
     const gSnap = await db.collection('groups').doc(ev.groupId).get();
-    await notifyMany(gSnap.data().members||[], { type:'items', eventId:S.currentEventId, eventTitle:ev.title,
-      text:`${displayName(S.userDoc)} ha aggiunto "${text}" alla lista di "${ev.title}"` });
   },
 
   async takeItem(itemId, itemText) {
@@ -1922,8 +1912,6 @@ const App = {
     const eSnap = await db.collection('events').doc(S.currentEventId).get();
     const ev = eSnap.data();
     if (ev.createdBy !== S.user.uid) {
-      await notify({ toUserId:ev.createdBy, type:'items', eventId:S.currentEventId, eventTitle:ev.title,
-        text:`${displayName(S.userDoc)} si è assegnato "${itemText}" in "${ev.title}"` });
     }
     toast(`🎒 "${itemText}" assegnato a te`);
   },
@@ -2198,8 +2186,6 @@ const App = {
     const gSnap = await db.collection('groups').doc(ev.groupId).get();
     for (const m of (gSnap.data().members || [])) {
       if (m.uid !== S.user.uid) {
-        await notify({ toUserId: m.uid, type:'items', eventId: S.currentEventId, eventTitle: ev.title,
-          text: dName(S.userDoc) + ' ha aggiunto "' + text + '" alla lista di "' + ev.title + '"' });
       }
     }
   },
@@ -2364,9 +2350,6 @@ const App = {
     await db.collection('groups').doc(S.currentGroupId).update({ members:firebase.firestore.FieldValue.arrayUnion(mData), memberUids:firebase.firestore.FieldValue.arrayUnion(uid) });
     await db.collection('users').doc(uid).update({ groups:firebase.firestore.FieldValue.arrayUnion(S.currentGroupId) });
     await db.collection('groups').doc(S.currentGroupId).collection('requests').doc(uid).update({ status:'approved' });
-    await notify({ toUserId:uid, type:'join_approved', eventId:null, eventTitle:null,
-      groupId:S.currentGroupId, groupName:S.currentGroupData?.name||'',
-      text:`La tua richiesta di entrare in "${S.currentGroupData?.name||'un gruppo'}" è stata accettata! 🎉` });
     toast(`✅ ${displayNameVal} approvato!`);
     this.openRequests();
     loadGroup(S.currentGroupId);
@@ -2375,9 +2358,6 @@ const App = {
   async rejectRequest(uid) {
     await db.collection('groups').doc(S.currentGroupId).collection('requests').doc(uid).update({ status:'rejected' });
     const rDoc = await db.collection('groups').doc(S.currentGroupId).collection('requests').doc(uid).get();
-    await notify({ toUserId:uid, type:'join_rejected', eventId:null, eventTitle:null,
-      groupId:S.currentGroupId, groupName:S.currentGroupData?.name||'',
-      text:`La tua richiesta di entrare in "${S.currentGroupData?.name||'un gruppo'}" non è stata accettata.` });
     toast('Richiesta rifiutata');
     this.openRequests();
   },
@@ -2392,7 +2372,7 @@ const App = {
       c.innerHTML = '<div class="empty-state" style="padding:32px 0"><div class="empty-emoji">🔔</div><div class="empty-title">Nessuna notifica</div></div>';
       return;
     }
-    const ICONS = { new_event:'🎉', mention:'💬', items:'🎒', rsvp:'✅', reminder_item:'🎒', comment:'💬', join_request:'👋', join_approved:'✅', join_rejected:'❌', deadline:'⏰' };
+    const ICONS = { new_event:'🎉', comment:'💬', mention:'💬', deadline_reminder:'⏰', day_before:'📅' };
     const unread=[], read=[];
     snap.forEach(doc=>{ const n={id:doc.id,...doc.data()}; n.read?read.push(n):unread.push(n); });
     let html='';
@@ -2522,18 +2502,36 @@ async function checkDayBeforeReminders() {
   const checkKey = 'crew_reminder_' + todayStr();
   if (localStorage.getItem(checkKey)) return;
   const tom = tomorrowStr();
+  const today = todayStr();
   try {
-    const evSnap = await db.collection('events').where('groupId','in',S.userDoc.groups.slice(0,10)).where('date','==',tom).get();
+    const evSnap = await db.collection('events')
+      .where('groupId','in',S.userDoc.groups.slice(0,10))
+      .get();
     for (const evDoc of evSnap.docs) {
       const ev = evDoc.data();
-      const iSnap = await db.collection('events').doc(evDoc.id).collection('items').where('assignedTo','==',S.user.uid).get();
-      for (const iDoc of iSnap.docs) {
-        const remKey = 'crew_rem_sent_' + evDoc.id + '_' + iDoc.id;
-        if (localStorage.getItem(remKey)) continue;
-        await notify({ toUserId: S.user.uid, type: 'reminder_item', eventId: evDoc.id, eventTitle: ev.title,
-          itemText: iDoc.data().text, eventDate: ev.date,
-          text: 'Domani è "' + ev.title + '"! Ricorda di portare: "' + iDoc.data().text + '"' });
-        localStorage.setItem(remKey, '1');
+      // Day before reminder
+      if (ev.date === tom) {
+        const remKey = 'crew_daybefore_' + evDoc.id;
+        if (!localStorage.getItem(remKey)) {
+          await notify({ toUserId:S.user.uid, type:'day_before',
+            eventId:evDoc.id, eventTitle:ev.title,
+            text:'Domani c\'è "' + ev.title + '"! 📅' });
+          localStorage.setItem(remKey, '1');
+        }
+      }
+      // Deadline reminder — last day to respond, only if not responded
+      if (ev.deadline === today) {
+        const rsvpSnap = await db.collection('events').doc(evDoc.id)
+          .collection('rsvp').doc(S.user.uid).get();
+        if (!rsvpSnap.exists) {
+          const remKey = 'crew_deadline_' + evDoc.id;
+          if (!localStorage.getItem(remKey)) {
+            await notify({ toUserId:S.user.uid, type:'deadline_reminder',
+              eventId:evDoc.id, eventTitle:ev.title,
+              text:'Oggi scade la risposta per "' + ev.title + '" — hai risposto? ⏰' });
+            localStorage.setItem(remKey, '1');
+          }
+        }
       }
     }
     localStorage.setItem(checkKey, '1');

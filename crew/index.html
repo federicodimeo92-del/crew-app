@@ -1882,6 +1882,8 @@ const App = {
       toast('Errore: ' + err.message);
     }
   },
+
+  async enableNotifications() {
     try {
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') { toast('Notifiche non autorizzate'); return; }

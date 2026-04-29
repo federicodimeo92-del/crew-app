@@ -1675,10 +1675,7 @@ async function loadProfile() {
         <div class="settings-item" onclick="if(confirm('Vuoi uscire?')){stopListeners();auth.signOut();}">
           <span style="color:var(--red);font-weight:600;">Esci</span>
         </div>
-        ${S.userDoc?.role==='admin' ? `<div class="settings-item" onclick="App.fixUserGroups()">
-          <span style="font-size:15px;">🔧 Fix gruppi utenti</span>
-          <svg width="7" height="12" viewBox="0 0 7 12"><path d="M1 1L6 6L1 11" stroke="var(--text-3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>` : ''}
+        ${S.userDoc?.role==='admin' ? '<div class="settings-item" onclick="App.fixUserGroups()"><span style="font-size:15px;">🔧 Fix gruppi utenti</span></div>' : ''}
       </div>`;
 
     const prefList = $id('notif-prefs-list');

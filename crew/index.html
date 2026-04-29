@@ -16,6 +16,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -751,6 +752,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.firestore();
+const functions = firebase.app().functions('europe-west1');
 
 // ============================================================
 // STATE
@@ -1673,6 +1675,10 @@ async function loadProfile() {
         <div class="settings-item" onclick="if(confirm('Vuoi uscire?')){stopListeners();auth.signOut();}">
           <span style="color:var(--red);font-weight:600;">Esci</span>
         </div>
+        ${S.userDoc?.role==='admin' ? `<div class="settings-item" onclick="App.fixUserGroups()">
+          <span style="font-size:15px;">🔧 Fix gruppi utenti</span>
+          <svg width="7" height="12" viewBox="0 0 7 12"><path d="M1 1L6 6L1 11" stroke="var(--text-3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>` : ''}
       </div>`;
 
     const prefList = $id('notif-prefs-list');
@@ -1868,7 +1874,17 @@ const App = {
     initApp();
   },
 
-  async enableNotifications() {
+  async fixUserGroups() {
+    if (!confirm('Avvia fix gruppi utenti? Potrebbe richiedere qualche secondo.')) return;
+    try {
+      toast('🔧 Fix in corso...');
+      const fixGroups = functions.httpsCallable('fixUserGroups');
+      const result = await fixGroups();
+      toast(`✅ Fix completato! ${result.data.fixed} utenti aggiornati`);
+    } catch(err) {
+      toast('Errore: ' + err.message);
+    }
+  },
     try {
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') { toast('Notifiche non autorizzate'); return; }
@@ -2299,23 +2315,26 @@ const App = {
   },
 
   async addMemberToGroup(uid, displayNameVal, photoURL) {
-    const mData = { uid, displayName: displayNameVal, photoURL: photoURL || null };
-    await db.collection('groups').doc(S.currentGroupId).update({
-      members: firebase.firestore.FieldValue.arrayUnion(mData),
-      memberUids: firebase.firestore.FieldValue.arrayUnion(uid)
-    });
-    await db.collection('users').doc(uid).update({
-      groups: firebase.firestore.FieldValue.arrayUnion(S.currentGroupId)
-    });
-    const gData = S.currentGroupData;
-    await notify({
-      toUserId: uid, type: 'join_approved',
-      groupId: S.currentGroupId, groupName: gData?.name || '',
-      text: 'Sei stato aggiunto al gruppo "' + (gData?.name||'') + '"! 🎉'
-    });
-    toast('✅ ' + displayNameVal + ' aggiunto!');
-    this.openMembers();
-    loadGroup(S.currentGroupId);
+    try {
+      const addMember = functions.httpsCallable('addMemberToGroup');
+      await addMember({
+        groupId: S.currentGroupId,
+        uid,
+        displayName: displayNameVal,
+        photoURL: photoURL || null
+      });
+      const gData = S.currentGroupData;
+      await notify({
+        toUserId: uid, type: 'join_approved',
+        groupId: S.currentGroupId, groupName: gData?.name || '',
+        text: 'Sei stato aggiunto al gruppo "' + (gData?.name||'') + '"! 🎉'
+      });
+      toast('✅ ' + displayNameVal + ' aggiunto!');
+      this.openMembers();
+      loadGroup(S.currentGroupId);
+    } catch(err) {
+      toast('Errore: ' + err.message);
+    }
   },
 
   async removeMember(uid, name) {

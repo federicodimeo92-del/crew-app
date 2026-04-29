@@ -1187,9 +1187,10 @@ async function loadGroup(gid) {
   }
 
   const ec = $id('events-list');
-  const unsub = db.collection('events').where('groupId','==',gid).orderBy('date','asc')
+  const unsub = db.collection('events').where('groupId','==',gid)
+    .where('date','>=',todayStr()).orderBy('date','asc')
     .onSnapshot(snap => {
-      if (snap.empty) { ec.innerHTML=`<div class="empty-state"><div class="empty-emoji">🎉</div><div class="empty-title">Nessun evento</div><div class="empty-sub">Crea il primo evento!</div></div>`; return; }
+      if (snap.empty) { ec.innerHTML=`<div class="empty-state"><div class="empty-emoji">🎉</div><div class="empty-title">Nessun evento in programma</div><div class="empty-sub">Crea il primo evento!</div></div>`; return; }
       ec.innerHTML = '';
       const evs = []; snap.forEach(doc=>evs.push({id:doc.id,...doc.data()}));
       evs.forEach((ev,i) => { ec.innerHTML += renderTimelineEvent(ev,i,evs.length); });
@@ -2550,8 +2551,14 @@ function countdownLabel(dateStr) {
   if (diff === 1) return { label: 'Domani! 📅', cls: 'tomorrow' };
   return { label: 'Mancano ' + diff + ' giorni', cls: '' };
 }
-function todayStr() { return new Date().toISOString().split('T')[0]; }
-function tomorrowStr() { const d = new Date(); d.setDate(d.getDate()+1); return d.toISOString().split('T')[0]; }
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function tomorrowStr() {
+  const d = new Date(); d.setDate(d.getDate()+1);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
 
 // ── DAY-BEFORE REMINDERS ──────────────────────────────────
 async function checkDayBeforeReminders() {

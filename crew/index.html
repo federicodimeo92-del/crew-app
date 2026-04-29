@@ -1186,16 +1186,7 @@ async function loadGroup(gid) {
     }
   }
 
-  const ec = $id('events-list');
-  const unsub = db.collection('events').where('groupId','==',gid)
-    .where('date','>=',todayStr()).orderBy('date','asc')
-    .onSnapshot(snap => {
-      if (snap.empty) { ec.innerHTML=`<div class="empty-state"><div class="empty-emoji">🎉</div><div class="empty-title">Nessun evento in programma</div><div class="empty-sub">Crea il primo evento!</div></div>`; return; }
-      ec.innerHTML = '';
-      const evs = []; snap.forEach(doc=>evs.push({id:doc.id,...doc.data()}));
-      evs.forEach((ev,i) => { ec.innerHTML += renderTimelineEvent(ev,i,evs.length); });
-    });
-  S.unsubscribers.push(unsub);
+  loadGroupEvents(gid, 'prossimi');
 }
 
 function renderTimelineEvent(ev, i, total) {

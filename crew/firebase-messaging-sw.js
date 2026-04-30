@@ -1,6 +1,4 @@
 // firebase-messaging-sw.js
-// Service Worker per notifiche push in background (FCM)
-
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
@@ -15,11 +13,29 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Gestione notifiche in background (quando app è chiusa/nascosta)
+// Contatore badge locale
+let badgeCount = 0;
+
+function updateBadge(count) {
+  badgeCount = count;
+  if ('setAppBadge' in navigator) {
+    if (count > 0) {
+      navigator.setAppBadge(count).catch(() => {});
+    } else {
+      navigator.clearAppBadge().catch(() => {});
+    }
+  }
+}
+
+// Notifiche in background
 messaging.onBackgroundMessage(payload => {
   console.log('[SW] Notifica ricevuta in background:', payload);
 
   const { title, body, icon } = payload.notification || {};
+
+  // Incrementa badge
+  badgeCount++;
+  updateBadge(badgeCount);
 
   self.registration.showNotification(title || 'Crew', {
     body: body || '',
@@ -31,9 +47,13 @@ messaging.onBackgroundMessage(payload => {
   });
 });
 
-// Click sulla notifica → apri/porta in primo piano l'app
+// Click sulla notifica
 self.addEventListener('notificationclick', event => {
   event.notification.close();
+
+  // Azzera badge al click
+  updateBadge(0);
+
   const eventId = event.notification.data?.eventId;
   const url = eventId ? `/?event=${eventId}` : '/';
 
@@ -41,10 +61,21 @@ self.addEventListener('notificationclick', event => {
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.postMessage({ type: 'CLEAR_BADGE' });
           return client.focus();
         }
       }
       return clients.openWindow(url);
     })
   );
+});
+
+// Messaggio dall'app per azzerare il badge
+self.addEventListener('message', event => {
+  if (event.data?.type === 'CLEAR_BADGE') {
+    updateBadge(0);
+  }
+  if (event.data?.type === 'SET_BADGE') {
+    updateBadge(event.data.count || 0);
+  }
 });

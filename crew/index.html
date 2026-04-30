@@ -1718,6 +1718,15 @@ function listenNotifications() {
       const count = snap.size;
       if (count > 0) { show('notif-dot'); $id('tab-notif-badge').textContent=count>9?'9+':count; show('tab-notif-badge'); }
       else { hide('notif-dot'); hide('tab-notif-badge'); }
+      // Sync badge con service worker
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: 'SET_BADGE', count });
+      }
+      // App Badging API diretta (quando app è in foreground)
+      if ('setAppBadge' in navigator) {
+        if (count > 0) navigator.setAppBadge(count).catch(()=>{});
+        else navigator.clearAppBadge().catch(()=>{});
+      }
     });
 }
 
@@ -2063,11 +2072,17 @@ const App = {
         createdBy:S.user.uid, createdAt:firebase.firestore.FieldValue.serverTimestamp()
       });
     }
-    // Notify ALL members (not just if admin creates)
-    const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
-    await notifyMany(gSnap.data().members||[], { type:'new_event', eventId:ref.id, eventTitle:w.title,
-      text:`${displayName(S.userDoc)} ha creato "${w.title}" — ${ital(w.date)}` });
+    // Notify ALL members
+    try {
+      const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
+      await notifyMany(gSnap.data().members||[], { type:'new_event', eventId:ref.id, eventTitle:w.title,
+        text:`${displayName(S.userDoc)} ha creato "${w.title}" — ${ital(w.date)}` });
+    } catch(e) {}
     toast('🎉 Evento creato!');
+    // Assicura che currentEventId e currentGroupId siano impostati prima di navigare
+    S.currentEventId = ref.id;
+    S.currentGroupId = data.groupId;
+    S.currentEventData = null;
     goTo('event', ref.id);
   },
 
@@ -2432,6 +2447,11 @@ const App = {
   // ─── NOTIFICATIONS ───────────────────────────────────
   async openNotifications() {
     show('modal-notifications');
+    // Azzera badge
+    if ('setAppBadge' in navigator) navigator.clearAppBadge().catch(()=>{});
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_BADGE' });
+    }
     const c = $id('notifications-list');
     c.innerHTML = '<div style="display:flex;justify-content:center;padding:24px"><div class="spinner"></div></div>';
     const snap = await db.collection('notifications').where('toUserId','==',S.user.uid).orderBy('createdAt','desc').limit(60).get();
@@ -2684,8 +2704,9 @@ function _doLoadItemsPage() {
   if (tipoEl) tipoEl.innerHTML = ['consigliata','comune'].map(v =>
     '<div onclick="' + (S.userDoc?.role==='admin' ? 'App.changeTipoFromPage(\''+v+'\')' : 'void(0)') + '" style="border-radius:99px;padding:4px 12px;font-size:11px;font-weight:700;font-family:var(--font-h);cursor:' + (S.userDoc?.role==='admin'?'pointer':'default') + ';background:' + (v===tipo?(v==='comune'?'var(--blue-soft)':'#FFF3E8'):'var(--surface-2)') + ';color:' + (v===tipo?(v==='comune'?'var(--blue-dark)':'#E8893A'):'var(--text-3)') + ';">' + (v==='comune'?'🤝 Comune':'📋 Consigliata') + '</div>'
   ).join('');
+  const canEdit = S.userDoc?.role==='admin' || S.currentEventData?.createdBy === S.user?.uid;
   const addRow = $id('items-add-row');
-  if (addRow) addRow.style.display = S.userDoc?.role==='admin' ? '' : 'none';
+  if (addRow) addRow.style.display = canEdit ? '' : 'none';
   const unsub = db.collection('events').doc(S.currentEventId).collection('items').orderBy('createdAt','asc').onSnapshot(snap => {
     const items = []; snap.forEach(s => items.push({id:s.id,...s.data()})); renderItemsPage(items);
   });
@@ -2706,7 +2727,7 @@ function renderItemsPage(items) {
           ? '<div class="item-assigned"><img src="' + av(it.assignedPhoto,it.assignedName) + '" alt="">' + (isMe?'Tu':escHtml(it.assignedName||'')) + '</div>' + (isMe?'<button class="btn-take mine" onclick="App.releaseItem(\''+it.id+'\')">Rilascia</button>':'')
           : '<button class="btn-take free" onclick="App.takeItem(\''+it.id+'\',\''+escAttr(it.text)+'\')">Porto io</button>')
         : '') +
-      (S.userDoc?.role==='admin' ? '<button class="item-delete-btn" onclick="App.deleteItem(\''+it.id+'\')">×</button>' : '') +
+      (S.userDoc?.role==='admin' || S.currentEventData?.createdBy === S.user?.uid ? '<button class="item-delete-btn" onclick="App.deleteItem(\''+it.id+'\')">×</button>' : '') +
       '</div>';
   }).join('');
 }

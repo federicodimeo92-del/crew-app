@@ -560,9 +560,9 @@
         <div style="font-family:var(--font-h);font-weight:800;font-size:22px;color:var(--text);margin-top:14px;">&#127956; Cosa portare</div>
         <div style="display:flex;gap:6px;margin-top:10px;" id="items-page-tipo"></div>
         <!-- Add row in alto, sempre visibile -->
-        <div style="display:flex;gap:8px;margin-top:12px;" id="items-add-row">
-          <input type="text" id="items-page-input" placeholder="Aggiungi una voce..." style="flex:1;padding:10px 12px;" onkeydown="if(event.key==='Enter')App.addItemFromPage()">
-          <button class="btn btn-primary btn-sm" onclick="App.addItemFromPage()">+</button>
+        <div style="display:flex;align-items:center;margin-top:12px;position:relative;" id="items-add-row">
+          <input type="text" id="items-page-input" placeholder="Aggiungi una voce..." style="width:100%;padding:10px 48px 10px 14px;" onkeydown="if(event.key==='Enter')App.addItemFromPage()">
+          <button onclick="App.addItemFromPage()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;background:var(--blue);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700;">+</button>
         </div>
       </div>
       <div style="flex:1;overflow-y:auto;padding:16px;" id="items-page-body"></div>

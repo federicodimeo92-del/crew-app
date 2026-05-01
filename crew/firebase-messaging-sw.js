@@ -13,50 +13,40 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Contatore badge locale
 let badgeCount = 0;
 
-function updateBadge(count) {
+function setBadge(count) {
   badgeCount = count;
-  if ('setAppBadge' in navigator) {
-    if (count > 0) {
-      navigator.setAppBadge(count).catch(() => {});
-    } else {
-      navigator.clearAppBadge().catch(() => {});
-    }
+  if ('setAppBadge' in self.navigator) {
+    if (count > 0) self.navigator.setAppBadge(count).catch(() => {});
+    else self.navigator.clearAppBadge().catch(() => {});
   }
 }
 
-// Notifiche in background
-messaging.onBackgroundMessage(payload => {
-  console.log('[SW] Notifica ricevuta in background:', payload);
-
-  const { title, body, icon } = payload.notification || {};
-
-  // Incrementa badge
+// Intercetta push nativo PRIMA di Firebase — necessario per badge su MIUI
+self.addEventListener('push', () => {
   badgeCount++;
-  updateBadge(badgeCount);
+  setBadge(badgeCount);
+});
 
+// Firebase gestisce la notifica visiva
+messaging.onBackgroundMessage(payload => {
+  const { title, body, icon } = payload.notification || {};
   self.registration.showNotification(title || 'Crew', {
     body: body || '',
     icon: icon || '/icon-192.png',
     badge: '/icon-192.png',
     tag: payload.data?.eventId || 'crew-notif',
     data: payload.data || {},
-    vibrate: [200, 100, 200]
+    vibrate: [200, 100, 200],
   });
 });
 
-// Click sulla notifica
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-
-  // Azzera badge al click
-  updateBadge(0);
-
+  setBadge(0);
   const eventId = event.notification.data?.eventId;
   const url = eventId ? `/?event=${eventId}` : '/';
-
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
       for (const client of clientList) {
@@ -70,12 +60,7 @@ self.addEventListener('notificationclick', event => {
   );
 });
 
-// Messaggio dall'app per azzerare il badge
 self.addEventListener('message', event => {
-  if (event.data?.type === 'CLEAR_BADGE') {
-    updateBadge(0);
-  }
-  if (event.data?.type === 'SET_BADGE') {
-    updateBadge(event.data.count || 0);
-  }
+  if (event.data?.type === 'CLEAR_BADGE') setBadge(0);
+  if (event.data?.type === 'SET_BADGE') setBadge(event.data.count || 0);
 });

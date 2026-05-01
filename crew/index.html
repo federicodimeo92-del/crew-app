@@ -2649,6 +2649,9 @@ function loadGroupEvents(gid, tab) {
     ec.innerHTML = '';
     const evs = []; snap.forEach(doc => evs.push({id:doc.id,...doc.data()}));
     evs.forEach((ev,i) => { ec.innerHTML += renderTimelineEventNew(ev, i, evs.length, tab==='passati'); });
+  }, err => {
+    console.error('loadGroupEvents error:', err);
+    ec.innerHTML = '<div class="empty-state"><div class="empty-emoji">⚠️</div><div class="empty-title">Errore caricamento</div><div class="empty-sub">' + err.message + '</div></div>';
   });
   S._eventsUnsub = unsub;
 }

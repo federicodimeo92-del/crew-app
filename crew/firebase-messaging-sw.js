@@ -13,6 +13,66 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+// ── CACHE ─────────────────────────────────────────────────────
+const CACHE = 'crew-v2';
+const APP_SHELL = [
+  '/',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png',
+];
+
+// Installa: metti in cache l'app shell
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE).then(cache => cache.addAll(APP_SHELL))
+      .then(() => self.skipWaiting())
+  );
+});
+
+// Attiva: rimuovi cache vecchie
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
+});
+
+// Fetch: cache-first per shell, network-first per Firebase/API
+self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+
+  // Ignora richieste non GET e richieste a Firebase/API esterne
+  if (event.request.method !== 'GET') return;
+  if (url.hostname.includes('firestore') ||
+      url.hostname.includes('firebase') ||
+      url.hostname.includes('googleapis') ||
+      url.hostname.includes('gstatic')) return;
+
+  // Stale-while-revalidate per index.html
+  if (url.pathname === '/' || url.pathname === '/index.html') {
+    event.respondWith(
+      caches.open(CACHE).then(cache =>
+        cache.match('/').then(cached => {
+          const fetchPromise = fetch(event.request).then(res => {
+            cache.put('/', res.clone());
+            return res;
+          }).catch(() => cached);
+          return cached || fetchPromise;
+        })
+      )
+    );
+    return;
+  }
+
+  // Cache-first per icone e manifest
+  event.respondWith(
+    caches.match(event.request).then(cached => cached || fetch(event.request))
+  );
+});
+
+// ── BADGE ─────────────────────────────────────────────────────
 let badgeCount = 0;
 
 function setBadge(count) {
@@ -23,7 +83,7 @@ function setBadge(count) {
   }
 }
 
-// Intercetta push nativo PRIMA di Firebase — necessario per badge su MIUI
+// Push nativo per badge su MIUI
 self.addEventListener('push', () => {
   badgeCount++;
   setBadge(badgeCount);
@@ -42,6 +102,7 @@ messaging.onBackgroundMessage(payload => {
   });
 });
 
+// ── NOTIFICA CLICK ─────────────────────────────────────────────
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   setBadge(0);
@@ -60,6 +121,7 @@ self.addEventListener('notificationclick', event => {
   );
 });
 
+// ── MESSAGGI DALL'APP ─────────────────────────────────────────
 self.addEventListener('message', event => {
   if (event.data?.type === 'CLEAR_BADGE') setBadge(0);
   if (event.data?.type === 'SET_BADGE') setBadge(event.data.count || 0);

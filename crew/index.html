@@ -11,12 +11,13 @@
   <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -345,8 +346,22 @@
     .views-label { font-size:11px; color:var(--text-3); }
     .past-tag { background:var(--surface-2); color:var(--text-3); border-radius:99px; padding:2px 8px; font-size:10px; font-weight:700; font-family:var(--font-h); }
   </style>
+  <style>
+    #instant-splash {
+      position:fixed;inset:0;background:var(--blue);display:flex;flex-direction:column;
+      align-items:center;justify-content:center;z-index:99999;transition:opacity .4s ease;
+    }
+    #instant-splash.out{opacity:0;pointer-events:none;}
+    .is-logo{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:56px;
+      color:#fff;letter-spacing:-2px;animation:splashPop .5s cubic-bezier(.34,1.56,.64,1) both;}
+    .is-dot{width:10px;height:10px;border-radius:5px;background:rgba(255,255,255,.6);
+      margin-top:12px;animation:splashPop .5s .15s cubic-bezier(.34,1.56,.64,1) both;}
+    @keyframes splashPop{from{transform:scale(0);opacity:0;}to{transform:scale(1);opacity:1;}}
+  </style>
 </head>
 <body>
+<!-- Splash istantaneo — visibile subito prima di Firebase -->
+<div id="instant-splash"><div class="is-logo">Crew</div><div class="is-dot"></div></div>
 
 <div id="loading-screen"><div class="spinner"></div></div>
 
@@ -922,6 +937,9 @@ function switchLoginTab(tab) {
 })();
 
 auth.onAuthStateChanged(async user => {
+  // Nascondi splash istantaneo
+  const is = $id('instant-splash');
+  if (is) { is.classList.add('out'); setTimeout(() => is.remove(), 400); }
   hide('loading-screen');
   if (user) {
     S.user = user;
@@ -1040,6 +1058,14 @@ function goTo(view, id=null) {
   $id('tab-bar').style.display = view === 'create' ? 'none' : '';
   $id('app-header').style.display = (view === 'create' || view === 'items') ? 'none' : '';
 
+  // Push state so Android back gesture works
+  const state = { view, id };
+  if (view === 'home') {
+    window.history.replaceState(state, '');
+  } else {
+    window.history.pushState(state, '');
+  }
+
   if (view === 'home') {
     $id('header-back').classList.add('hidden');
     $id('header-title').textContent = '🔥 Crew';
@@ -1060,6 +1086,35 @@ function goTo(view, id=null) {
     showView('view-profile'); setTab('profile'); loadProfile();
   }
 }
+
+// Handle Android back gesture / browser back button
+window.addEventListener('popstate', e => {
+  const state = e.state;
+  if (!state || !S.user) return;
+  stopListeners();
+  $id('tab-bar').style.display = state.view === 'create' ? 'none' : '';
+  $id('app-header').style.display = (state.view === 'create' || state.view === 'items') ? 'none' : '';
+  if (state.view === 'home') {
+    $id('header-back').classList.add('hidden');
+    $id('header-title').textContent = '🔥 Crew';
+    showView('view-home'); setTab('home'); loadHome();
+  } else if (state.view === 'group') {
+    S.currentGroupId = state.id;
+    showView('view-group'); loadGroup(state.id);
+  } else if (state.view === 'event') {
+    S.currentEventId = state.id;
+    showView('view-event'); loadEvent(state.id);
+  } else if (state.view === 'items') {
+    showView('view-items'); loadItemsPage();
+  } else if (state.view === 'profile') {
+    $id('header-back').classList.add('hidden');
+    showView('view-profile'); setTab('profile'); loadProfile();
+  } else {
+    // Fallback: vai alla home invece di chiudere
+    window.history.replaceState({ view:'home', id:null }, '');
+    showView('view-home'); setTab('home'); loadHome();
+  }
+});
 
 function setTab(tab) {
   S.activeTab = tab;

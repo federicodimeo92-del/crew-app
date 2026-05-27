@@ -1416,12 +1416,23 @@ async function handleJoin(code, gated=false) {
       });
     S.unsubscribers.push(_pendingUnsub);
   } else {
-    // Direct entry
-    await db.collection('groups').doc(gid).update({ members:firebase.firestore.FieldValue.arrayUnion(mData), memberUids:firebase.firestore.FieldValue.arrayUnion(S.user.uid) });
-    await db.collection('users').doc(S.user.uid).update({ groups:firebase.firestore.FieldValue.arrayUnion(gid) });
-    S.userDoc.groups = [...(S.userDoc.groups||[]), gid];
-    toast(`✅ Sei entrato in "${gData.name}"!`);
-    goTo('group', gid);
+    // Direct entry — usa la Cloud Function per bypassare le security rules Firestore
+    try {
+      const addMember = functions.httpsCallable('addMemberToGroup');
+      await addMember({
+        groupId: gid,
+        uid: S.user.uid,
+        displayName: displayName(S.userDoc),
+        photoURL: S.user.photoURL || null
+      });
+      S.userDoc.groups = [...(S.userDoc.groups||[]), gid];
+      toast(`✅ Sei entrato in "${gData.name}"!`);
+      goTo('group', gid);
+    } catch(err) {
+      console.error('handleJoin addMember error:', err);
+      toast('Errore accesso al gruppo ❌');
+      goTo('home');
+    }
   }
 }
 
@@ -2664,18 +2675,30 @@ const App = {
   },
 
   async approveRequest(uid, displayNameVal, photoURL) {
-    const mData = { uid, displayName:displayNameVal, photoURL:photoURL||null };
-    await db.collection('groups').doc(S.currentGroupId).update({ members:firebase.firestore.FieldValue.arrayUnion(mData), memberUids:firebase.firestore.FieldValue.arrayUnion(uid) });
-    await db.collection('users').doc(uid).update({ groups:firebase.firestore.FieldValue.arrayUnion(S.currentGroupId) });
-    await db.collection('groups').doc(S.currentGroupId).collection('requests').doc(uid).update({ status:'approved' });
-    await notify({
-      toUserId: uid, type: 'join_approved',
-      groupId: S.currentGroupId, groupName: S.currentGroupData?.name || '',
-      text: `Sei stato approvato nel gruppo "${S.currentGroupData?.name || ''}"! 🎉`
-    });
-    toast(`✅ ${displayNameVal} approvato!`);
-    this.openRequests();
-    loadGroup(S.currentGroupId);
+    try {
+      // Usa la Cloud Function per bypassare le security rules Firestore
+      const addMember = functions.httpsCallable('addMemberToGroup');
+      await addMember({
+        groupId: S.currentGroupId,
+        uid,
+        displayName: displayNameVal,
+        photoURL: photoURL || null
+      });
+      // Segna la richiesta come approvata
+      await db.collection('groups').doc(S.currentGroupId)
+        .collection('requests').doc(uid).update({ status:'approved' });
+      await notify({
+        toUserId: uid, type: 'join_approved',
+        groupId: S.currentGroupId, groupName: S.currentGroupData?.name || '',
+        text: `Sei stato approvato nel gruppo "${S.currentGroupData?.name || ''}"! 🎉`
+      });
+      toast(`✅ ${displayNameVal} approvato!`);
+      this.openRequests();
+      loadGroup(S.currentGroupId);
+    } catch(err) {
+      console.error('approveRequest error:', err);
+      toast('Errore approvazione ❌');
+    }
   },
 
   async rejectRequest(uid) {

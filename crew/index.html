@@ -42,6 +42,9 @@
 
     /* SPINNER */
     #loading-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px; }
+    #pwa-banner { position:fixed; top:0; left:0; right:0; z-index:9999; background:var(--blue); color:#fff; padding:12px 16px 12px 20px; display:flex; align-items:center; gap:10px; box-shadow:0 2px 8px rgba(0,0,0,.2); }
+    #pwa-banner-text { flex:1; font-size:13px; line-height:1.4; }
+    #pwa-banner-close { background:rgba(255,255,255,.25); border:none; color:#fff; width:28px; height:28px; border-radius:50%; font-size:14px; cursor:pointer; flex-shrink:0; }
     .spinner { width:34px; height:34px; border:3px solid var(--border); border-top-color:var(--blue); border-radius:50%; animation:spin .7s linear infinite; }
     @keyframes spin { to { transform:rotate(360deg); } }
 
@@ -755,7 +758,7 @@
 
 <script>
 // ============================================================
-// FIREBASE
+// ⚙️  CONFIG — Firebase
 // ============================================================
 const firebaseConfig = {
   apiKey: "AIzaSyD-hemzJowgkYTDuSxdrZH7SbY3-rO6aQw",
@@ -771,7 +774,7 @@ const db   = firebase.firestore();
 const functions = firebase.app().functions('europe-west1');
 
 // ============================================================
-// STATE
+// ⚙️  STATO GLOBALE
 // ============================================================
 const S = {
   user: null, userDoc: null,
@@ -824,7 +827,7 @@ async function getUserPrefs(uid) {
 }
 
 // ============================================================
-// UTILS
+// 🛠️  UTILITY & HELPERS
 // ============================================================
 function uid8() { return 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'.split('').sort(()=>Math.random()-.5).join('').slice(0,8); }
 function dName(doc){return doc?.nickname||doc?.displayName||'Utente';}
@@ -834,7 +837,12 @@ function hide(id) { $id(id)?.classList.add('hidden'); }
 function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escAttr(s) { return String(s||'').replace(/'/g,"\\'"); }
 function av(url, name='?') { return url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=ffedd5&color=c2410c&bold=true&size=64`; }
-function stopListeners() { S.unsubscribers.forEach(fn=>fn()); S.unsubscribers=[]; }
+function stopListeners() {
+  S.unsubscribers.forEach(fn => fn());
+  S.unsubscribers = [];
+  _onMessageActive = false;                         // FIX: re-registra onMessage al prossimo login
+  for (const k in prefsCache) delete prefsCache[k]; // FIX: svuota cache preferenze
+}
 function displayName(userDoc) {
   // Prefer nickname, fall back to displayName
   return userDoc?.nickname || userDoc?.displayName || 'Utente';
@@ -870,12 +878,55 @@ function formatExpiry(ts) {
 }
 
 // ============================================================
-// NOTIFICHE — con controllo preferenze
+// 🛡️  DIFESE GLOBALI
 // ============================================================
+
+// Cattura tutte le promise non gestite — impedisce pagine bianche silenziose
+window.addEventListener('unhandledrejection', event => {
+  const err = event.reason;
+  console.error('[Crew] Unhandled rejection:', err);
+  const code = err?.code || '';
+  const msg = code === 'permission-denied' ? 'Accesso non autorizzato ❌'
+             : code === 'unavailable'       ? 'Connessione assente — riprova ❌'
+             : code === 'not-found'         ? 'Risorsa non trovata ❌'
+             : 'Qualcosa è andato storto — riprova ❌';
+  toast(msg);
+  event.preventDefault();
+});
+
+// Rimpiazzo mobile-friendly di confirm() — usa il design system esistente
+function showConfirm(msg, onYes, opts = {}) {
+  const btnLabel  = opts.danger ? 'Conferma' : 'OK';
+  const btnClass  = opts.danger ? 'btn-danger' : 'btn-primary';
+  const el = document.createElement('div');
+  el.className = 'modal-overlay';
+  el.style.cssText = 'display:flex!important;align-items:flex-end;';
+  el.innerHTML = `
+    <div class="modal-sheet" style="padding:24px 20px 32px 20px;">
+      <p style="font-size:15px;color:var(--text);line-height:1.5;margin-bottom:20px;">${escHtml(msg)}</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn ${btnClass} btn-full" id="_sc-yes">${btnLabel}</button>
+        <button class="btn btn-secondary btn-full" id="_sc-no">Annulla</button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+  el.querySelector('#_sc-yes').onclick = () => { el.remove(); onYes(); };
+  el.querySelector('#_sc-no').onclick  = () => el.remove();
+  el.onclick = e => { if (e.target === el) el.remove(); };
+}
+
+// ============================================================
+// 🔔 NOTIFICHE IN-APP (Firestore)
+// ============================================================
+// Tipi di notifica che bypassano le preferenze utente (notifiche di sistema)
+const SYSTEM_NOTIF_TYPES = ['join_request', 'join_approved', 'join_rejected'];
+
 async function notify(data) {
   try {
-    const prefs = await getUserPrefs(data.toUserId);
-    if (!prefs[data.type]) return;
+    if (!SYSTEM_NOTIF_TYPES.includes(data.type)) {
+      const prefs = await getUserPrefs(data.toUserId);
+      if (!prefs[data.type]) return;
+    }
   } catch(e) {}
   await db.collection('notifications').add({
     ...data, read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -885,12 +936,12 @@ async function notify(data) {
 async function notifyMany(members, data) {
   await Promise.all(members.map(async m => {
     if (m.uid === S.user?.uid) return;
-    await notify({ ...data, toUserId: m.uid });
+    try { await notify({ ...data, toUserId: m.uid }); } catch(e) {}
   }));
 }
 
 // ============================================================
-// ONBOARDING
+// 🎓 ONBOARDING
 // ============================================================
 const OB_STEPS = [
   { emoji:'📅', title:'Pianifica\neventi insieme', sub:'Date, luoghi, chi porta cosa — tutto condiviso in tempo reale.' },
@@ -909,7 +960,7 @@ $id('ob-cta').addEventListener('click',()=>{ if(obStep<OB_STEPS.length-1){obStep
 $id('ob-skip').addEventListener('click',doneOnboarding);
 
 // ============================================================
-// LOGIN — tab switch
+// 🔐 AUTH — tab switch login
 // ============================================================
 function switchLoginTab(tab) {
   $id('tab-google').classList.toggle('active', tab==='google');
@@ -919,7 +970,7 @@ function switchLoginTab(tab) {
 }
 
 // ============================================================
-// AUTH — Magic Link detection (deve girare PRIMA di onAuthStateChanged se possibile)
+// 🔐 AUTH — Magic Link detection
 // ============================================================
 (function checkMagicLink() {
   if (firebase.auth().isSignInWithEmailLink(window.location.href)) {
@@ -929,8 +980,17 @@ function switchLoginTab(tab) {
     firebase.auth().signInWithEmailLink(email, window.location.href)
       .then(() => {
         localStorage.removeItem('crew_magic_email');
-        localStorage.setItem('crew_show_set_password', '1');
-        window.history.replaceState({}, '', window.location.pathname);
+        // Preserva ?join= e ?gated= rimuovendo solo i token Firebase dall'URL
+        // IMPORTANTE: replaceState viene eseguito PRIMA di onAuthStateChanged,
+        // quindi i params devono sopravvivere per permettere il join automatico
+        (function preserveJoinParams() {
+          const p = new URLSearchParams(window.location.search);
+          const keep = new URLSearchParams();
+          if (p.get('join'))  keep.set('join',  p.get('join'));
+          if (p.get('gated')) keep.set('gated', p.get('gated'));
+          const qs = keep.toString() ? '?' + keep.toString() : '';
+          window.history.replaceState({}, '', window.location.pathname + qs);
+        })();
       })
       .catch(err => { console.error(err); toast('Link non valido o scaduto'); });
   }
@@ -998,7 +1058,7 @@ async function ensureUserDoc(user) {
 }
 
 // ============================================================
-// NICKNAME SCREEN
+// 🔐 AUTH — nickname screen
 // ============================================================
 function showNicknameScreen() {
   hide('login-screen'); hide('app');
@@ -1006,8 +1066,28 @@ function showNicknameScreen() {
   show('nickname-screen');
 }
 
+// Rimuove il token FCM da Firestore prima del logout (privacy dispositivi condivisi)
+async function handleSignOut() {
+  try {
+    if (S.user && 'Notification' in window && Notification.permission === 'granted') {
+      const messaging = firebase.messaging();
+      const token = await messaging.getToken({
+        vapidKey: 'BBXUoAtQnTv7U1CaYSvzFYnNKFJJaiawDUAkdzibvk4F2_IT0PiaCoFGJ6uD-AIA5_lZxH8yBhrr1weg8tYnE6I'
+      }).catch(() => null);
+      if (token) {
+        await messaging.deleteToken().catch(() => {});
+        await db.collection('users').doc(S.user.uid).update({
+          fcmTokens: firebase.firestore.FieldValue.arrayRemove(token)
+        }).catch(() => {});
+      }
+    }
+  } catch(e) {}
+  stopListeners();
+  auth.signOut();
+}
+
 // ============================================================
-// APP INIT
+// 🚀 APP INIT
 // ============================================================
 function initApp() {
   hide('login-screen'); hide('onboarding-screen'); hide('nickname-screen');
@@ -1016,11 +1096,14 @@ function initApp() {
   $id('header-avatar').alt = displayName(S.userDoc);
   listenNotifications();
   setupPushNotifications();
+  checkDayBeforeReminders(); // ← reminder giorno prima & scadenza
+  // Carica sempre home: l'utente vede qualcosa di visibile subito
+  goTo('home');
   if (S.pendingJoin) {
-    handleJoin(S.pendingJoin, S.pendingJoinGated);
+    const _joinCode  = S.pendingJoin;
+    const _joinGated = S.pendingJoinGated;
     S.pendingJoin = null; S.pendingJoinGated = false;
-  } else {
-    goTo('home');
+    handleJoin(_joinCode, _joinGated); // async — naviga al gruppo quando pronto
   }
 }
 
@@ -1030,11 +1113,11 @@ $id('btn-login').addEventListener('click', () => {
 });
 
 $id('btn-user-menu').addEventListener('click', () => {
-  if (confirm('Vuoi uscire?')) { stopListeners(); auth.signOut(); }
+  showConfirm('Vuoi uscire da Crew?', handleSignOut);
 });
 
 // ============================================================
-// NAVIGATION
+// 🧭 NAVIGAZIONE & ROUTER
 // ============================================================
 const VIEWS = ['view-home','view-group','view-event','view-create','view-profile','view-items'];
 // Views that need display:flex instead of block
@@ -1145,7 +1228,7 @@ $id('items-back-btn').addEventListener('click', () => {
 });
 
 // ============================================================
-// HOME
+// 🏠 HOME
 // ============================================================
 async function loadHome() {
   const c = $id('groups-list');
@@ -1212,10 +1295,12 @@ function renderGroupCard(g) {
 }
 
 // ============================================================
-// GROUP
+// 👥 GRUPPI — dettaglio
 // ============================================================
 async function loadGroup(gid) {
-  const gSnap = await db.collection('groups').doc(gid).get();
+  let gSnap;
+  try { gSnap = await db.collection('groups').doc(gid).get(); }
+  catch(err) { toast('Errore nel caricamento del gruppo ❌'); goTo('home'); return; }
   if (!gSnap.exists) { toast('Gruppo non trovato'); goTo('home'); return; }
   const g = { id:gSnap.id, ...gSnap.data() };
   S.currentGroupData = g; S.groupMembers = g.members || [];
@@ -1271,10 +1356,17 @@ function buildInviteUrl(code, gated=false) {
 }
 
 // ============================================================
-// JOIN HANDLING
+// 👥 GRUPPI — join / inviti
 // ============================================================
 async function handleJoin(code, gated=false) {
-  const snap = await db.collection('groups').where('inviteCode','==',code).limit(1).get();
+  let snap;
+  try {
+    snap = await db.collection('groups').where('inviteCode','==',code).limit(1).get();
+  } catch(err) {
+    console.error('handleJoin Firestore error:', err);
+    toast('Errore nel caricamento del gruppo — riprova ❌');
+    goTo('home'); return;
+  }
   if (snap.empty) { toast('Link invito non valido ❌'); goTo('home'); return; }
   const gDoc = snap.docs[0]; const gid = gDoc.id; const gData = gDoc.data();
 
@@ -1297,8 +1389,32 @@ async function handleJoin(code, gated=false) {
     // Notify group creator/admin
     const adminUid = gData.createdBy;
     if (adminUid) {
+      await notify({
+        toUserId: adminUid, type: 'join_request',
+        groupId: gid, groupName: gData.name,
+        text: `${displayName(S.userDoc)} vuole unirsi a "${gData.name}" 👋`
+      });
     }
     hide('app'); show('pending-screen');
+    // Listener real-time: aggiorna lo schermo appena l'admin approva/rifiuta
+    const _pendingUnsub = db.collection('groups').doc(gid)
+      .collection('requests').doc(S.user.uid)
+      .onSnapshot(snap => {
+        const status = snap.data()?.status;
+        if (status === 'approved') {
+          _pendingUnsub();
+          hide('pending-screen');
+          S.userDoc.groups = [...(S.userDoc.groups || []), gid];
+          toast(`🎉 Sei entrato in "${gData.name}"!`);
+          initApp();
+        } else if (status === 'rejected') {
+          _pendingUnsub();
+          hide('pending-screen');
+          show('login-screen');
+          toast('La tua richiesta non è stata accettata ❌');
+        }
+      });
+    S.unsubscribers.push(_pendingUnsub);
   } else {
     // Direct entry
     await db.collection('groups').doc(gid).update({ members:firebase.firestore.FieldValue.arrayUnion(mData), memberUids:firebase.firestore.FieldValue.arrayUnion(S.user.uid) });
@@ -1310,10 +1426,12 @@ async function handleJoin(code, gated=false) {
 }
 
 // ============================================================
-// EVENT DETAIL
+// 📅 EVENTI — dettaglio
 // ============================================================
 async function loadEvent(eid) {
-  const eSnap = await db.collection('events').doc(eid).get();
+  let eSnap;
+  try { eSnap = await db.collection('events').doc(eid).get(); }
+  catch(err) { toast('Errore nel caricamento dell\u2019evento ❌'); return; }
   if (!eSnap.exists) { toast('Evento non trovato'); return; }
   const ev = { id:eSnap.id, ...eSnap.data() };
   S.currentEventData = ev;
@@ -1466,7 +1584,7 @@ function renderTipoPills(tipo) {
 }
 
 // ============================================================
-// RSVP
+// 📅 EVENTI — RSVP
 // ============================================================
 function renderRSVP(d, ev) {
   let yes=[], no=[], maybe=[];
@@ -1486,16 +1604,15 @@ function renderRSVP(d, ev) {
     <div class="rsvp-label">${r.label}</div>
   </div>`).join('');
   S._rsvpData = { yes, maybe, no };
-  try {
-    db.collection('events').doc(S.currentEventId).update({
-      rsvp_yes:yes.length, rsvp_maybe:maybe.length, rsvp_no:no.length,
-      rsvp_yes_ids:yes.map(x=>x.uid), rsvp_maybe_ids:maybe.map(x=>x.uid), rsvp_no_ids:no.map(x=>x.uid)
-    });
-  } catch(e) {}
+  // Fire-and-forget: aggiorna i contatori RSVP su Firestore in background
+  db.collection('events').doc(S.currentEventId).update({
+    rsvp_yes:yes.length, rsvp_maybe:maybe.length, rsvp_no:no.length,
+    rsvp_yes_ids:yes.map(x=>x.uid), rsvp_maybe_ids:maybe.map(x=>x.uid), rsvp_no_ids:no.map(x=>x.uid)
+  }).catch(() => {}); // errore non bloccante — il contatore si aggiornerà al prossimo reload
 }
 
 // ============================================================
-// ITEMS
+// 📅 EVENTI — lista cose da portare
 // ============================================================
 function renderItems(items, tipo) {
   renderTipoPills(tipo);
@@ -1518,7 +1635,7 @@ function renderItems(items, tipo) {
 }
 
 // ============================================================
-// COMMENTS
+// 📅 EVENTI — commenti & @mention
 // ============================================================
 function renderComments(comments) {
   const c = $id('comments-list'); if(!c) return;
@@ -1568,7 +1685,7 @@ function handleMentionInput(e) {
 }
 
 // ============================================================
-// WIZARD
+// 📅 EVENTI — wizard creazione
 // ============================================================
 const WIZARD_STEPS = ['Dettagli','Luogo','Lista'];
 function initWizard() {
@@ -1698,7 +1815,7 @@ document.addEventListener('input', e => {
 });
 
 // ============================================================
-// PROFILE
+// 👤 PROFILO
 // ============================================================
 async function loadProfile() {
   try {
@@ -1728,7 +1845,7 @@ async function loadProfile() {
           <span style="font-size:15px;" id="notif-btn-label">${Notification.permission === 'granted' ? '✅ Notifiche attive' : '🔔 Attiva notifiche push'}</span>
           ${Notification.permission !== 'granted' ? '<svg width="7" height="12" viewBox="0 0 7 12"><path d="M1 1L6 6L1 11" stroke="var(--text-3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
         </div>
-        <div class="settings-item" onclick="if(confirm('Vuoi uscire?')){stopListeners();auth.signOut();}">
+        <div class="settings-item" onclick="showConfirm('Vuoi uscire da Crew?', handleSignOut)">
           <span style="color:var(--red);font-weight:600;">Esci</span>
         </div>
         ${S.userDoc?.role==='admin' ? '<div class="settings-item" onclick="App.fixUserGroups()"><span style="font-size:15px;">🔧 Fix gruppi utenti</span></div>' : ''}
@@ -1765,11 +1882,11 @@ async function loadProfile() {
 }
 
 // ============================================================
-// NOTIFICATIONS
+// 📲 NOTIFICHE PUSH & IN-APP
 // ============================================================
 function listenNotifications() {
   if (!S.user) return;
-  db.collection('notifications').where('toUserId','==',S.user.uid).where('read','==',false)
+  const _notifUnsub = db.collection('notifications').where('toUserId','==',S.user.uid).where('read','==',false)
     .onSnapshot(snap => {
       const count = snap.size;
       if (count > 0) { show('notif-dot'); $id('tab-notif-badge').textContent=count>9?'9+':count; show('tab-notif-badge'); }
@@ -1784,14 +1901,19 @@ function listenNotifications() {
         else navigator.clearAppBadge().catch(()=>{});
       }
     });
+  S.unsubscribers.push(_notifUnsub);
 }
 
+// Flag globale: evita doppia registrazione di onMessage
+let _onMessageActive = false;
+
 async function setupPushNotifications() {
+  // Chiamata silente al login: aggiorna il token solo se il permesso è già stato concesso
+  // NON chiede il permesso all'utente — quello va fatto esplicitamente dal Profilo
   if (!S.user) return;
   try {
     if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') return;
+    if (Notification.permission !== 'granted') return; // ← nessuna richiesta automatica
     const messaging = firebase.messaging();
     const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
     const token = await messaging.getToken({
@@ -1805,30 +1927,58 @@ async function setupPushNotifications() {
     if (!existing.includes(token)) {
       await userRef.update({ fcmTokens: firebase.firestore.FieldValue.arrayUnion(token) });
     }
-    // Handle foreground messages
-    messaging.onMessage(payload => {
-      const n = payload.notification || {};
-      toast((n.title || 'Crew') + (n.body ? ' — ' + n.body : ''));
-    });
+    // Registra onMessage una sola volta
+    if (!_onMessageActive) {
+      _onMessageActive = true;
+      messaging.onMessage(payload => {
+        const n = payload.notification || {};
+        toast((n.title || 'Crew') + (n.body ? ' — ' + n.body : ''));
+      });
+    }
   } catch(err) {
     console.log('Push non disponibili:', err.message);
   }
 }
 $id('btn-notifications').addEventListener('click', () => App.openNotifications());
 
+// ── 📲 BANNER "APRI IN CHROME" (solo browser, non PWA standalone) ─────────────
+(function checkPWABanner() {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                    || window.navigator.standalone === true;
+  if (isStandalone) return; // già nell'app installata — niente banner
+  const hasJoin = new URLSearchParams(window.location.search).get('join');
+  if (!hasJoin) return; // nessun invito attivo
+  // L'utente ha cliccato un link invito da un browser non-PWA
+  // Su Android il browser predefinito intercetta i link prima della PWA
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const isIOS     = /iPhone|iPad/i.test(navigator.userAgent);
+  const hint = isAndroid
+    ? 'Per aprire Crew, usa Chrome → tocca ⋮ → "Aggiungi a schermata Home".'
+    : isIOS
+    ? 'Per aprire Crew, usa Safari → tocca ☐ → "Aggiungi a schermata Home".'
+    : 'Stai aprendo il link nel browser. Per la migliore esperienza usa Crew come app.';
+  const banner = document.createElement('div');
+  banner.id = 'pwa-banner';
+  banner.innerHTML = `<div id="pwa-banner-text">📲 ${hint}</div>`
+    + `<button id="pwa-banner-close" onclick="document.getElementById('pwa-banner').remove()">✕</button>`;
+  document.body.prepend(banner);
+})();
+
 // ============================================================
-// APP ACTIONS
+// ⚡ APP ACTIONS
 // ============================================================
 const App = {
 
   async saveNickname() {
+    try {
     const nick = $id('nickname-input')?.value?.trim();
     if (!nick) { toast('Inserisci un nickname'); return; }
     await db.collection('users').doc(S.user.uid).update({ nickname: nick });
     S.userDoc.nickname = nick;
     prefsCache[S.user.uid] = null; // invalidate cache
     initApp();
-  },
+    } catch(err) { toast('Errore nel salvataggio nickname ❌'); }
+},
 
   changeNickname() {
     const current = S.userDoc?.nickname || '';
@@ -1864,7 +2014,7 @@ const App = {
         // Probably no password set — offer magic link
         if (confirm('Non hai ancora impostato una password. Vuoi ricevere un link di accesso via email?')) {
           const actionCodeSettings = {
-            url: window.location.origin + window.location.pathname,
+            url: window.location.origin + window.location.pathname + window.location.search, // FIX: preserva ?join=...
             handleCodeInApp: true,
           };
           await auth.sendSignInLinkToEmail(email, actionCodeSettings);
@@ -1895,7 +2045,7 @@ const App = {
     if (!email) { toast('Inserisci la tua email'); return; }
     try {
       const actionCodeSettings = {
-        url: window.location.origin + window.location.pathname,
+        url: window.location.origin + window.location.pathname + window.location.search, // FIX: preserva ?join=...
         handleCodeInApp: true,
       };
       await auth.sendSignInLinkToEmail(email, actionCodeSettings);
@@ -1924,7 +2074,7 @@ const App = {
     } catch(err) {
       if (err.code === 'auth/requires-recent-login') {
         toast('Sessione scaduta, effettua di nuovo il login');
-        auth.signOut();
+        handleSignOut();
       } else {
         toast('Errore: ' + err.message);
       }
@@ -1965,10 +2115,14 @@ const App = {
       if (!existing.includes(token)) {
         await userRef.update({ fcmTokens: firebase.firestore.FieldValue.arrayUnion(token) });
       }
-      messaging.onMessage(payload => {
-        const n = payload.notification || {};
-        toast((n.title || 'Crew') + (n.body ? ' — ' + n.body : ''));
-      });
+      // Registra onMessage una sola volta (guard contro doppia registrazione)
+      if (!_onMessageActive) {
+        _onMessageActive = true;
+        messaging.onMessage(payload => {
+          const n = payload.notification || {};
+          toast((n.title || 'Crew') + (n.body ? ' — ' + n.body : ''));
+        });
+      }
       const btn = $id('notif-enable-btn');
       if (btn) btn.innerHTML = '<span style="font-size:15px;color:var(--green);">✅ Notifiche attive</span>';
       toast('✅ Notifiche push attivate!');
@@ -1991,17 +2145,21 @@ const App = {
 
   async setRSVP(status) {
     if (!S.user || !S.currentEventId) return;
-    await db.collection('events').doc(S.currentEventId).collection('rsvp').doc(S.user.uid).set({
-      status, name: displayName(S.userDoc), photoURL: S.user.photoURL||null,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    const eSnap = await db.collection('events').doc(S.currentEventId).get();
-    const ev = eSnap.data();
-    if (ev.createdBy !== S.user.uid) {
-    }
+    try {
+      await db.collection('events').doc(S.currentEventId).collection('rsvp').doc(S.user.uid).set({
+        status, name: displayName(S.userDoc), photoURL: S.user.photoURL||null,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      const eSnap = await db.collection('events').doc(S.currentEventId).get();
+      const ev = eSnap.data();
+      if (ev.createdBy !== S.user.uid) {
+      }
+    } catch(err) { toast('Errore nell\'invio RSVP ❌'); }
   },
 
   async addItem() {
+
+    try {
     const inp = $id('new-item-input');
     const text = inp?.value?.trim();
     if (!text || !S.currentEventId) return;
@@ -2013,6 +2171,7 @@ const App = {
     const eSnap = await db.collection('events').doc(S.currentEventId).get();
     const ev = eSnap.data();
     const gSnap = await db.collection('groups').doc(ev.groupId).get();
+    } catch(err) { toast("Errore nell'aggiunta ❌"); }
   },
 
   async takeItem(itemId, itemText) {
@@ -2035,6 +2194,8 @@ const App = {
   },
 
   async sendComment() {
+
+    try {
     const inp = $id('comment-input');
     const text = inp?.value?.trim();
     if (!text || !S.currentEventId) return;
@@ -2066,6 +2227,7 @@ const App = {
       await notify({ toUserId:uid, type:'comment', eventId:S.currentEventId, eventTitle:ev.title,
         text:`${displayName(S.userDoc)} ha commentato "${ev.title}": "${text.slice(0,60)}${text.length>60?'…':''}"` });
     }
+    } catch(err) { toast("Errore nell'invio commento ❌"); }
   },
 
   openEditGroup(gid, name, emoji) {
@@ -2076,6 +2238,7 @@ const App = {
   },
 
   async saveEditGroup() {
+    try {
     const gid = $id('edit-group-id').value;
     const name = $id('edit-group-name').value.trim();
     const emoji = $id('edit-group-emoji').value.trim() || '👥';
@@ -2084,10 +2247,12 @@ const App = {
     App.closeModal('modal-edit-group');
     toast('✅ Gruppo aggiornato!');
     loadHome();
-  },
+    } catch(err) { toast('Errore nel salvataggio gruppo ❌'); }
+},
 
   async createGroup() {
     if (S.userDoc?.role !== 'admin') return;
+    try {
     const name = $id('group-name-input').value.trim();
     const emoji = $id('group-emoji-input').value.trim() || '👥';
     if (!name) { toast('Inserisci il nome del gruppo'); return; }
@@ -2107,7 +2272,8 @@ const App = {
     $id('group-name-input').value=''; $id('group-emoji-input').value='';
     toast('✅ Gruppo creato!');
     goTo('group', ref.id);
-  },
+    } catch(err) { toast('Errore nella creazione gruppo ❌'); }
+},
 
   async createEvent() {
     const w = S.wizard;
@@ -2243,6 +2409,7 @@ const App = {
 
   async regenerateInvite() {
     if (!S.currentGroupId) return;
+    try {
     const days = this._selectedDuration || S.currentGroupData?.inviteDurationDays || 7;
     const newCode = uid8();
     const expiresAt = addDays(new Date(), days);
@@ -2257,7 +2424,8 @@ const App = {
     this.closeModal('modal-invite-settings');
     toast('🔄 Link rigenerato! Scade tra '+days+' giorni.');
     loadGroup(S.currentGroupId);
-  },
+    } catch(err) { toast('Errore nel rinnovo invito ❌'); }
+},
 
   copyCurrentLink() {
     const url = buildInviteUrl(S.currentGroupData?.inviteCode);
@@ -2272,9 +2440,11 @@ const App = {
 
   async openEditEvent() {
     if (!S.currentEventData) {
-      const snap = await db.collection('events').doc(S.currentEventId).get();
-      if (!snap.exists) { toast('Evento non trovato'); return; }
-      S.currentEventData = { id:snap.id, ...snap.data() };
+      try {
+        const snap = await db.collection('events').doc(S.currentEventId).get();
+        if (!snap.exists) { toast('Evento non trovato'); return; }
+        S.currentEventData = { id:snap.id, ...snap.data() };
+      } catch(err) { toast('Errore nel caricamento evento ❌'); return; }
     }
     const ev = S.currentEventData;
     S.wizard = {
@@ -2291,9 +2461,11 @@ const App = {
       things: [], showEmojiPicker: false
     };
     goTo('create');
-  },
+},
 
   async saveEditEvent() {
+
+    try {
     const w = S.wizard;
     if (!w.title.trim() || !w.date) { toast('Titolo e data obbligatori'); return; }
     await db.collection('events').doc(w.eventId).update({
@@ -2305,9 +2477,11 @@ const App = {
     Object.assign(S.currentEventData, { emoji:w.emoji, title:w.title.trim(), date:w.date, time:w.time||null, description:w.desc.trim()||null, place:w.place.trim()||null, meetingPoint:w.meetingPoint.trim()||null, deadline:w.deadline||null, thingsType:w.thingsType });
     toast('✅ Evento aggiornato!');
     goTo('event', w.eventId);
+    } catch(err) { toast('Errore nel salvataggio ❌'); }
   },
 
   async addItemFromPage() {
+    try {
     const inp = $id('items-page-input');
     const text = inp?.value?.trim();
     if (!text || !S.currentEventId) return;
@@ -2323,12 +2497,15 @@ const App = {
       if (m.uid !== S.user.uid) {
       }
     }
-  },
+    } catch(err) { toast("Errore nell'aggiunta voce ❌"); }
+},
 
   async deleteItem(itemId) {
     if (!S.currentEventId) return;
+    try {
     await db.collection('events').doc(S.currentEventId).collection('items').doc(itemId).delete();
-  },
+    } catch(err) { toast("Errore nell'eliminazione ❌"); }
+},
 
   async changeTipoFromPage(tipo) {
     if (!S.currentEventId || S.userDoc?.role !== 'admin') return;
@@ -2408,31 +2585,33 @@ const App = {
   },
 
   async removeMember(uid, name) {
-    if (!confirm('Rimuovere ' + name + ' dal gruppo?')) return;
-    const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
-    const members = gSnap.data().members.filter(m => m.uid !== uid);
-    const memberUids = members.map(m => m.uid);
-    await db.collection('groups').doc(S.currentGroupId).update({ members, memberUids });
-    await db.collection('users').doc(uid).update({ groups: firebase.firestore.FieldValue.arrayRemove(S.currentGroupId) });
-    toast(name + ' rimosso');
-    this.openMembers();
-    loadGroup(S.currentGroupId);
+    showConfirm('Rimuovere ' + escHtml(name) + ' dal gruppo?', async () => {
+      const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
+      const members = gSnap.data().members.filter(m => m.uid !== uid);
+      const memberUids = members.map(m => m.uid);
+      await db.collection('groups').doc(S.currentGroupId).update({ members, memberUids });
+      await db.collection('users').doc(uid).update({ groups: firebase.firestore.FieldValue.arrayRemove(S.currentGroupId) });
+      toast(name + ' rimosso');
+      this.openMembers();
+      loadGroup(S.currentGroupId);
+    }, { danger: true });
   },
 
   async leaveGroup() {
-    if (!confirm('Vuoi lasciare questo gruppo?')) return;
-    const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
-    const members = gSnap.data().members.filter(m => m.uid !== S.user.uid);
-    const memberUids = members.map(m => m.uid);
-    await db.collection('groups').doc(S.currentGroupId).update({ members, memberUids });
-    await db.collection('users').doc(S.user.uid).update({ groups: firebase.firestore.FieldValue.arrayRemove(S.currentGroupId) });
-    S.userDoc.groups = (S.userDoc.groups || []).filter(g => g !== S.currentGroupId);
-    toast('Hai lasciato il gruppo');
-    goTo('home');
+    showConfirm('Vuoi lasciare questo gruppo?', async () => {
+      const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
+      const members = gSnap.data().members.filter(m => m.uid !== S.user.uid);
+      const memberUids = members.map(m => m.uid);
+      await db.collection('groups').doc(S.currentGroupId).update({ members, memberUids });
+      await db.collection('users').doc(S.user.uid).update({ groups: firebase.firestore.FieldValue.arrayRemove(S.currentGroupId) });
+      S.userDoc.groups = (S.userDoc.groups || []).filter(g => g !== S.currentGroupId);
+      toast('Hai lasciato il gruppo');
+      goTo('home');
+    }, { danger: true });
   },
 
   async deleteGroup() {
-    if (!confirm('Eliminare il gruppo? Tutti gli eventi e i dati verranno cancellati. Azione irreversibile.')) return;
+    showConfirm('Eliminare il gruppo? Tutti gli eventi verranno cancellati. Azione irreversibile.', async () => {
     const gid = S.currentGroupId;
     // Remove group from all members' user docs
     const gSnap = await db.collection('groups').doc(gid).get();
@@ -2449,6 +2628,7 @@ const App = {
     S.userDoc.groups = (S.userDoc.groups || []).filter(g => g !== gid);
     toast('Gruppo eliminato');
     goTo('home');
+  }, { danger: true });
   },
 
   copyLink(url) {
@@ -2488,6 +2668,11 @@ const App = {
     await db.collection('groups').doc(S.currentGroupId).update({ members:firebase.firestore.FieldValue.arrayUnion(mData), memberUids:firebase.firestore.FieldValue.arrayUnion(uid) });
     await db.collection('users').doc(uid).update({ groups:firebase.firestore.FieldValue.arrayUnion(S.currentGroupId) });
     await db.collection('groups').doc(S.currentGroupId).collection('requests').doc(uid).update({ status:'approved' });
+    await notify({
+      toUserId: uid, type: 'join_approved',
+      groupId: S.currentGroupId, groupName: S.currentGroupData?.name || '',
+      text: `Sei stato approvato nel gruppo "${S.currentGroupData?.name || ''}"! 🎉`
+    });
     toast(`✅ ${displayNameVal} approvato!`);
     this.openRequests();
     loadGroup(S.currentGroupId);
@@ -2495,7 +2680,11 @@ const App = {
 
   async rejectRequest(uid) {
     await db.collection('groups').doc(S.currentGroupId).collection('requests').doc(uid).update({ status:'rejected' });
-    const rDoc = await db.collection('groups').doc(S.currentGroupId).collection('requests').doc(uid).get();
+    await notify({
+      toUserId: uid, type: 'join_rejected',
+      groupId: S.currentGroupId, groupName: S.currentGroupData?.name || '',
+      text: `La tua richiesta per "${S.currentGroupData?.name || ''}" non è stata accettata.`
+    });
     toast('Richiesta rifiutata');
     this.openRequests();
   },
@@ -2503,6 +2692,7 @@ const App = {
   // ─── NOTIFICATIONS ───────────────────────────────────
   async openNotifications() {
     show('modal-notifications');
+    try {
     // Azzera badge
     if ('setAppBadge' in navigator) navigator.clearAppBadge().catch(()=>{});
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
@@ -2529,6 +2719,7 @@ const App = {
     }
     c.innerHTML = html;
     unread.forEach(n=>db.collection('notifications').doc(n.id).update({read:true}));
+    } catch(err) { $id('notifications-list').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-3)">Errore nel caricamento</div>'; }
   },
 
   _renderNotifItem(n, ICONS) {
@@ -2572,7 +2763,7 @@ const App = {
 };
 
 // ============================================================
-// EVENT LISTENERS
+// 🎧 EVENT LISTENERS
 // ============================================================
 $id('btn-create-group').addEventListener('click', () => show('modal-create-group'));
 $id('btn-create-event').addEventListener('click', () => goTo('create'));
@@ -2581,7 +2772,7 @@ document.querySelectorAll('.modal-overlay').forEach(ov => {
 });
 $id('sheet-who').addEventListener('click', e => { if(e.target===$id('sheet-who')) App.closeWho(); });
 
-// ── SWIPE DOWN TO DISMISS modals ────────────────────────────
+// ── 🎧 SWIPE DOWN TO DISMISS modals ─────────────────────────
 (function setupSwipeDismiss() {
   let startY = 0, startScrollTop = 0, dragging = false;
 
@@ -2625,7 +2816,7 @@ $id('sheet-who').addEventListener('click', e => { if(e.target===$id('sheet-who')
   }, { passive: true });
 })();
 
-// ── COUNTDOWN ──────────────────────────────────────────────
+// ── 🛠️  COUNTDOWN ───────────────────────────────────────────
 function countdownLabel(dateStr) {
   if (!dateStr) return { label: '', cls: '' };
   const today = new Date(); today.setHours(0,0,0,0);
@@ -2645,7 +2836,7 @@ function tomorrowStr() {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 
-// ── DAY-BEFORE REMINDERS ──────────────────────────────────
+// ── ⏰ REMINDERS (giorno prima & scadenza) ──────────────────
 async function checkDayBeforeReminders() {
   if (!S.userDoc?.groups?.length) return;
   const checkKey = 'crew_reminder_' + todayStr();
@@ -2687,7 +2878,7 @@ async function checkDayBeforeReminders() {
   } catch(e) {}
 }
 
-// ── GROUP TABS (prossimi / passati) ──────────────────────
+// ── 👥 GROUP TABS (prossimi / passati) ─────────────────────
 S._eventsUnsub = null;
 function loadGroupEvents(gid, tab) {
   if (S._eventsUnsub) { S._eventsUnsub(); S._eventsUnsub = null; }
@@ -2728,7 +2919,7 @@ function renderTimelineEventNew(ev, i, total, isPast) {
     '</div></div></div>';
 }
 
-// ── VIEWS (chi ha visto l'evento) ──────────────────────────
+// ── 📅 VIEWS (chi ha visto l'evento) ────────────────────────
 function renderViews(views) {
   const el = $id('views-row'); if (!el) return;
   if (!views.length) { el.innerHTML = '<span class="views-label">👁 Nessuna visualizzazione</span>'; return; }
@@ -2739,7 +2930,7 @@ function renderViews(views) {
     (views.length>2?' e altri '+(views.length-2):'') + '</span>';
 }
 
-// ── ITEMS PAGE ───────────────────────────────────────────
+// ── 📅 ITEMS PAGE ─────────────────────────────────────────
 function loadItemsPage() {
   // Show spinner immediately
   const body = $id('items-page-body');

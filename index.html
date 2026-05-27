@@ -877,10 +877,15 @@ function formatExpiry(ts) {
 // ============================================================
 // 🔔 NOTIFICHE IN-APP (Firestore)
 // ============================================================
+// Tipi di notifica che bypassano le preferenze utente (notifiche di sistema)
+const SYSTEM_NOTIF_TYPES = ['join_request', 'join_approved', 'join_rejected'];
+
 async function notify(data) {
   try {
-    const prefs = await getUserPrefs(data.toUserId);
-    if (!prefs[data.type]) return;
+    if (!SYSTEM_NOTIF_TYPES.includes(data.type)) {
+      const prefs = await getUserPrefs(data.toUserId);
+      if (!prefs[data.type]) return;
+    }
   } catch(e) {}
   await db.collection('notifications').add({
     ...data, read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -934,9 +939,17 @@ function switchLoginTab(tab) {
     firebase.auth().signInWithEmailLink(email, window.location.href)
       .then(() => {
         localStorage.removeItem('crew_magic_email');
-        // crew_show_set_password viene impostato PRIMA dell'invio (sendRegisterLink / loginWithPassword)
-        // NON va impostato qui: causerebbe la schermata "imposta password" anche a utenti già registrati
-        window.history.replaceState({}, '', window.location.pathname);
+        // Preserva ?join= e ?gated= rimuovendo solo i token Firebase dall'URL
+        // IMPORTANTE: replaceState viene eseguito PRIMA di onAuthStateChanged,
+        // quindi i params devono sopravvivere per permettere il join automatico
+        (function preserveJoinParams() {
+          const p = new URLSearchParams(window.location.search);
+          const keep = new URLSearchParams();
+          if (p.get('join'))  keep.set('join',  p.get('join'));
+          if (p.get('gated')) keep.set('gated', p.get('gated'));
+          const qs = keep.toString() ? '?' + keep.toString() : '';
+          window.history.replaceState({}, '', window.location.pathname + qs);
+        })();
       })
       .catch(err => { console.error(err); toast('Link non valido o scaduto'); });
   }
@@ -1324,8 +1337,32 @@ async function handleJoin(code, gated=false) {
     // Notify group creator/admin
     const adminUid = gData.createdBy;
     if (adminUid) {
+      await notify({
+        toUserId: adminUid, type: 'join_request',
+        groupId: gid, groupName: gData.name,
+        text: `${displayName(S.userDoc)} vuole unirsi a "${gData.name}" 👋`
+      });
     }
     hide('app'); show('pending-screen');
+    // Listener real-time: aggiorna lo schermo appena l'admin approva/rifiuta
+    const _pendingUnsub = db.collection('groups').doc(gid)
+      .collection('requests').doc(S.user.uid)
+      .onSnapshot(snap => {
+        const status = snap.data()?.status;
+        if (status === 'approved') {
+          _pendingUnsub();
+          hide('pending-screen');
+          S.userDoc.groups = [...(S.userDoc.groups || []), gid];
+          toast(`🎉 Sei entrato in "${gData.name}"!`);
+          initApp();
+        } else if (status === 'rejected') {
+          _pendingUnsub();
+          hide('pending-screen');
+          show('login-screen');
+          toast('La tua richiesta non è stata accettata ❌');
+        }
+      });
+    S.unsubscribers.push(_pendingUnsub);
   } else {
     // Direct entry
     await db.collection('groups').doc(gid).update({ members:firebase.firestore.FieldValue.arrayUnion(mData), memberUids:firebase.firestore.FieldValue.arrayUnion(S.user.uid) });
@@ -2527,6 +2564,11 @@ const App = {
     await db.collection('groups').doc(S.currentGroupId).update({ members:firebase.firestore.FieldValue.arrayUnion(mData), memberUids:firebase.firestore.FieldValue.arrayUnion(uid) });
     await db.collection('users').doc(uid).update({ groups:firebase.firestore.FieldValue.arrayUnion(S.currentGroupId) });
     await db.collection('groups').doc(S.currentGroupId).collection('requests').doc(uid).update({ status:'approved' });
+    await notify({
+      toUserId: uid, type: 'join_approved',
+      groupId: S.currentGroupId, groupName: S.currentGroupData?.name || '',
+      text: `Sei stato approvato nel gruppo "${S.currentGroupData?.name || ''}"! 🎉`
+    });
     toast(`✅ ${displayNameVal} approvato!`);
     this.openRequests();
     loadGroup(S.currentGroupId);
@@ -2534,7 +2576,11 @@ const App = {
 
   async rejectRequest(uid) {
     await db.collection('groups').doc(S.currentGroupId).collection('requests').doc(uid).update({ status:'rejected' });
-    const rDoc = await db.collection('groups').doc(S.currentGroupId).collection('requests').doc(uid).get();
+    await notify({
+      toUserId: uid, type: 'join_rejected',
+      groupId: S.currentGroupId, groupName: S.currentGroupData?.name || '',
+      text: `La tua richiesta per "${S.currentGroupData?.name || ''}" non è stata accettata.`
+    });
     toast('Richiesta rifiutata');
     this.openRequests();
   },

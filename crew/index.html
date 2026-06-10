@@ -479,8 +479,7 @@
     <!-- EVENT DETAIL -->
     <div id="view-event" class="view-full hidden" style="display:flex;flex-direction:column;">
       <div class="event-header">
-        <div style="margin-bottom:14px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
           <span id="event-back-btn" style="display:inline-flex;align-items:center;gap:4px;color:var(--orange);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-h)">
             <svg width="8" height="13" viewBox="0 0 8 13"><path d="M7 1L1.5 6.5L7 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span id="event-back-label">Gruppo</span>
@@ -1040,7 +1039,7 @@ $id('btn-user-menu').addEventListener('click', doLogout);
 // ============================================================
 // NAVIGATION
 // ============================================================
-const VIEWS = ['view-home','view-group','view-event','view-create','view-profile'];
+const VIEWS = ['view-home','view-group','view-event','view-items','view-create','view-profile'];
 function showView(id) {
   VIEWS.forEach(v => {
     const el = $id(v); if (!el) return;
@@ -1058,7 +1057,7 @@ function goTo(view, id=null) {
     else history.pushState({ view, id }, '');
   }
   $id('tab-bar').style.display = ['home','profile'].includes(view) ? '' : 'none';
-  $id('app-header').style.display = view === 'create' ? 'none' : '';
+  $id('app-header').style.display = ['create','items'].includes(view) ? 'none' : '';
 
   if (view === 'home') {
     $id('header-back').classList.add('hidden');
@@ -1070,6 +1069,8 @@ function goTo(view, id=null) {
   } else if (view === 'event') {
     S.currentEventId = id;
     showView('view-event'); loadEvent(id);
+  } else if (view === 'items') {
+    showView('view-items'); loadItemsPage();
   } else if (view === 'create') {
     showView('view-create'); initWizard();
   } else if (view === 'profile') {
@@ -1111,6 +1112,7 @@ document.querySelectorAll('.tab-item').forEach(item => {
 });
 
 $id('group-back-btn').addEventListener('click', () => goTo('home'));
+$id('items-back-btn').addEventListener('click', () => goTo('event', S.currentEventId));
 $id('event-back-btn').addEventListener('click', () => {
   if (S.currentGroupId) goTo('group', S.currentGroupId); else goTo('home');
 });
@@ -1138,7 +1140,7 @@ async function loadHome() {
     if (!evSnap.empty) renderNextEventBanner({ id:evSnap.docs[0].id, ...evSnap.docs[0].data() });
   } catch(e) {}
 
-  const unsub = db.collection('groups').where(firebase.firestore.FieldPath.documentId(),'in',S.userDoc.groups)
+  const unsub = db.collection('groups').where(firebase.firestore.FieldPath.documentId(),'in',S.userDoc.groups.slice(0,10))
     .onSnapshot(snap => {
       if (snap.empty) { c.innerHTML=`<div class="empty-state"><div class="empty-emoji">👥</div><div class="empty-title">Nessun gruppo</div></div>`; return; }
       c.innerHTML = '';
@@ -1196,11 +1198,15 @@ async function loadGroup(gid) {
 
   // Admin actions
   const adminActions = $id('group-admin-actions');
+  adminActions.classList.remove('hidden');
+  let actionsHtml = `<button class="btn btn-secondary btn-xs" onclick="App.openMembers()">👥 Membri</button>`;
   if (S.userDoc?.role === 'admin') {
-    adminActions.classList.remove('hidden');
-    adminActions.innerHTML = `
+    actionsHtml += `
       <button class="btn btn-secondary btn-xs" onclick="App.openInviteSettings()">⚙️ Invito</button>
-      <button class="btn btn-secondary btn-xs" id="btn-requests" onclick="App.openRequests()">👥 Richieste <span id="requests-count"></span></button>`;
+      <button class="btn btn-secondary btn-xs" id="btn-requests" onclick="App.openRequests()">✋ Richieste <span id="requests-count"></span></button>`;
+  }
+  adminActions.innerHTML = actionsHtml;
+  if (S.userDoc?.role === 'admin') {
     // Listen for pending requests
     const rUnsub = db.collection('groups').doc(gid).collection('requests')
       .where('status','==','pending').onSnapshot(snap => {
@@ -1208,8 +1214,6 @@ async function loadGroup(gid) {
         if (el) el.innerHTML = snap.size > 0 ? `<span class="requests-badge">${snap.size}</span>` : '';
       });
     S.unsubscribers.push(rUnsub);
-  } else {
-    adminActions.classList.add('hidden');
   }
 
   // Invite banner
@@ -1358,7 +1362,10 @@ function renderEventBody(ev) {
           <div class="card-head-title">🎒 Cosa portare</div>
           <div style="display:flex;gap:6px;margin-top:6px;" id="items-tipo-pills"></div>
         </div>
-        ${S.userDoc?.role==='admin'?`<button id="btn-add-item-toggle" onclick="App.toggleAddItem()" style="width:30px;height:30px;border-radius:15px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;font-size:20px;font-weight:700;color:var(--text-2);flex-shrink:0;align-self:flex-start;">+</button>`:''}
+        <div style="display:flex;gap:6px;align-items:flex-start;flex-shrink:0;">
+          <button class="open-items-btn" onclick="goTo('items')"><span>Apri ⤢</span></button>
+          ${S.userDoc?.role==='admin'?`<button id="btn-add-item-toggle" onclick="App.toggleAddItem()" style="width:30px;height:30px;border-radius:15px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;font-size:20px;font-weight:700;color:var(--text-2);">+</button>`:''}
+        </div>
       </div>
       <div id="items-tipo-info"></div>
       <div id="items-list-body"></div>
@@ -1381,6 +1388,7 @@ function renderEventBody(ev) {
         </button>
       </div>
     </div>
+    ${(S.userDoc?.role==='admin'||ev.createdBy===S.user?.uid)?`<div style="margin-bottom:8px;"><button class="btn btn-secondary btn-full" onclick="App.openEditEvent()">✏️ Modifica evento</button></div>`:''}
     ${S.userDoc?.role==='admin'?`<div style="margin-bottom:8px;"><button class="btn btn-danger btn-full" onclick="App.openDeleteSheet()">🗑 Elimina evento</button></div>`:''}
     <div style="height:16px;"></div>`;
 
@@ -1676,7 +1684,8 @@ async function loadProfile() {
 // ============================================================
 function listenNotifications() {
   if (!S.user) return;
-  db.collection('notifications').where('toUserId','==',S.user.uid).where('read','==',false)
+  if (S._notifUnsub) { S._notifUnsub(); S._notifUnsub = null; } // evita listener duplicati
+  S._notifUnsub = db.collection('notifications').where('toUserId','==',S.user.uid).where('read','==',false)
     .onSnapshot(snap => {
       const count = snap.size;
       if (count > 0) { show('notif-dot'); $id('tab-notif-badge').textContent=count>9?'9+':count; show('tab-notif-badge'); }
@@ -2048,7 +2057,7 @@ const App = {
     if (!S.currentEventId || S.userDoc?.role !== 'admin') return;
     S.currentEventData.thingsType = tipo;
     await db.collection('events').doc(S.currentEventId).update({ thingsType: tipo });
-    loadItemsPage();
+    goTo('items'); // ri-renderizza pulendo i listener precedenti
   },
 
   async openMembers() {
@@ -2065,7 +2074,9 @@ const App = {
       '<div style="font-size:12px;color:var(--text-3);margin-top:2px;">' + (m.uid===gSnap.data().createdBy?'Admin':'Membro') + '</div></div>' +
       (isAdmin && m.uid !== S.user.uid ? '<button class="btn btn-danger btn-xs" onclick="App.removeMember(\'' + m.uid + '\',\'' + escAttr(m.displayName||'') + '\')">Rimuovi</button>' : '') +
       '</div>'
-    ).join('');
+    ).join('') +
+    (gSnap.data().createdBy !== S.user.uid
+      ? '<button class="btn btn-danger btn-full" style="margin-top:10px;" onclick="App.leaveGroup()">🚪 Esci dal gruppo</button>' : '');
   },
 
   async removeMember(uid, name) {
@@ -2081,6 +2092,7 @@ const App = {
 
   async leaveGroup() {
     if (!confirm('Vuoi lasciare questo gruppo?')) return;
+    this.closeModal('modal-members');
     const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
     const members = gSnap.data().members.filter(m => m.uid !== S.user.uid);
     await db.collection('groups').doc(S.currentGroupId).update({ members, memberUids: members.map(m => m.uid) });

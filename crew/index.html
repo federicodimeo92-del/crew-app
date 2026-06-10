@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#4B7BEC">
+  <meta name="theme-color" content="#c2410c">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Crew">
@@ -11,28 +11,21 @@
   <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      /* v3 — primary blue palette */
-      --blue: #4B7BEC; --blue-dark: #3A65D4; --blue-soft: #EEF2FF; --blue-mid: #7099F0;
-      /* orange kept as warm accent only */
-      --orange: #FFAA6B; --orange-dark: #E8893A; --orange-soft: #FFF3E8; --orange-100: #FFE4CC;
-      /* semantic */
-      --green: #34C759; --red: #FF3B30; --amber: #f59e0b; --purple: #7B5FFF;
-      /* surfaces */
-      --bg: #F6F8FF; --surface: #ffffff; --surface-2: #F0F2F9;
-      --text: #1C1C1E; --text-2: #4A4A58; --text-3: #8E8E9A; --border: #EAECF4;
-      --shadow: 0 4px 20px rgba(75,123,236,.10);
+      --orange: #c2410c; --orange-dark: #9a3412; --orange-soft: #fff7ed; --orange-100: #ffedd5;
+      --green: #22c55e; --red: #ef4444; --amber: #f59e0b; --blue: #3b82f6;
+      --bg: #f6f7fb; --surface: #ffffff; --surface-2: #f1f2f6;
+      --text: #1c1c1e; --text-2: #4a4a58; --text-3: #8e8e9a; --border: #eaecf4;
+      --shadow: 0 4px 20px rgba(28,25,23,.08);
       --font-h: 'Bricolage Grotesque', sans-serif; --font-b: 'DM Sans', sans-serif;
-      --r: 16px; --r-sm: 10px; --r-lg: 18px; --r-xl: 24px;
+      --r: 16px; --r-sm: 10px; --r-lg: 20px; --r-xl: 26px;
     }
     html, body { height: 100%; background: var(--bg); font-family: var(--font-b); color: var(--text); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
     body { max-width: 430px; margin: 0 auto; }
@@ -42,29 +35,26 @@
 
     /* SPINNER */
     #loading-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px; }
-    #pwa-banner { position:fixed; top:0; left:0; right:0; z-index:9999; background:var(--blue); color:#fff; padding:12px 16px 12px 20px; display:flex; align-items:center; gap:10px; box-shadow:0 2px 8px rgba(0,0,0,.2); }
-    #pwa-banner-text { flex:1; font-size:13px; line-height:1.4; }
-    #pwa-banner-close { background:rgba(255,255,255,.25); border:none; color:#fff; width:28px; height:28px; border-radius:50%; font-size:14px; cursor:pointer; flex-shrink:0; }
-    .spinner { width:34px; height:34px; border:3px solid var(--border); border-top-color:var(--blue); border-radius:50%; animation:spin .7s linear infinite; }
+    .spinner { width:34px; height:34px; border:3px solid var(--border); border-top-color:var(--orange); border-radius:50%; animation:spin .7s linear infinite; }
     @keyframes spin { to { transform:rotate(360deg); } }
 
     /* ONBOARDING */
     #onboarding-screen { min-height:100vh; display:flex; flex-direction:column; background:var(--surface); padding:48px 28px 40px; position:relative; }
     .ob-skip { position:absolute; top:52px; right:28px; font-size:14px; font-weight:600; color:var(--text-3); cursor:pointer; }
     .ob-illustration { flex:1; display:flex; align-items:center; justify-content:center; }
-    .ob-circle { width:200px; height:200px; border-radius:100px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center; font-size:80px; }
+    .ob-circle { width:200px; height:200px; border-radius:100px; background:var(--orange-soft); display:flex; align-items:center; justify-content:center; font-size:80px; }
     .ob-dots { display:flex; justify-content:center; gap:8px; margin-bottom:28px; }
     .ob-dot { height:8px; border-radius:4px; background:var(--border); transition:all .3s; }
-    .ob-dot.active { background:var(--blue); width:24px; } .ob-dot:not(.active) { width:8px; }
+    .ob-dot.active { background:var(--orange); width:24px; } .ob-dot:not(.active) { width:8px; }
     .ob-title { font-family:var(--font-h); font-weight:800; font-size:34px; color:var(--text); line-height:1.1; margin-bottom:12px; text-align:center; white-space:pre-line; }
     .ob-sub { font-size:16px; color:var(--text-2); line-height:1.5; text-align:center; margin-bottom:36px; }
-    .ob-cta { background:var(--blue); border-radius:var(--r); padding:17px; text-align:center; font-family:var(--font-h); font-weight:700; font-size:17px; color:#fff; cursor:pointer; }
-    .ob-cta:hover { background:var(--blue-dark); }
+    .ob-cta { background:var(--orange); border-radius:var(--r); padding:17px; text-align:center; font-family:var(--font-h); font-weight:700; font-size:17px; color:#fff; cursor:pointer; }
+    .ob-cta:hover { background:var(--orange-dark); }
 
     /* LOGIN */
     #login-screen { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 28px; background:var(--surface); }
     .login-logo { font-family:var(--font-h); font-weight:800; font-size:48px; color:var(--text); letter-spacing:-2px; margin-bottom:6px; }
-    .login-dot { width:8px; height:8px; border-radius:4px; background:var(--blue); margin:0 auto 10px; }
+    .login-dot { width:8px; height:8px; border-radius:4px; background:var(--orange); margin:0 auto 10px; }
     .login-tagline { font-size:15px; color:var(--text-3); margin-bottom:40px; text-align:center; }
     .login-card { width:100%; max-width:320px; background:var(--surface); border-radius:var(--r-xl); padding:28px 22px; box-shadow:0 16px 48px rgba(28,25,23,.12); }
     .login-tab-row { display:flex; background:var(--bg); border-radius:12px; padding:4px; margin-bottom:22px; }
@@ -76,13 +66,13 @@
     .magic-sent-title { font-family:var(--font-h); font-weight:700; font-size:18px; color:var(--text); margin-bottom:6px; }
     .magic-sent-sub { font-size:14px; color:var(--text-3); line-height:1.5; }
     .btn-google { width:100%; padding:14px 20px; background:var(--surface); border:1.5px solid var(--border); border-radius:var(--r); display:flex; align-items:center; justify-content:center; gap:12px; font-family:var(--font-h); font-size:15px; font-weight:700; color:var(--text); cursor:pointer; transition:all .15s; }
-    .btn-google:hover { background:var(--surface-2); border-color:var(--blue); }
+    .btn-google:hover { background:var(--surface-2); border-color:var(--orange); }
 
     /* NICKNAME SCREEN */
     #nickname-screen { position:fixed; inset:0; background:var(--surface); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 28px; z-index:1000; }
     .nickname-title { font-family:var(--font-h); font-weight:800; font-size:28px; color:var(--text); text-align:center; margin-bottom:8px; }
     .nickname-sub { font-size:15px; color:var(--text-3); text-align:center; margin-bottom:32px; line-height:1.5; }
-    .nickname-avatar { width:80px; height:80px; border-radius:24px; object-fit:cover; background:#D8E4FF; margin:0 auto 24px; display:block; }
+    .nickname-avatar { width:80px; height:80px; border-radius:24px; object-fit:cover; background:var(--orange-100); margin:0 auto 24px; display:block; }
 
     /* PENDING JOIN SCREEN */
     #pending-screen { position:fixed; inset:0; background:var(--surface); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 28px; z-index:900; text-align:center; }
@@ -93,32 +83,31 @@
     /* APP */
     #app { display:flex; flex-direction:column; height:100vh; }
     #app-header { position:sticky; top:0; z-index:100; background:rgba(246,247,251,.92); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border-bottom:1px solid var(--border); padding:0 12px; height:56px; display:flex; align-items:center; gap:8px; flex-shrink:0; }
-    #header-back { width:36px; height:36px; border-radius:50%; border:none; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--blue); flex-shrink:0; }
-    #header-back:hover { background:var(--blue-soft); }
+    #header-back { width:36px; height:36px; border-radius:50%; border:none; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--orange); flex-shrink:0; }
+    #header-back:hover { background:var(--orange-soft); }
     #header-title { flex:1; font-family:var(--font-h); font-size:19px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     #header-actions { display:flex; align-items:center; gap:2px; flex-shrink:0; }
     .header-btn { width:40px; height:40px; border-radius:50%; border:none; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text-2); position:relative; transition:background .15s; }
     .header-btn:hover { background:var(--surface-2); }
-    #notif-dot { position:absolute; top:7px; right:7px; width:8px; height:8px; border-radius:50%; background:var(--blue); border:2px solid var(--bg); }
+    #notif-dot { position:absolute; top:7px; right:7px; width:8px; height:8px; border-radius:50%; background:var(--orange); border:2px solid var(--bg); }
     #header-avatar { border-radius:50%; object-fit:cover; background:var(--border); }
     #app-main { flex:1; overflow:hidden; position:relative; }
 
     /* VIEWS */
-    .view { position:absolute; inset:0; overflow-y:auto; padding:16px; padding-bottom:calc(80px + env(safe-area-inset-bottom)); background:var(--bg); }
-    .inner-view { flex:1; overflow-y:auto; padding:16px; padding-bottom:calc(80px + env(safe-area-inset-bottom)); }
-    .view-full { position:absolute; inset:0; overflow:hidden; }
+    .view { height:100%; overflow-y:auto; padding:16px; padding-bottom:calc(80px + env(safe-area-inset-bottom)); }
+    .view-full { height:100%; overflow-y:auto; }
 
     /* TAB BAR */
     #tab-bar { position:absolute; bottom:0; left:0; right:0; height:calc(64px + env(safe-area-inset-bottom)); background:var(--surface); border-top:1px solid var(--border); display:flex; align-items:flex-start; padding-top:10px; z-index:50; }
     .tab-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:2px 0; position:relative; }
     .tab-label { font-size:10px; font-weight:600; font-family:var(--font-h); color:var(--text-3); transition:color .15s; }
-    .tab-item.active .tab-label { color:var(--blue); }
+    .tab-item.active .tab-label { color:var(--orange); }
     .tab-badge { position:absolute; top:-2px; right:calc(50% - 22px); min-width:16px; height:16px; border-radius:8px; background:var(--red); font-size:9px; font-weight:700; color:#fff; display:flex; align-items:center; justify-content:center; border:2px solid var(--surface); padding:0 3px; }
 
     /* BUTTONS */
     .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:12px 18px; border-radius:var(--r); font-family:var(--font-h); font-size:15px; font-weight:700; cursor:pointer; border:none; transition:all .15s; white-space:nowrap; }
-    .btn-primary { background:var(--blue); color:#fff; }
-    .btn-primary:hover { background:var(--blue-dark); }
+    .btn-primary { background:var(--orange); color:#fff; }
+    .btn-primary:hover { background:var(--orange-dark); }
     .btn-primary:active { transform:scale(.97); }
     .btn-secondary { background:var(--surface-2); color:var(--text); border:1.5px solid var(--border); }
     .btn-danger { background:#fef2f2; color:var(--red); border:1.5px solid #fecaca; }
@@ -130,7 +119,7 @@
     .field { display:flex; flex-direction:column; gap:5px; margin-bottom:14px; }
     .field-label { font-size:11px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:.06em; font-family:var(--font-h); }
     input,textarea,select { width:100%; padding:13px 14px; border:1.5px solid var(--border); border-radius:var(--r-sm); font-size:15px; color:var(--text); background:var(--bg); transition:border-color .15s; outline:none; -webkit-appearance:none; }
-    input:focus,textarea:focus,select:focus { border-color:var(--blue); background:var(--surface); }
+    input:focus,textarea:focus,select:focus { border-color:var(--orange); background:var(--surface); }
     textarea { resize:vertical; min-height:72px; }
 
     /* CARDS */
@@ -139,7 +128,7 @@
     .card-head-title { font-family:var(--font-h); font-weight:700; font-size:14px; color:var(--text); }
 
     /* HOME */
-    .next-event-banner { border-radius:var(--r-lg); background:linear-gradient(135deg,var(--blue) 0%,#e85d2a 100%); padding:20px; position:relative; overflow:hidden; cursor:pointer; margin-bottom:22px; }
+    .next-event-banner { border-radius:var(--r-lg); background:linear-gradient(135deg,var(--orange) 0%,#e85d2a 100%); padding:20px; position:relative; overflow:hidden; cursor:pointer; margin-bottom:22px; }
     .neb-bubble-1 { position:absolute; right:-20px; top:-20px; width:110px; height:110px; border-radius:55px; background:rgba(255,255,255,.08); pointer-events:none; }
     .neb-bubble-2 { position:absolute; right:20px; bottom:-30px; width:70px; height:70px; border-radius:35px; background:rgba(255,255,255,.06); pointer-events:none; }
     .neb-label { font-size:10px; font-weight:700; color:rgba(255,255,255,.65); letter-spacing:1.2px; text-transform:uppercase; margin-bottom:8px; }
@@ -149,7 +138,7 @@
     .neb-pill { background:rgba(255,255,255,.2); color:#fff; border-radius:99px; padding:3px 10px; font-size:12px; font-weight:700; font-family:var(--font-h); display:inline-block; }
     .group-card { background:var(--surface); border-radius:var(--r-lg); padding:16px; border:1.5px solid var(--border); box-shadow:var(--shadow); cursor:pointer; display:flex; align-items:center; gap:14px; margin-bottom:10px; transition:all .15s; }
     .group-card:hover { transform:translateY(-1px); box-shadow:0 8px 24px rgba(28,25,23,.12); }
-    .group-avatar { width:52px; height:52px; border-radius:16px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0; }
+    .group-avatar { width:52px; height:52px; border-radius:16px; background:var(--orange-soft); display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0; }
     .group-name { font-family:var(--font-h); font-weight:700; font-size:16px; color:var(--text); }
     .group-meta { font-size:13px; color:var(--text-3); margin-top:2px; }
     .section-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:13px; }
@@ -158,7 +147,7 @@
     /* GROUP */
     .group-header { background:var(--surface); padding:8px 20px 18px; border-bottom:1px solid var(--border); flex-shrink:0; }
     .timeline-item { display:flex; gap:14px; margin-bottom:16px; }
-    .timeline-dot { width:42px; height:42px; border-radius:13px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+    .timeline-dot { width:42px; height:42px; border-radius:13px; background:var(--orange-soft); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
     .timeline-line { width:2px; flex:1; background:var(--border); margin-top:6px; min-height:20px; }
     .timeline-card { flex:1; background:var(--surface); border-radius:var(--r); padding:14px 16px; border:1.5px solid var(--border); cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.04); transition:all .15s; }
     .timeline-card:hover { transform:translateY(-1px); box-shadow:var(--shadow); }
@@ -168,20 +157,20 @@
     .rsvp-pill.yes { background:#dcfce7; color:#16a34a; }
     .rsvp-pill.maybe { background:#fef3c7; color:#d97706; }
     .rsvp-pill.no { background:#fee2e2; color:#dc2626; }
-    .invite-banner { background:var(--blue-soft); border:1.5px solid #D8E4FF; border-radius:var(--r); padding:12px 14px; margin-bottom:14px; }
+    .invite-banner { background:var(--orange-soft); border:1.5px solid var(--orange-100); border-radius:var(--r); padding:12px 14px; margin-bottom:14px; }
     .invite-label { font-size:10px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:.06em; margin-bottom:2px; }
-    .invite-code { font-family:var(--font-h); font-size:15px; font-weight:700; color:var(--blue); letter-spacing:.05em; }
+    .invite-code { font-family:var(--font-h); font-size:15px; font-weight:700; color:var(--orange); letter-spacing:.05em; }
     .invite-expiry { font-size:11px; color:var(--text-3); margin-top:3px; }
     .invite-expired { font-size:11px; color:var(--red); font-weight:700; margin-top:3px; }
     .requests-badge { background:var(--red); color:#fff; border-radius:99px; padding:2px 8px; font-size:11px; font-weight:700; font-family:var(--font-h); }
 
     /* EVENT */
-    .event-header { background:var(--surface); padding:6px 16px 14px; border-bottom:1px solid var(--border); flex-shrink:0; }
-    .event-emoji-box { width:48px; height:48px; border-radius:14px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; }
-    .event-hero-title { font-family:var(--font-h); font-weight:800; font-size:17px; color:var(--text); letter-spacing:-.3px; line-height:1.2; }
-    .event-meta-item { font-size:12px; color:var(--text-2); margin-top:3px; }
-    .event-meta-link { font-size:12px; color:var(--blue); font-weight:600; cursor:pointer; margin-top:3px; }
-    .event-deadline { font-size:11px; color:var(--amber); font-weight:700; margin-top:3px; }
+    .event-header { background:var(--surface); padding:8px 20px 18px; border-bottom:1px solid var(--border); flex-shrink:0; }
+    .event-emoji-box { width:64px; height:64px; border-radius:20px; background:var(--orange-soft); display:flex; align-items:center; justify-content:center; font-size:32px; flex-shrink:0; }
+    .event-hero-title { font-family:var(--font-h); font-weight:800; font-size:20px; color:var(--text); letter-spacing:-.3px; line-height:1.2; }
+    .event-meta-item { font-size:13px; color:var(--text-2); margin-top:4px; }
+    .event-meta-link { font-size:13px; color:var(--orange); font-weight:600; cursor:pointer; margin-top:4px; }
+    .event-deadline { font-size:12px; color:var(--amber); font-weight:700; margin-top:4px; }
 
     /* RSVP */
     .rsvp-blocks { display:flex; gap:8px; padding:14px; }
@@ -194,21 +183,21 @@
     .rsvp-block.active-maybe .rsvp-count { color:var(--amber); }
     .rsvp-block.active-no .rsvp-count { color:var(--red); }
     .rsvp-label { font-size:10px; color:var(--text-3); font-weight:700; text-transform:uppercase; letter-spacing:.3px; margin-top:3px; }
-    .see-who-btn { display:flex; align-items:center; gap:4px; background:var(--blue-soft); border-radius:99px; padding:5px 11px; cursor:pointer; flex-shrink:0; }
-    .see-who-btn span { font-size:11px; color:var(--blue); font-weight:700; }
+    .see-who-btn { display:flex; align-items:center; gap:4px; background:var(--orange-soft); border-radius:99px; padding:5px 11px; cursor:pointer; flex-shrink:0; }
+    .see-who-btn span { font-size:11px; color:var(--orange); font-weight:700; }
 
     /* ITEMS */
     .items-type-info { margin:0 14px 8px; border-radius:10px; padding:8px 12px; font-size:12px; }
-    .items-type-info.comune { background:var(--blue-soft); color:var(--blue-dark); }
+    .items-type-info.comune { background:var(--orange-soft); color:var(--orange-dark); }
     .items-type-info.consigliata { background:#fffbeb; color:#92400e; }
     .item-row { display:flex; align-items:center; gap:10px; padding:11px 16px; border-top:1px solid var(--border); }
     .item-text { flex:1; font-size:14px; color:var(--text); }
     .item-assigned { display:flex; align-items:center; gap:5px; font-size:12px; color:var(--text-3); }
     .item-assigned img { width:20px; height:20px; border-radius:50%; }
     .btn-take { padding:5px 11px; border-radius:7px; font-size:12px; font-weight:700; cursor:pointer; transition:all .15s; white-space:nowrap; border:1.5px solid; font-family:var(--font-h); }
-    .btn-take.free { background:transparent; border-color:var(--blue); color:var(--blue); }
-    .btn-take.free:hover { background:var(--blue-soft); }
-    .btn-take.mine { background:#D8E4FF; border-color:#D8E4FF; color:var(--blue-dark); }
+    .btn-take.free { background:transparent; border-color:var(--orange); color:var(--orange); }
+    .btn-take.free:hover { background:var(--orange-soft); }
+    .btn-take.mine { background:var(--orange-100); border-color:var(--orange-100); color:var(--orange-dark); }
     .add-item-row { display:flex; gap:8px; padding:10px 14px; border-top:1px solid var(--border); }
     .add-item-row input { flex:1; padding:9px 12px; }
 
@@ -218,43 +207,43 @@
     .c-author { font-family:var(--font-h); font-weight:700; font-size:13px; color:var(--text); }
     .c-time { font-size:11px; color:var(--text-3); margin-left:6px; }
     .c-text { font-size:14px; color:var(--text-2); line-height:1.4; margin-top:2px; }
-    .c-text .mention { color:var(--blue); font-weight:600; }
+    .c-text .mention { color:var(--orange); font-weight:600; }
     .comment-input-area { display:flex; gap:8px; align-items:center; padding:10px 12px; border-top:1px solid var(--border); }
     .comment-input-wrap { flex:1; background:var(--bg); border-radius:99px; padding:9px 16px; display:flex; align-items:center; position:relative; }
     #comment-input { flex:1; background:none; border:none; outline:none; font-size:13px; color:var(--text); width:100%; }
-    #comment-send { width:34px; height:34px; border-radius:50%; background:var(--blue); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-    #mention-dropdown { position:fixed; background:var(--surface); border:1.5px solid var(--border); border-radius:var(--r-sm); box-shadow:var(--shadow); overflow-y:auto; max-height:200px; z-index:9000; }
+    #comment-send { width:34px; height:34px; border-radius:50%; background:var(--orange); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    #mention-dropdown { position:absolute; bottom:calc(100% + 6px); left:0; right:0; background:var(--surface); border:1.5px solid var(--border); border-radius:var(--r-sm); box-shadow:var(--shadow); overflow:hidden; z-index:200; }
     .mention-opt { padding:9px 12px; display:flex; align-items:center; gap:9px; cursor:pointer; font-size:14px; font-weight:600; font-family:var(--font-h); }
     .mention-opt:hover { background:var(--surface-2); }
     .mention-opt img { width:26px; height:26px; border-radius:50%; }
 
     /* WIZARD */
-    #view-create { position:fixed; inset:0; display:flex; flex-direction:column; background:var(--bg); z-index:150; }
+    #view-create { display:flex; flex-direction:column; height:100%; }
     .wizard-header { background:var(--surface); padding:8px 20px 16px; border-bottom:1px solid var(--border); flex-shrink:0; }
     .wizard-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-    .wizard-back { font-family:var(--font-h); font-weight:700; font-size:14px; color:var(--blue); cursor:pointer; }
+    .wizard-back { font-family:var(--font-h); font-weight:700; font-size:14px; color:var(--orange); cursor:pointer; }
     .wizard-step-label { font-size:13px; color:var(--text-3); font-weight:600; }
     .wizard-progress { display:flex; gap:6px; }
     .wizard-bar { flex:1; height:4px; border-radius:2px; background:var(--border); transition:background .3s; }
-    .wizard-bar.done { background:var(--blue); }
+    .wizard-bar.done { background:var(--orange); }
     .wizard-step-title { font-family:var(--font-h); font-weight:800; font-size:22px; color:var(--text); margin-top:14px; }
     .wizard-body { flex:1; overflow-y:auto; padding:18px 16px 20px; }
     .wizard-footer { padding:12px 16px calc(28px + env(safe-area-inset-bottom)); background:var(--surface); border-top:1px solid var(--border); }
-    .emoji-preview { width:64px; height:64px; border-radius:20px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center; font-size:32px; cursor:pointer; border:2px dashed var(--border); }
+    .emoji-preview { width:64px; height:64px; border-radius:20px; background:var(--orange-soft); display:flex; align-items:center; justify-content:center; font-size:32px; cursor:pointer; border:2px dashed var(--border); }
     .emoji-picker { margin-top:10px; background:var(--surface); border:1.5px solid var(--border); border-radius:var(--r); padding:12px; display:flex; flex-wrap:wrap; gap:4px; }
     .emoji-opt { width:42px; height:42px; display:flex; align-items:center; justify-content:center; font-size:24px; border-radius:10px; cursor:pointer; border:1.5px solid transparent; }
-    .emoji-opt.active { background:var(--blue-soft); border-color:var(--blue); }
+    .emoji-opt.active { background:var(--orange-soft); border-color:var(--orange); }
     .tipo-toggle { display:flex; gap:8px; }
     .tipo-btn { flex:1; border-radius:14px; padding:12px 8px; text-align:center; cursor:pointer; background:var(--bg); border:2px solid var(--border); transition:all .15s; }
-    .tipo-btn.active-comune { background:var(--blue-soft); border-color:var(--blue); }
+    .tipo-btn.active-comune { background:var(--orange-soft); border-color:var(--orange); }
     .tipo-btn.active-consigliata { background:#fffbeb; border-color:var(--amber); }
     .tipo-btn-label { font-family:var(--font-h); font-weight:700; font-size:13px; color:var(--text-3); }
-    .tipo-btn.active-comune .tipo-btn-label { color:var(--blue-dark); }
+    .tipo-btn.active-comune .tipo-btn-label { color:var(--orange-dark); }
     .tipo-btn.active-consigliata .tipo-btn-label { color:#92400e; }
 
     /* PROFILE + NOTIF PREFS */
     .profile-header { background:var(--surface); padding:8px 20px 20px; border-bottom:1px solid var(--border); }
-    .profile-avatar { width:72px; height:72px; border-radius:22px; object-fit:cover; background:#D8E4FF; }
+    .profile-avatar { width:72px; height:72px; border-radius:22px; object-fit:cover; background:var(--orange-100); }
     .profile-name { font-family:var(--font-h); font-weight:800; font-size:20px; color:var(--text); }
     .profile-email { font-size:13px; color:var(--text-3); margin-top:3px; }
     .badge { border-radius:7px; padding:2px 9px; font-size:10px; font-family:var(--font-h); font-weight:700; }
@@ -262,7 +251,7 @@
     .stats-row { display:flex; background:var(--bg); border-radius:14px; overflow:hidden; margin-top:18px; }
     .stat-item { flex:1; text-align:center; padding:12px 0; }
     .stat-item + .stat-item { border-left:1px solid var(--border); }
-    .stat-num { font-family:var(--font-h); font-weight:800; font-size:22px; color:var(--blue); }
+    .stat-num { font-family:var(--font-h); font-weight:800; font-size:22px; color:var(--orange); }
     .stat-label { font-size:11px; color:var(--text-3); margin-top:2px; }
     .settings-list { background:var(--surface); border-radius:var(--r); border:1.5px solid var(--border); overflow:hidden; margin-bottom:14px; }
     .settings-item { padding:14px 16px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
@@ -275,24 +264,24 @@
     .toggle { position:relative; width:44px; height:26px; flex-shrink:0; }
     .toggle input { opacity:0; width:0; height:0; }
     .toggle-track { position:absolute; inset:0; border-radius:13px; background:var(--border); cursor:pointer; transition:background .2s; }
-    .toggle input:checked + .toggle-track { background:var(--blue); }
+    .toggle input:checked + .toggle-track { background:var(--orange); }
     .toggle-thumb { position:absolute; left:3px; top:3px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.2); transition:transform .2s; pointer-events:none; }
     .toggle input:checked ~ .toggle-thumb { transform:translateX(18px); }
 
     /* NOTIFICATIONS */
     .notif-section-title { font-family:var(--font-h); font-weight:700; font-size:13px; color:var(--text-3); margin-bottom:8px; margin-top:4px; }
     .notif-item { display:flex; gap:12px; padding:12px 14px; border-radius:14px; border:1.5px solid var(--border); cursor:pointer; background:var(--surface); margin-bottom:8px; }
-    .notif-item.unread { background:var(--blue-soft); border-color:#D8E4FF; }
+    .notif-item.unread { background:var(--orange-soft); border-color:var(--orange-100); }
     .notif-icon { width:44px; height:44px; border-radius:22px; background:var(--surface); border:1.5px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; }
-    .notif-item.unread .notif-icon { background:#D8E4FF; }
+    .notif-item.unread .notif-icon { background:var(--orange-100); }
     .notif-text { font-size:13px; color:var(--text); line-height:1.4; }
-    .notif-event-name { font-size:12px; color:var(--blue); font-weight:700; margin-top:3px; }
+    .notif-event-name { font-size:12px; color:var(--orange); font-weight:700; margin-top:3px; }
     .notif-time { font-size:11px; color:var(--text-3); margin-top:2px; }
-    .notif-unread-dot { width:8px; height:8px; border-radius:4px; background:var(--blue); flex-shrink:0; margin-top:4px; }
+    .notif-unread-dot { width:8px; height:8px; border-radius:4px; background:var(--orange); flex-shrink:0; margin-top:4px; }
 
     /* MODALS */
     .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.48); backdrop-filter:blur(4px); z-index:500; display:flex; align-items:flex-end; }
-    .modal-sheet { background:var(--surface); border-radius:var(--r-xl) var(--r-xl) 0 0; width:100%; max-width:430px; margin:0 auto; padding:22px 18px calc(36px + env(safe-area-inset-bottom)); max-height:92vh; overflow-y:auto; animation:slideUp .22s ease; transition:transform .3s ease; touch-action:pan-y; }
+    .modal-sheet { background:var(--surface); border-radius:var(--r-xl) var(--r-xl) 0 0; width:100%; max-width:430px; margin:0 auto; padding:22px 18px calc(36px + env(safe-area-inset-bottom)); max-height:92vh; overflow-y:auto; animation:slideUp .22s ease; }
     .modal-handle { width:36px; height:4px; border-radius:2px; background:var(--border); margin:0 auto 20px; }
     .modal-title { font-family:var(--font-h); font-weight:800; font-size:22px; color:var(--text); margin-bottom:20px; }
     .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
@@ -315,7 +304,7 @@
     /* INVITE SETTINGS */
     .duration-pills { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
     .duration-pill { border-radius:99px; padding:6px 14px; font-size:13px; font-weight:700; font-family:var(--font-h); cursor:pointer; border:1.5px solid var(--border); background:var(--bg); color:var(--text-3); transition:all .15s; }
-    .duration-pill.active { background:var(--blue-soft); border-color:var(--blue); color:var(--blue-dark); }
+    .duration-pill.active { background:var(--orange-soft); border-color:var(--orange); color:var(--orange-dark); }
 
     /* TOAST */
     #toast-container { position:fixed; bottom:100px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:8px; pointer-events:none; align-items:center; }
@@ -329,7 +318,7 @@
     .empty-sub { font-size:14px; color:var(--text-3); }
     .chevron-r { color:var(--text-3); flex-shrink:0; }
     .section-subtext { font-size:12px; color:var(--text-3); margin-top:5px; }
-    .maps-btn { width:50px; height:50px; border-radius:14px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center; text-decoration:none; flex-shrink:0; }
+    .maps-btn { width:50px; height:50px; border-radius:14px; background:var(--orange-soft); display:flex; align-items:center; justify-content:center; text-decoration:none; flex-shrink:0; }
 
     .items-scroll-box { max-height: 250px; overflow-y: auto; }
     .open-items-btn { display:flex; align-items:center; gap:4px; background:var(--surface-2); border-radius:99px; padding:5px 11px; cursor:pointer; border:none; }
@@ -338,33 +327,19 @@
     .item-delete-btn { width:28px; height:28px; border-radius:50%; border:none; background:var(--surface-2); color:var(--text-3); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
     .member-card { display:flex; align-items:center; gap:12px; padding:12px; background:var(--surface); border-radius:var(--r-sm); border:1.5px solid var(--border); margin-bottom:8px; }
     .member-card img { width:44px; height:44px; border-radius:14px; object-fit:cover; flex-shrink:0; }
-    .countdown-badge { display:inline-block; margin-top:4px; background:var(--blue-soft); color:var(--blue-dark); border-radius:99px; padding:2px 9px; font-size:11px; font-weight:700; font-family:var(--font-h); }
-    .countdown-badge.today { background:#E8F8F0; color:#34C759; }
-    .countdown-badge.tomorrow { background:#FFF6E8; color:#E8893A; }
+    .countdown-badge { display:inline-block; margin-top:8px; background:var(--orange-soft); color:var(--orange-dark); border-radius:99px; padding:4px 12px; font-size:12px; font-weight:700; font-family:var(--font-h); }
+    .countdown-badge.today { background:#dcfce7; color:#16a34a; }
+    .countdown-badge.tomorrow { background:#fef3c7; color:#92400e; }
     .countdown-badge.past { background:var(--surface-2); color:var(--text-3); }
-    .views-row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:8px; }
+    .views-row { display:flex; align-items:center; gap:8px; margin-top:10px; }
     .views-avatars { display:flex; }
-    .views-avatars img { width:18px; height:18px; border-radius:50%; object-fit:cover; border:2px solid var(--surface); margin-left:-5px; }
+    .views-avatars img { width:22px; height:22px; border-radius:50%; object-fit:cover; border:2px solid var(--surface); margin-left:-6px; }
     .views-avatars img:first-child { margin-left:0; }
-    .views-label { font-size:11px; color:var(--text-3); }
+    .views-label { font-size:12px; color:var(--text-3); }
     .past-tag { background:var(--surface-2); color:var(--text-3); border-radius:99px; padding:2px 8px; font-size:10px; font-weight:700; font-family:var(--font-h); }
-  </style>
-  <style>
-    #instant-splash {
-      position:fixed;inset:0;background:var(--blue);display:flex;flex-direction:column;
-      align-items:center;justify-content:center;z-index:99999;transition:opacity .4s ease;
-    }
-    #instant-splash.out{opacity:0;pointer-events:none;}
-    .is-logo{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:56px;
-      color:#fff;letter-spacing:-2px;animation:splashPop .5s cubic-bezier(.34,1.56,.64,1) both;}
-    .is-dot{width:10px;height:10px;border-radius:5px;background:rgba(255,255,255,.6);
-      margin-top:12px;animation:splashPop .5s .15s cubic-bezier(.34,1.56,.64,1) both;}
-    @keyframes splashPop{from{transform:scale(0);opacity:0;}to{transform:scale(1);opacity:1;}}
   </style>
 </head>
 <body>
-<!-- Splash istantaneo — visibile subito prima di Firebase -->
-<div id="instant-splash"><div class="is-logo">Crew</div><div class="is-dot"></div></div>
 
 <div id="loading-screen"><div class="spinner"></div></div>
 
@@ -395,68 +370,20 @@
       </button>
     </div>
     <div id="magic-login-section" class="hidden">
-      <!-- Step 1: inserisci email + password -->
-      <div id="email-step">
+      <div id="magic-form">
         <div class="field" style="margin-bottom:12px;">
           <label class="field-label">La tua email</label>
-          <input type="email" id="magic-email-input" placeholder="nome@email.com" onkeydown="if(event.key==='Enter')App.checkEmail()">
+          <input type="email" id="magic-email-input" placeholder="nome@email.com">
         </div>
-        <button class="btn btn-primary btn-full" onclick="App.checkEmail()">Continua →</button>
-        <div style="text-align:center;margin-top:14px;font-size:13px;color:var(--text-3);">
-          Non hai un account? <span style="color:var(--blue);font-weight:700;cursor:pointer;" onclick="App.showRegister()">Iscriviti</span>
-        </div>
+        <button class="btn btn-primary btn-full" onclick="App.sendMagicLink()">Invia link di accesso</button>
       </div>
-      <!-- Step 1b: registrazione nuova utenza -->
-      <div id="register-step" class="hidden">
-        <div class="field" style="margin-bottom:12px;">
-          <label class="field-label">La tua email</label>
-          <input type="email" id="register-email-input" placeholder="nome@email.com">
-        </div>
-        <button class="btn btn-primary btn-full" onclick="App.sendRegisterLink()">Invia link di registrazione</button>
-        <div style="text-align:center;margin-top:12px;">
-          <span style="font-size:12px;color:var(--text-3);cursor:pointer;" onclick="App.backToEmail()">← Torna al login</span>
-        </div>
-      </div>
-      <!-- Step 2a: ha già una password -->
-      <div id="password-step" class="hidden">
-        <div style="font-size:13px;color:var(--text-3);margin-bottom:14px;" id="email-display"></div>
-        <div class="field" style="margin-bottom:12px;">
-          <label class="field-label">Password</label>
-          <input type="password" id="password-input" placeholder="La tua password" onkeydown="if(event.key==='Enter')App.loginWithPassword()">
-        </div>
-        <button class="btn btn-primary btn-full" onclick="App.loginWithPassword()">Accedi</button>
-        <div style="text-align:center;margin-top:12px;">
-          <span style="font-size:13px;color:var(--blue);cursor:pointer;font-weight:600;" onclick="App.resetPassword()">Password dimenticata?</span>
-        </div>
-        <div style="text-align:center;margin-top:8px;">
-          <span style="font-size:12px;color:var(--text-3);cursor:pointer;" onclick="App.backToEmail()">← Cambia email</span>
-        </div>
-      </div>
-      <!-- Step 2b: magic link inviato -->
       <div id="magic-sent" class="magic-sent hidden">
         <div class="magic-sent-icon">📬</div>
         <div class="magic-sent-title">Link inviato!</div>
-        <div class="magic-sent-sub">Controlla la tua email e clicca il link per accedere. Dopo potrai impostare una password.</div>
+        <div class="magic-sent-sub">Controlla la tua email e clicca il link per accedere. Puoi chiudere questa schermata.</div>
       </div>
     </div>
   </div>
-</div>
-
-<!-- SET PASSWORD SCREEN (dopo primo login) -->
-<div id="set-password-screen" class="hidden" style="min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;background:var(--surface);">
-  <div style="font-size:48px;margin-bottom:16px;">🔐</div>
-  <div style="font-family:var(--font-h);font-weight:800;font-size:26px;color:var(--text);text-align:center;margin-bottom:8px;">Imposta una password</div>
-  <div style="font-size:15px;color:var(--text-3);text-align:center;margin-bottom:32px;line-height:1.5;max-width:280px;">Così la prossima volta puoi accedere direttamente senza aspettare l'email</div>
-  <div class="field" style="width:100%;max-width:280px;margin-bottom:12px;">
-    <label class="field-label">Password</label>
-    <input type="password" id="new-password-input" placeholder="Minimo 6 caratteri">
-  </div>
-  <div class="field" style="width:100%;max-width:280px;">
-    <label class="field-label">Conferma password</label>
-    <input type="password" id="confirm-password-input" placeholder="Ripeti la password" onkeydown="if(event.key==='Enter')App.setPassword()">
-  </div>
-  <button class="btn btn-primary" style="margin-top:8px;min-width:200px;" onclick="App.setPassword()">Salva password</button>
-  <div style="margin-top:16px;"><span style="font-size:13px;color:var(--text-3);cursor:pointer;" onclick="App.skipPassword()">Salta per ora</span></div>
 </div>
 
 <!-- NICKNAME SCREEN -->
@@ -498,16 +425,15 @@
 
   <div id="app-main">
     <!-- HOME -->
-    <div id="view-home" class="view" style="padding-top:0;">
-      <!-- v3 Home Header -->
-      <div style="background:var(--surface);padding:12px 20px 16px;border-bottom:1px solid var(--border);margin:0 -16px 18px;position:sticky;top:0;z-index:10;backdrop-filter:blur(12px);">
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <div>
-            <div style="font-size:13px;color:var(--text-3);font-weight:500;">Bentornato 👋</div>
-            <div style="font-family:var(--font-h);font-weight:800;font-size:26px;color:var(--text);letter-spacing:-.5px;margin-top:1px;" id="home-greeting-name">Crew</div>
-          </div>
-          <img id="home-avatar" width="40" height="40" src="" alt="" style="border-radius:12px;object-fit:cover;background:var(--blue-soft);cursor:pointer;" onclick="goTo('profile')">
+    <div id="view-home" class="view">
+      <div id="push-banner" class="hidden" style="background:var(--orange-soft);border:1.5px solid var(--orange-100);border-radius:var(--r);padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:24px;">🔔</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:var(--font-h);font-weight:700;font-size:14px;color:var(--text);">Attiva le notifiche push</div>
+          <div style="font-size:12px;color:var(--text-3);">Ricevi avvisi anche quando l'app è chiusa</div>
         </div>
+        <button class="btn btn-primary btn-xs" onclick="enablePush()">Attiva</button>
+        <button onclick="dismissPushBanner()" style="border:none;background:transparent;color:var(--text-3);font-size:18px;cursor:pointer;padding:0 2px;">×</button>
       </div>
       <div id="home-next-event" class="hidden"></div>
       <div class="section-row">
@@ -520,70 +446,64 @@
     <!-- GROUP EVENTS -->
     <div id="view-group" class="view-full hidden" style="display:flex;flex-direction:column;">
       <div class="group-header">
-        <!-- Back + Admin actions -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <span id="group-back-btn" style="display:inline-flex;align-items:center;gap:4px;color:var(--blue);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-h)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <span id="group-back-btn" style="display:inline-flex;align-items:center;gap:4px;color:var(--orange);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-h)">
             <svg width="8" height="13" viewBox="0 0 8 13"><path d="M7 1L1.5 6.5L7 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Home
           </span>
-          <div id="group-admin-actions" style="display:flex;gap:6px;"></div>
+          <div id="group-admin-actions" class="hidden" style="display:flex;gap:6px;"></div>
         </div>
-        <!-- Emoji + Nome + Meta + Leave/Delete -->
-        <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
-          <div class="group-avatar" id="group-header-emoji" style="width:48px;height:48px;border-radius:14px;font-size:24px;background:var(--blue-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-family:var(--font-h);font-weight:800;font-size:20px;color:var(--text);" id="group-header-name"></div>
-            <div style="font-size:12px;color:var(--text-3);margin-top:1px;" id="group-header-meta"></div>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div class="group-avatar" id="group-header-emoji" style="width:54px;height:54px;border-radius:16px;font-size:28px;"></div>
+          <div>
+            <div style="font-family:var(--font-h);font-weight:800;font-size:22px;color:var(--text);" id="group-header-name"></div>
+            <div style="font-size:13px;color:var(--text-3);margin-top:2px;" id="group-header-meta"></div>
           </div>
-          <div id="group-leave-delete-btn"></div>
         </div>
-        <!-- + Nuovo evento per tutti -->
-        <button class="btn btn-primary btn-full" id="btn-create-event" style="margin-top:2px;">+ Nuovo evento</button>
       </div>
-      <div class="inner-view" id="group-body">
+      <div class="view" id="group-body" style="flex:1;">
+        <div id="group-invite-banner"></div>
         <div style="display:flex;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:14px;">
           <div style="flex:1;text-align:center;padding:8px;border-radius:8px;font-family:var(--font-h);font-weight:700;font-size:13px;cursor:pointer;background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.08);" id="gtab-prossimi" onclick="App.showGroupTab('prossimi')">Prossimi</div>
           <div style="flex:1;text-align:center;padding:8px;border-radius:8px;font-family:var(--font-h);font-weight:700;font-size:13px;cursor:pointer;color:var(--text-3);" id="gtab-passati" onclick="App.showGroupTab('passati')">Passati</div>
         </div>
         <div id="events-list"></div>
       </div>
+      <div style="padding:12px 16px calc(24px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--border);">
+        <button class="btn btn-primary btn-full" id="btn-create-event">+ Nuovo evento</button>
+      </div>
     </div>
 
     <!-- EVENT DETAIL -->
     <div id="view-event" class="view-full hidden" style="display:flex;flex-direction:column;">
       <div class="event-header">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <span id="event-back-btn" style="display:inline-flex;align-items:center;gap:4px;color:var(--blue);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-h)">
+        <div style="margin-bottom:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <span id="event-back-btn" style="display:inline-flex;align-items:center;gap:4px;color:var(--orange);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-h)">
             <svg width="8" height="13" viewBox="0 0 8 13"><path d="M7 1L1.5 6.5L7 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span id="event-back-label">Gruppo</span>
           </span>
-          <div id="event-edit-btn" class="hidden">
-            <button class="icon-btn" onclick="App.openEditEvent()">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </button>
-          </div>
         </div>
         <div style="display:flex;gap:14px;" id="event-hero-row"></div>
       </div>
-      <div class="inner-view" id="event-body"></div>
+      <div class="view" id="event-body" style="flex:1;"></div>
     </div>
 
 
     <!-- ITEMS PAGE -->
-    <div id="view-items" class="hidden" style="position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);z-index:150;">
+    <div id="view-items" class="hidden" style="display:flex;flex-direction:column;height:100%;background:var(--bg);">
       <div style="background:var(--surface);padding:8px 20px 18px;border-bottom:1px solid var(--border);flex-shrink:0;">
-        <span id="items-back-btn" style="display:inline-flex;align-items:center;gap:4px;color:var(--blue);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-h);">
+        <span id="items-back-btn" style="display:inline-flex;align-items:center;gap:4px;color:var(--orange);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-h);">
           <svg width="8" height="13" viewBox="0 0 8 13"><path d="M7 1L1.5 6.5L7 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Evento
         </span>
         <div style="font-family:var(--font-h);font-weight:800;font-size:22px;color:var(--text);margin-top:14px;">&#127956; Cosa portare</div>
         <div style="display:flex;gap:6px;margin-top:10px;" id="items-page-tipo"></div>
-        <!-- Add row in alto, sempre visibile -->
-        <div style="display:flex;align-items:center;margin-top:12px;position:relative;" id="items-add-row">
-          <input type="text" id="items-page-input" placeholder="Aggiungi una voce..." style="width:100%;padding:10px 48px 10px 14px;" onkeydown="if(event.key==='Enter')App.addItemFromPage()">
-          <button onclick="App.addItemFromPage()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;background:var(--blue);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700;">+</button>
-        </div>
       </div>
       <div style="flex:1;overflow-y:auto;padding:16px;" id="items-page-body"></div>
+      <div style="display:flex;gap:8px;padding:12px 16px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;" id="items-add-row">
+        <input type="text" id="items-page-input" placeholder="Aggiungi una voce..." style="flex:1;padding:10px 12px;">
+        <button class="btn btn-primary btn-sm" onclick="App.addItemFromPage()">+</button>
+      </div>
     </div>
 
     <!-- WIZARD -->
@@ -603,7 +523,7 @@
     </div>
 
     <!-- PROFILE -->
-    <div id="view-profile" class="hidden" style="position:absolute;inset:0;overflow-y:auto;padding-bottom:calc(72px + env(safe-area-inset-bottom));background:var(--bg);">
+    <div id="view-profile" class="hidden" style="height:100%;overflow-y:auto;padding-bottom:calc(80px + env(safe-area-inset-bottom));">
       <div class="profile-header">
         <div style="font-family:var(--font-h);font-weight:800;font-size:26px;color:var(--text);margin-bottom:18px;">Profilo</div>
         <div style="display:flex;gap:16px;align-items:center;">
@@ -662,29 +582,6 @@
       <button class="modal-close" onclick="App.closeModal('modal-notifications')"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <div id="notifications-list"></div>
-  </div>
-</div>
-
-<!-- MODAL: Modifica gruppo -->
-<div class="modal-overlay hidden" id="modal-edit-group">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-header">
-      <div class="modal-title">Modifica gruppo</div>
-      <button class="modal-close" onclick="App.closeModal('modal-edit-group')">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
-    </div>
-    <div class="field">
-      <label class="field-label">Emoji</label>
-      <input type="text" id="edit-group-emoji" maxlength="2" style="font-size:28px;text-align:center;letter-spacing:.1em;">
-    </div>
-    <div class="field">
-      <label class="field-label">Nome gruppo</label>
-      <input type="text" id="edit-group-name" placeholder="Es: Amici del calcetto">
-    </div>
-    <input type="hidden" id="edit-group-id">
-    <button class="btn btn-primary btn-full" onclick="App.saveEditGroup()">Salva modifiche</button>
   </div>
 </div>
 
@@ -758,7 +655,7 @@
 
 <script>
 // ============================================================
-// ⚙️  CONFIG — Firebase
+// FIREBASE (config)
 // ============================================================
 const firebaseConfig = {
   apiKey: "AIzaSyD-hemzJowgkYTDuSxdrZH7SbY3-rO6aQw",
@@ -771,10 +668,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.firestore();
-const functions = firebase.app().functions('europe-west1');
 
 // ============================================================
-// ⚙️  STATO GLOBALE
+// STATE
 // ============================================================
 const S = {
   user: null, userDoc: null,
@@ -792,19 +688,21 @@ const S = {
 const EVENT_EMOJIS = ['🎉','⛱️','🍕','🎸','⚽','🏊','🌆','🗼','🎭','🍹','🏕️','🎬','🎤','🏖️','🚴','🎮','🍔','🌮','🍣','🥂','🎂','🏋️','🎯','🃏','🎨','🌍','✈️','🎡','🎪','🏔️'];
 
 const DEFAULT_NOTIF_PREFS = {
-  new_event: true,
-  comment: true,
-  mention: true,
-  deadline_reminder: true,
-  day_before: true,
+  new_event: true, rsvp: true, items: true, comment: true,
+  mention: true, reminder_item: true,
+  join_request: true, join_approved: true, join_rejected: true
 };
 
 const NOTIF_LABELS = {
-  new_event:         { label: 'Nuovo evento', sub: 'Quando viene creato un evento nel gruppo' },
-  comment:           { label: 'Commenti', sub: 'Quando qualcuno commenta un evento' },
-  mention:           { label: 'Menzioni', sub: 'Quando qualcuno ti menziona con @' },
-  deadline_reminder: { label: 'Scadenza risposta', sub: 'Reminder l\'ultimo giorno utile per rispondere' },
-  day_before:        { label: 'Giorno prima', sub: 'Reminder il giorno prima dell\'evento' },
+  new_event:     { label: 'Nuovo evento', sub: 'Quando viene creato un evento nel gruppo' },
+  rsvp:          { label: 'Risposte partecipazione', sub: 'Quando qualcuno risponde a un tuo evento' },
+  items:         { label: 'Lista cose', sub: 'Quando viene aggiunta o assegnata una voce' },
+  comment:       { label: 'Commenti', sub: 'Quando qualcuno commenta un evento' },
+  mention:       { label: 'Menzioni', sub: 'Quando qualcuno ti menziona con @' },
+  reminder_item: { label: 'Promemoria cose', sub: 'Cosa devi portare agli eventi' },
+  join_request:  { label: 'Richieste di ingresso', sub: 'Solo per admin' },
+  join_approved: { label: 'Approvazione richiesta', sub: 'Se la tua richiesta viene accettata' },
+  join_rejected: { label: 'Rifiuto richiesta', sub: 'Se la tua richiesta viene rifiutata' },
 };
 
 const INVITE_DURATIONS = [
@@ -827,7 +725,7 @@ async function getUserPrefs(uid) {
 }
 
 // ============================================================
-// 🛠️  UTILITY & HELPERS
+// UTILS
 // ============================================================
 function uid8() { return 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'.split('').sort(()=>Math.random()-.5).join('').slice(0,8); }
 function dName(doc){return doc?.nickname||doc?.displayName||'Utente';}
@@ -838,10 +736,8 @@ function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&
 function escAttr(s) { return String(s||'').replace(/'/g,"\\'"); }
 function av(url, name='?') { return url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=ffedd5&color=c2410c&bold=true&size=64`; }
 function stopListeners() {
-  S.unsubscribers.forEach(fn => fn());
-  S.unsubscribers = [];
-  _onMessageActive = false;                         // FIX: re-registra onMessage al prossimo login
-  for (const k in prefsCache) delete prefsCache[k]; // FIX: svuota cache preferenze
+  S.unsubscribers.forEach(fn=>fn()); S.unsubscribers=[];
+  if (S._eventsUnsub) { S._eventsUnsub(); S._eventsUnsub = null; }
 }
 function displayName(userDoc) {
   // Prefer nickname, fall back to displayName
@@ -878,72 +774,118 @@ function formatExpiry(ts) {
 }
 
 // ============================================================
-// 🛡️  DIFESE GLOBALI
+// NOTIFICHE — con controllo preferenze
 // ============================================================
-
-// Cattura tutte le promise non gestite — impedisce pagine bianche silenziose
-window.addEventListener('unhandledrejection', event => {
-  const err = event.reason;
-  console.error('[Crew] Unhandled rejection:', err);
-  const code = err?.code || '';
-  const msg = code === 'permission-denied' ? 'Accesso non autorizzato ❌'
-             : code === 'unavailable'       ? 'Connessione assente — riprova ❌'
-             : code === 'not-found'         ? 'Risorsa non trovata ❌'
-             : 'Qualcosa è andato storto — riprova ❌';
-  toast(msg);
-  event.preventDefault();
-});
-
-// Rimpiazzo mobile-friendly di confirm() — usa il design system esistente
-function showConfirm(msg, onYes, opts = {}) {
-  const btnLabel  = opts.danger ? 'Conferma' : 'OK';
-  const btnClass  = opts.danger ? 'btn-danger' : 'btn-primary';
-  const el = document.createElement('div');
-  el.className = 'modal-overlay';
-  el.style.cssText = 'display:flex!important;align-items:flex-end;';
-  el.innerHTML = `
-    <div class="modal-sheet" style="padding:24px 20px 32px 20px;">
-      <p style="font-size:15px;color:var(--text);line-height:1.5;margin-bottom:20px;">${escHtml(msg)}</p>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <button class="btn ${btnClass} btn-full" id="_sc-yes">${btnLabel}</button>
-        <button class="btn btn-secondary btn-full" id="_sc-no">Annulla</button>
-      </div>
-    </div>`;
-  document.body.appendChild(el);
-  el.querySelector('#_sc-yes').onclick = () => { el.remove(); onYes(); };
-  el.querySelector('#_sc-no').onclick  = () => el.remove();
-  el.onclick = e => { if (e.target === el) el.remove(); };
-}
-
-// ============================================================
-// 🔔 NOTIFICHE IN-APP (Firestore)
-// ============================================================
-// Tipi di notifica che bypassano le preferenze utente (notifiche di sistema)
-const SYSTEM_NOTIF_TYPES = ['join_request', 'join_approved', 'join_rejected'];
-
 async function notify(data) {
   try {
-    if (!SYSTEM_NOTIF_TYPES.includes(data.type)) {
-      const prefs = await getUserPrefs(data.toUserId);
-      if (!prefs[data.type]) return;
-    }
+    const prefs = await getUserPrefs(data.toUserId);
+    if (prefs[data.type] === false) return; // disattivata esplicitamente
   } catch(e) {}
-  await db.collection('notifications').add({
-    ...data, read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
+  try {
+    await db.collection('notifications').add({
+      ...data, read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch(err) {
+    console.error('[Notify] creazione fallita:', err, data);
+  }
 }
 
 async function notifyMany(members, data) {
   await Promise.all(members.map(async m => {
     if (m.uid === S.user?.uid) return;
-    try { await notify({ ...data, toUserId: m.uid }); } catch(e) {}
+    await notify({ ...data, toUserId: m.uid });
   }));
 }
 
 // ============================================================
-// 🎓 ONBOARDING
+// PUSH (FCM) — registrazione token + gestione foreground
+// ============================================================
+// Chiave VAPID: Firebase Console → Impostazioni progetto → Cloud Messaging
+// → Certificati push web → "Coppia di chiavi" (genera se assente)
+const FCM_VAPID_KEY = BBXUoAtQnTv7U1CaYSvzFYnNKFJJaiawDUAkdzibvk4F2_IT0PiaCoFGJ6uD-AIA5_lZxH8yBhrr1weg8tYnE6I ;
+
+let _swReg = null;
+
+function pushSupported() {
+  return 'serviceWorker' in navigator && 'Notification' in window &&
+    firebase.messaging && firebase.messaging.isSupported();
+}
+
+async function initPush() {
+  if (!pushSupported()) return;
+  try {
+    _swReg = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+    if (Notification.permission === 'granted') {
+      await savePushToken();
+    } else if (Notification.permission === 'default' && !localStorage.getItem('crew_push_dismissed')) {
+      show('push-banner');
+    }
+    // Notifiche in foreground (app aperta): mostra un toast
+    firebase.messaging().onMessage(payload => {
+      const t = payload.notification?.title || 'Crew';
+      const b = payload.notification?.body || '';
+      toast('🔔 ' + t + (b ? ' — ' + b : ''), 5000);
+    });
+  } catch (err) { console.error('[Push] init:', err); }
+}
+
+async function savePushToken() {
+  if (!S.user || !_swReg) return false;
+  if (!FCM_VAPID_KEY || FCM_VAPID_KEY.startsWith('INCOLLA')) {
+    console.warn('[Push] Chiave VAPID non configurata: push disattivate. Vedi README.');
+    return false;
+  }
+  try {
+    const token = await firebase.messaging().getToken({
+      vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: _swReg
+    });
+    if (!token) return false;
+    if (localStorage.getItem('crew_fcm_token') !== token) {
+      await db.collection('users').doc(S.user.uid).update({
+        fcmTokens: firebase.firestore.FieldValue.arrayUnion(token)
+      });
+      localStorage.setItem('crew_fcm_token', token);
+    }
+    return true;
+  } catch (err) { console.error('[Push] token:', err); return false; }
+}
+
+async function enablePush() {
+  if (!pushSupported()) { toast('Push non supportate su questo browser'); return; }
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    const ok = await savePushToken();
+    toast(ok ? '🔔 Notifiche push attivate!' : 'Errore: controlla la chiave VAPID (console)');
+  } else {
+    toast('Permesso notifiche negato');
+  }
+  hide('push-banner');
+  if (S.activeTab === 'profile') loadProfile();
+}
+
+function dismissPushBanner() {
+  localStorage.setItem('crew_push_dismissed', '1');
+  hide('push-banner');
+}
+
+async function removePushToken() {
+  const token = localStorage.getItem('crew_fcm_token');
+  localStorage.removeItem('crew_fcm_token');
+  if (token && S.user) {
+    try {
+      await db.collection('users').doc(S.user.uid).update({
+        fcmTokens: firebase.firestore.FieldValue.arrayRemove(token)
+      });
+    } catch(e) {}
+    try { if (pushSupported()) await firebase.messaging().deleteToken(); } catch(e) {}
+  }
+}
+
+// ============================================================
+// ONBOARDING
 // ============================================================
 const OB_STEPS = [
+  { emoji:'👥', title:'Organizza con\nil tuo gruppo', sub:'Crea gruppi, invita i tuoi amici e tieni tutto in un posto.' },
   { emoji:'📅', title:'Pianifica\neventi insieme', sub:'Date, luoghi, chi porta cosa — tutto condiviso in tempo reale.' },
   { emoji:'✅', title:'Rispondi\nin un tap', sub:"Ci sono, forse, non vengo — tutti sanno chi c'è, sempre." },
 ];
@@ -960,7 +902,7 @@ $id('ob-cta').addEventListener('click',()=>{ if(obStep<OB_STEPS.length-1){obStep
 $id('ob-skip').addEventListener('click',doneOnboarding);
 
 // ============================================================
-// 🔐 AUTH — tab switch login
+// LOGIN — tab switch
 // ============================================================
 function switchLoginTab(tab) {
   $id('tab-google').classList.toggle('active', tab==='google');
@@ -970,7 +912,7 @@ function switchLoginTab(tab) {
 }
 
 // ============================================================
-// 🔐 AUTH — Magic Link detection
+// AUTH — Magic Link detection (deve girare PRIMA di onAuthStateChanged se possibile)
 // ============================================================
 (function checkMagicLink() {
   if (firebase.auth().isSignInWithEmailLink(window.location.href)) {
@@ -980,26 +922,13 @@ function switchLoginTab(tab) {
     firebase.auth().signInWithEmailLink(email, window.location.href)
       .then(() => {
         localStorage.removeItem('crew_magic_email');
-        // Preserva ?join= e ?gated= rimuovendo solo i token Firebase dall'URL
-        // IMPORTANTE: replaceState viene eseguito PRIMA di onAuthStateChanged,
-        // quindi i params devono sopravvivere per permettere il join automatico
-        (function preserveJoinParams() {
-          const p = new URLSearchParams(window.location.search);
-          const keep = new URLSearchParams();
-          if (p.get('join'))  keep.set('join',  p.get('join'));
-          if (p.get('gated')) keep.set('gated', p.get('gated'));
-          const qs = keep.toString() ? '?' + keep.toString() : '';
-          window.history.replaceState({}, '', window.location.pathname + qs);
-        })();
+        window.history.replaceState({}, '', window.location.pathname + window.location.search.replace(/[?&]?(apiKey|oobCode|mode|lang)=[^&]*/g,'').replace(/^&/,'?'));
       })
       .catch(err => { console.error(err); toast('Link non valido o scaduto'); });
   }
 })();
 
 auth.onAuthStateChanged(async user => {
-  // Nascondi splash istantaneo
-  const is = $id('instant-splash');
-  if (is) { is.classList.add('out'); setTimeout(() => is.remove(), 400); }
   hide('loading-screen');
   if (user) {
     S.user = user;
@@ -1015,17 +944,12 @@ auth.onAuthStateChanged(async user => {
     // Check if nickname is set
     if (!S.userDoc?.nickname) {
       showNicknameScreen();
-    } else if (localStorage.getItem('crew_show_set_password')) {
-      // First magic link login — prompt to set password
-      localStorage.removeItem('crew_show_set_password');
-      hide('login-screen'); hide('onboarding-screen');
-      show('set-password-screen');
     } else {
       initApp();
     }
   } else {
     S.user = null; S.userDoc = null;
-    hide('app'); hide('nickname-screen'); hide('pending-screen'); hide('set-password-screen');
+    hide('app'); hide('nickname-screen'); hide('pending-screen');
     if (localStorage.getItem('crew_ob')) show('login-screen');
     else { renderOBStep(); show('onboarding-screen'); }
   }
@@ -1058,7 +982,7 @@ async function ensureUserDoc(user) {
 }
 
 // ============================================================
-// 🔐 AUTH — nickname screen
+// NICKNAME SCREEN
 // ============================================================
 function showNicknameScreen() {
   hide('login-screen'); hide('app');
@@ -1066,28 +990,8 @@ function showNicknameScreen() {
   show('nickname-screen');
 }
 
-// Rimuove il token FCM da Firestore prima del logout (privacy dispositivi condivisi)
-async function handleSignOut() {
-  try {
-    if (S.user && 'Notification' in window && Notification.permission === 'granted') {
-      const messaging = firebase.messaging();
-      const token = await messaging.getToken({
-        vapidKey: 'BBXUoAtQnTv7U1CaYSvzFYnNKFJJaiawDUAkdzibvk4F2_IT0PiaCoFGJ6uD-AIA5_lZxH8yBhrr1weg8tYnE6I'
-      }).catch(() => null);
-      if (token) {
-        await messaging.deleteToken().catch(() => {});
-        await db.collection('users').doc(S.user.uid).update({
-          fcmTokens: firebase.firestore.FieldValue.arrayRemove(token)
-        }).catch(() => {});
-      }
-    }
-  } catch(e) {}
-  stopListeners();
-  auth.signOut();
-}
-
 // ============================================================
-// 🚀 APP INIT
+// APP INIT
 // ============================================================
 function initApp() {
   hide('login-screen'); hide('onboarding-screen'); hide('nickname-screen');
@@ -1095,15 +999,13 @@ function initApp() {
   $id('header-avatar').src = av(S.user.photoURL, displayName(S.userDoc));
   $id('header-avatar').alt = displayName(S.userDoc);
   listenNotifications();
-  setupPushNotifications();
-  checkDayBeforeReminders(); // ← reminder giorno prima & scadenza
-  // Carica sempre home: l'utente vede qualcosa di visibile subito
-  goTo('home');
+  initPush();
+  checkDayBeforeReminders();
   if (S.pendingJoin) {
-    const _joinCode  = S.pendingJoin;
-    const _joinGated = S.pendingJoinGated;
+    handleJoin(S.pendingJoin, S.pendingJoinGated);
     S.pendingJoin = null; S.pendingJoinGated = false;
-    handleJoin(_joinCode, _joinGated); // async — naviga al gruppo quando pronto
+  } else {
+    goTo('home');
   }
 }
 
@@ -1112,42 +1014,30 @@ $id('btn-login').addEventListener('click', () => {
     .catch(err => toast('Errore login: ' + err.message));
 });
 
-$id('btn-user-menu').addEventListener('click', () => {
-  showConfirm('Vuoi uscire da Crew?', handleSignOut);
-});
+async function doLogout() {
+  if (!confirm('Vuoi uscire?')) return;
+  stopListeners();
+  await removePushToken();
+  auth.signOut();
+}
+$id('btn-user-menu').addEventListener('click', doLogout);
 
 // ============================================================
-// 🧭 NAVIGAZIONE & ROUTER
+// NAVIGATION
 // ============================================================
-const VIEWS = ['view-home','view-group','view-event','view-create','view-profile','view-items'];
-// Views that need display:flex instead of block
-const FLEX_VIEWS = { 'view-group':true, 'view-event':true, 'view-items':true, 'view-create':true };
+const VIEWS = ['view-home','view-group','view-event','view-create','view-profile'];
 function showView(id) {
   VIEWS.forEach(v => {
     const el = $id(v); if (!el) return;
-    if (v === id) {
-      el.classList.remove('hidden');
-      el.style.display = FLEX_VIEWS[v] ? 'flex' : '';
-    } else {
-      el.classList.add('hidden');
-      el.style.display = '';
-    }
+    if (v === id) { el.classList.remove('hidden'); el.style.display=''; }
+    else { el.classList.add('hidden'); }
   });
 }
 
 function goTo(view, id=null) {
   stopListeners();
-  // Tab bar always visible except in wizard
-  $id('tab-bar').style.display = view === 'create' ? 'none' : '';
-  $id('app-header').style.display = (view === 'create' || view === 'items') ? 'none' : '';
-
-  // Push state so Android back gesture works
-  const state = { view, id };
-  if (view === 'home') {
-    window.history.replaceState(state, '');
-  } else {
-    window.history.pushState(state, '');
-  }
+  $id('tab-bar').style.display = ['home','profile'].includes(view) ? '' : 'none';
+  $id('app-header').style.display = view === 'create' ? 'none' : '';
 
   if (view === 'home') {
     $id('header-back').classList.add('hidden');
@@ -1159,8 +1049,6 @@ function goTo(view, id=null) {
   } else if (view === 'event') {
     S.currentEventId = id;
     showView('view-event'); loadEvent(id);
-  } else if (view === 'items') {
-    showView('view-items'); loadItemsPage();
   } else if (view === 'create') {
     showView('view-create'); initWizard();
   } else if (view === 'profile') {
@@ -1170,43 +1058,14 @@ function goTo(view, id=null) {
   }
 }
 
-// Handle Android back gesture / browser back button
-window.addEventListener('popstate', e => {
-  const state = e.state;
-  if (!state || !S.user) return;
-  stopListeners();
-  $id('tab-bar').style.display = state.view === 'create' ? 'none' : '';
-  $id('app-header').style.display = (state.view === 'create' || state.view === 'items') ? 'none' : '';
-  if (state.view === 'home') {
-    $id('header-back').classList.add('hidden');
-    $id('header-title').textContent = '🔥 Crew';
-    showView('view-home'); setTab('home'); loadHome();
-  } else if (state.view === 'group') {
-    S.currentGroupId = state.id;
-    showView('view-group'); loadGroup(state.id);
-  } else if (state.view === 'event') {
-    S.currentEventId = state.id;
-    showView('view-event'); loadEvent(state.id);
-  } else if (state.view === 'items') {
-    showView('view-items'); loadItemsPage();
-  } else if (state.view === 'profile') {
-    $id('header-back').classList.add('hidden');
-    showView('view-profile'); setTab('profile'); loadProfile();
-  } else {
-    // Fallback: vai alla home invece di chiudere
-    window.history.replaceState({ view:'home', id:null }, '');
-    showView('view-home'); setTab('home'); loadHome();
-  }
-});
-
 function setTab(tab) {
   S.activeTab = tab;
   ['home','notif','profile'].forEach(t => {
     $id('tab-'+t)?.classList.toggle('active', t===tab);
     const icon = $id('tab-icon-'+t);
     if (icon) {
-      icon.setAttribute('fill', t===tab ? 'var(--blue)' : 'none');
-      icon.setAttribute('stroke', t===tab ? 'var(--blue)' : 'var(--text-3)');
+      icon.setAttribute('fill', t===tab ? 'var(--orange)' : 'none');
+      icon.setAttribute('stroke', t===tab ? 'var(--orange)' : 'var(--text-3)');
     }
   });
 }
@@ -1223,12 +1082,9 @@ $id('group-back-btn').addEventListener('click', () => goTo('home'));
 $id('event-back-btn').addEventListener('click', () => {
   if (S.currentGroupId) goTo('group', S.currentGroupId); else goTo('home');
 });
-$id('items-back-btn').addEventListener('click', () => {
-  if (S.currentEventId) goTo('event', S.currentEventId); else goTo('home');
-});
 
 // ============================================================
-// 🏠 HOME
+// HOME
 // ============================================================
 async function loadHome() {
   const c = $id('groups-list');
@@ -1238,12 +1094,6 @@ async function loadHome() {
   const uSnap = await db.collection('users').doc(S.user.uid).get();
   S.userDoc = { uid: S.user.uid, ...uSnap.data() };
   if (S.userDoc?.role === 'admin') show('btn-create-group'); else hide('btn-create-group');
-
-  // Update home greeting + avatar
-  const hg = $id('home-greeting-name');
-  if (hg) hg.textContent = displayName(S.userDoc);
-  const ha = $id('home-avatar');
-  if (ha) ha.src = av(S.user?.photoURL || S.userDoc?.photoURL, displayName(S.userDoc));
 
   if (!S.userDoc?.groups?.length) {
     c.innerHTML = `<div class="empty-state"><div class="empty-emoji">👥</div><div class="empty-title">Nessun gruppo ancora</div><div class="empty-sub">Entra tramite link invito o crea un nuovo gruppo</div></div>`;
@@ -1280,56 +1130,76 @@ function renderNextEventBanner(ev) {
 
 function renderGroupCard(g) {
   const n = g.members?.length || 0;
-  const isAdmin = S.userDoc?.role === 'admin';
   return `<div class="group-card" onclick="goTo('group','${g.id}')">
     <div class="group-avatar">${escHtml(g.emoji||'👥')}</div>
     <div style="flex:1;min-width:0;">
-      <div style="display:flex;align-items:center;gap:6px;">
-        <div class="group-name">${escHtml(g.name)}</div>
-        ${isAdmin ? `<span onclick="event.stopPropagation();App.openEditGroup('${g.id}','${escAttr(g.name)}','${escAttr(g.emoji||'👥')}')" style="color:var(--text-3);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:6px;flex-shrink:0;" title="Modifica">✏️</span>` : ''}
-      </div>
-      <div class="group-meta">${n} ${n!==1?'membri':'membro'}</div>
+      <div class="group-name">${escHtml(g.name)}</div>
+      <div class="group-meta">${n} membro${n!==1?'i':''}</div>
     </div>
     <svg class="chevron-r" width="7" height="12" viewBox="0 0 7 12"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </div>`;
 }
 
 // ============================================================
-// 👥 GRUPPI — dettaglio
+// GROUP
 // ============================================================
 async function loadGroup(gid) {
-  let gSnap;
-  try { gSnap = await db.collection('groups').doc(gid).get(); }
-  catch(err) { toast('Errore nel caricamento del gruppo ❌'); goTo('home'); return; }
+  const gSnap = await db.collection('groups').doc(gid).get();
   if (!gSnap.exists) { toast('Gruppo non trovato'); goTo('home'); return; }
   const g = { id:gSnap.id, ...gSnap.data() };
   S.currentGroupData = g; S.groupMembers = g.members || [];
 
-  $id('group-header-emoji').textContent = g.emoji || '👥';
-  $id('group-header-name').textContent = g.name;
-  $id('group-header-meta').textContent = `${g.members?.length||0} partecipanti`;
-
-  // Admin actions — solo Membri e Invito
-  const adminActions = $id('group-admin-actions');
+  // Self-heal: backfill memberUids per gruppi creati prima delle nuove regole
   if (S.userDoc?.role === 'admin') {
-    adminActions.innerHTML = `
-      <button class="btn btn-secondary btn-xs" onclick="App.openMembers()">👥 Membri</button>
-      <button class="btn btn-secondary btn-xs" onclick="App.openInviteSettings()">⚙️ Invito</button>`;
-  } else {
-    adminActions.innerHTML = `<button class="btn btn-secondary btn-xs" onclick="App.openMembers()">👥 Membri</button>`;
-  }
-
-  // Lascia / Elimina gruppo in header
-  const ldb = $id('group-leave-delete-btn');
-  if (ldb) {
-    if (S.userDoc?.role === 'admin') {
-      ldb.innerHTML = `<button class="btn btn-danger btn-xs" onclick="App.deleteGroup()">🗑 Elimina</button>`;
-    } else {
-      ldb.innerHTML = `<button class="btn btn-danger btn-xs" onclick="App.leaveGroup()">🚪 Lascia</button>`;
+    const uids = (g.members || []).map(m => m.uid);
+    if (!g.memberUids || g.memberUids.length !== uids.length) {
+      try { await db.collection('groups').doc(gid).update({ memberUids: uids }); g.memberUids = uids; }
+      catch(e) { console.error('[Gruppo] backfill memberUids:', e); }
     }
   }
 
-  loadGroupEvents(gid, 'prossimi');
+  $id('group-header-emoji').textContent = g.emoji || '👥';
+  $id('group-header-name').textContent = g.name;
+  $id('group-header-meta').textContent = `${g.members?.length||0} partecipanti · ${Object.keys(g).includes('inviteExpiresAt')?formatExpiry(g.inviteExpiresAt):''}`;
+
+  // Admin actions
+  const adminActions = $id('group-admin-actions');
+  if (S.userDoc?.role === 'admin') {
+    adminActions.classList.remove('hidden');
+    adminActions.innerHTML = `
+      <button class="btn btn-secondary btn-xs" onclick="App.openInviteSettings()">⚙️ Invito</button>
+      <button class="btn btn-secondary btn-xs" id="btn-requests" onclick="App.openRequests()">👥 Richieste <span id="requests-count"></span></button>`;
+    // Listen for pending requests
+    const rUnsub = db.collection('groups').doc(gid).collection('requests')
+      .where('status','==','pending').onSnapshot(snap => {
+        const el = $id('requests-count');
+        if (el) el.innerHTML = snap.size > 0 ? `<span class="requests-badge">${snap.size}</span>` : '';
+      });
+    S.unsubscribers.push(rUnsub);
+  } else {
+    adminActions.classList.add('hidden');
+  }
+
+  // Invite banner
+  const ib = $id('group-invite-banner');
+  if (S.userDoc?.role === 'admin') {
+    const expired = isExpired(g.inviteExpiresAt);
+    const url = buildInviteUrl(g.inviteCode);
+    ib.innerHTML = `<div class="invite-banner">
+      <div style="flex:1;">
+        <div class="invite-label">Link invito</div>
+        <div class="invite-code">${g.inviteCode}</div>
+        <div class="${expired?'invite-expired':'invite-expiry'}">${formatExpiry(g.inviteExpiresAt)}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        ${!expired?`<button class="btn btn-primary btn-sm" onclick="App.copyLink('${url}')">📋 Copia</button>`:''}
+        <button class="btn btn-secondary btn-sm" onclick="App.openInviteSettings()">⚙️</button>
+      </div>
+    </div>`;
+  } else ib.innerHTML = '';
+
+  // Carica gli eventi tramite le tab Prossimi/Passati (un solo listener)
+  App.showGroupTab('prossimi');
 }
 
 function renderTimelineEvent(ev, i, total) {
@@ -1356,17 +1226,10 @@ function buildInviteUrl(code, gated=false) {
 }
 
 // ============================================================
-// 👥 GRUPPI — join / inviti
+// JOIN HANDLING
 // ============================================================
 async function handleJoin(code, gated=false) {
-  let snap;
-  try {
-    snap = await db.collection('groups').where('inviteCode','==',code).limit(1).get();
-  } catch(err) {
-    console.error('handleJoin Firestore error:', err);
-    toast('Errore nel caricamento del gruppo — riprova ❌');
-    goTo('home'); return;
-  }
+  const snap = await db.collection('groups').where('inviteCode','==',code).limit(1).get();
   if (snap.empty) { toast('Link invito non valido ❌'); goTo('home'); return; }
   const gDoc = snap.docs[0]; const gid = gDoc.id; const gData = gDoc.data();
 
@@ -1389,82 +1252,36 @@ async function handleJoin(code, gated=false) {
     // Notify group creator/admin
     const adminUid = gData.createdBy;
     if (adminUid) {
-      await notify({
-        toUserId: adminUid, type: 'join_request',
-        groupId: gid, groupName: gData.name,
-        text: `${displayName(S.userDoc)} vuole unirsi a "${gData.name}" 👋`
-      });
+      await notify({ toUserId:adminUid, type:'join_request', eventId:null, eventTitle:null,
+        groupId:gid, groupName:gData.name, requesterName:displayName(S.userDoc),
+        requesterUid:S.user.uid,
+        text:`${displayName(S.userDoc)} ha chiesto di entrare in "${gData.name}"` });
     }
     hide('app'); show('pending-screen');
-    // Listener real-time: aggiorna lo schermo appena l'admin approva/rifiuta
-    const _pendingUnsub = db.collection('groups').doc(gid)
-      .collection('requests').doc(S.user.uid)
-      .onSnapshot(snap => {
-        const status = snap.data()?.status;
-        if (status === 'approved') {
-          _pendingUnsub();
-          hide('pending-screen');
-          S.userDoc.groups = [...(S.userDoc.groups || []), gid];
-          toast(`🎉 Sei entrato in "${gData.name}"!`);
-          initApp();
-        } else if (status === 'rejected') {
-          _pendingUnsub();
-          hide('pending-screen');
-          show('login-screen');
-          toast('La tua richiesta non è stata accettata ❌');
-        }
-      });
-    S.unsubscribers.push(_pendingUnsub);
   } else {
-    // Direct entry — usa la Cloud Function per bypassare le security rules Firestore
-    try {
-      const addMember = functions.httpsCallable('addMemberToGroup');
-      await addMember({
-        groupId: gid,
-        uid: S.user.uid,
-        displayName: displayName(S.userDoc),
-        photoURL: S.user.photoURL || null
-      });
-      S.userDoc.groups = [...(S.userDoc.groups||[]), gid];
-      toast(`✅ Sei entrato in "${gData.name}"!`);
-      goTo('group', gid);
-    } catch(err) {
-      console.error('handleJoin addMember error:', err);
-      toast('Errore accesso al gruppo ❌');
-      goTo('home');
-    }
+    // Direct entry
+    await db.collection('groups').doc(gid).update({
+      members: firebase.firestore.FieldValue.arrayUnion(mData),
+      memberUids: firebase.firestore.FieldValue.arrayUnion(S.user.uid)
+    });
+    await db.collection('users').doc(S.user.uid).update({ groups:firebase.firestore.FieldValue.arrayUnion(gid) });
+    S.userDoc.groups = [...(S.userDoc.groups||[]), gid];
+    toast(`✅ Sei entrato in "${gData.name}"!`);
+    goTo('group', gid);
   }
 }
 
 // ============================================================
-// 📅 EVENTI — dettaglio
+// EVENT DETAIL
 // ============================================================
 async function loadEvent(eid) {
-  let eSnap;
-  try { eSnap = await db.collection('events').doc(eid).get(); }
-  catch(err) { toast('Errore nel caricamento dell\u2019evento ❌'); return; }
+  const eSnap = await db.collection('events').doc(eid).get();
   if (!eSnap.exists) { toast('Evento non trovato'); return; }
   const ev = { id:eSnap.id, ...eSnap.data() };
   S.currentEventData = ev;
   renderEventHeader(ev);
   renderEventBody(ev);
   $id('event-back-label').textContent = S.currentGroupData?.name || 'Gruppo';
-
-  // Show edit button for creator or admin
-  const editBtn = $id('event-edit-btn');
-  if (editBtn) {
-    if (ev.createdBy === S.user?.uid || S.userDoc?.role === 'admin') {
-      editBtn.classList.remove('hidden');
-    } else {
-      editBtn.classList.add('hidden');
-    }
-  }
-
-  // Record view
-  db.collection('events').doc(eid).collection('views').doc(S.user.uid).set({
-    name: displayName(S.userDoc), photoURL: S.user.photoURL||null,
-    ts: firebase.firestore.FieldValue.serverTimestamp()
-  }).catch(()=>{});
 
   const r1 = db.collection('events').doc(eid).collection('rsvp').onSnapshot(snap => {
     const d={}; snap.forEach(s=>{d[s.id]=s.data();}); renderRSVP(d, ev);
@@ -1475,67 +1292,28 @@ async function loadEvent(eid) {
   const r3 = db.collection('events').doc(eid).collection('comments').orderBy('createdAt','asc').onSnapshot(snap => {
     const cc=[]; snap.forEach(s=>cc.push({id:s.id,...s.data()})); renderComments(cc);
   });
-  const r4 = db.collection('events').doc(eid).collection('views').onSnapshot(snap => {
-    const views=[]; snap.forEach(s=>views.push({uid:s.id,...s.data()})); renderViews(views);
-  });
-  S.unsubscribers.push(r1, r2, r3, r4);
-}
-
-function buildGCalUrl(ev) {
-  if (!ev.date) return null;
-  // Format: YYYYMMDDTHHmmss
-  const dateStr = ev.date.replace(/-/g, '');
-  let start, end;
-  if (ev.time) {
-    const [h, m] = ev.time.split(':');
-    start = `${dateStr}T${h}${m}00`;
-    // Default duration: 2 hours
-    const endH = String(parseInt(h) + 2).padStart(2, '0');
-    end = `${dateStr}T${endH}${m}00`;
-  } else {
-    start = dateStr;
-    end = dateStr;
-  }
-  const params = new URLSearchParams({
-    action: 'TEMPLATE',
-    text: ev.title || '',
-    dates: `${start}/${end}`,
-    details: ev.description || '',
-    location: ev.place || ev.meetingPoint || '',
-  });
-  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+  S.unsubscribers.push(r1, r2, r3);
 }
 
 function renderEventHeader(ev) {
-  const cd = countdownLabel(ev.date);
-  const gcalUrl = buildGCalUrl(ev);
   $id('event-hero-row').innerHTML = `
     <div class="event-emoji-box">${escHtml(ev.emoji||'🎉')}</div>
     <div style="flex:1;min-width:0;">
       <div class="event-hero-title">${escHtml(ev.title)}</div>
       ${ev.date?`<div class="event-meta-item">📅 ${ital(ev.date)}${ev.time?' alle '+ev.time:''}</div>`:''}
-      ${cd.label?`<div class="countdown-badge ${cd.cls}" style="margin-top:6px;">${cd.label}</div>`:''}
-      ${ev.place?`<div class="event-meta-link" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.place)}')">📍 <span style="color:var(--text-3);font-weight:400;">Luogo:</span> ${escHtml(ev.place)} ↗</div>`:''}
-      ${ev.meetingPoint?`<div class="event-meta-link" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.meetingPoint)}')">🚩 <span style="color:var(--text-3);font-weight:400;">Ritrovo:</span> ${escHtml(ev.meetingPoint)} ↗</div>`:''}
+      ${ev.place?`<div class="event-meta-item">📍 ${escHtml(ev.place)}</div>`:''}
+      ${ev.meetingPoint?`<div class="event-meta-link" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.meetingPoint)}')">🚩 ${escHtml(ev.meetingPoint)} ↗</div>`:''}
       ${ev.deadline?`<div class="event-deadline">⏰ Rispondi entro ${ital(ev.deadline)}</div>`:''}
-      <div class="views-row" style="margin-top:8px;">
-        <div id="views-row"><span class="views-label">👁 …</span></div>
-        ${gcalUrl?`<a href="${gcalUrl}" target="_blank" rel="noreferrer" style="display:inline-flex;align-items:center;gap:4px;background:#EEF2FF;border-radius:99px;padding:3px 9px;text-decoration:none;font-size:10px;font-weight:700;font-family:var(--font-h);color:#4B7BEC;flex-shrink:0;">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-          + Calendar
-        </a>`:''}
-      </div>
     </div>`;
 }
 
 function renderEventBody(ev) {
   $id('event-body').innerHTML = `
-    ${ev.description?`<div class="card"><div style="padding:14px 16px;font-size:14px;color:var(--text-2);line-height:1.6;">${escHtml(ev.description)}</div></div>`:''}
     <div class="card">
       <div class="card-head">
         <div class="card-head-title">🙋 Partecipazione</div>
         <div class="see-who-btn" onclick="App.openWho()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
           <span>Vedi chi partecipa</span>
         </div>
       </div>
@@ -1548,14 +1326,15 @@ function renderEventBody(ev) {
           <div class="card-head-title">🎒 Cosa portare</div>
           <div style="display:flex;gap:6px;margin-top:6px;" id="items-tipo-pills"></div>
         </div>
-        <button class="open-items-btn" onclick="goTo('items')">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-          <span>Lista completa</span>
-        </button>
+        ${S.userDoc?.role==='admin'?`<button id="btn-add-item-toggle" onclick="App.toggleAddItem()" style="width:30px;height:30px;border-radius:15px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;font-size:20px;font-weight:700;color:var(--text-2);flex-shrink:0;align-self:flex-start;">+</button>`:''}
       </div>
       <div id="items-tipo-info"></div>
-      <div class="items-scroll-box" id="items-list-body"></div>
+      <div id="items-list-body"></div>
+      <div id="add-item-area" class="hidden">
+        <div class="add-item-row"><input type="text" id="new-item-input" placeholder="Aggiungi una cosa da portare..."><button class="btn btn-primary btn-sm" onclick="App.addItem()">+</button></div>
+      </div>
     </div>
+    ${ev.description?`<div class="card"><div style="padding:14px 16px;font-size:14px;color:var(--text-2);line-height:1.6;">${escHtml(ev.description)}</div></div>`:''}
     <div class="card">
       <div class="card-head"><div class="card-head-title" id="comments-title">💬 Commenti</div></div>
       <div id="comments-list"></div>
@@ -1570,24 +1349,21 @@ function renderEventBody(ev) {
         </button>
       </div>
     </div>
-    ${(S.userDoc?.role==='admin' || ev.createdBy===S.user?.uid)?`<div style="margin-bottom:8px;"><button class="btn btn-danger btn-full" onclick="App.openDeleteSheet()">🗑 Elimina evento</button></div>`:''}
-    <div style="height:calc(72px + env(safe-area-inset-bottom));"></div>`;
+    ${S.userDoc?.role==='admin'?`<div style="margin-bottom:8px;"><button class="btn btn-danger btn-full" onclick="App.openDeleteSheet()">🗑 Elimina evento</button></div>`:''}
+    <div style="height:16px;"></div>`;
 
   const ci = $id('comment-input');
   if (ci) {
     ci.addEventListener('input', handleMentionInput);
     ci.addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();App.sendComment();} });
-    ci.addEventListener('blur', () => setTimeout(() => hide('mention-dropdown'), 150));
   }
-  // Close dropdown on scroll
-  $id('event-body')?.addEventListener('scroll', () => hide('mention-dropdown'), {passive:true});
   renderTipoPills(ev.thingsType||'comune');
 }
 
 function renderTipoPills(tipo) {
   const el = $id('items-tipo-pills'); if(!el) return;
   el.innerHTML = ['consigliata','comune'].map(v=>`
-    <div onclick="${S.userDoc?.role==='admin'?`App.changeTipo('${v}')`:'void(0)'}" style="border-radius:99px;padding:4px 12px;font-size:11px;font-weight:700;font-family:var(--font-h);cursor:${S.userDoc?.role==='admin'?'pointer':'default'};background:${v===tipo?(v==='comune'?'var(--blue-soft)':'#FFF3E8'):'var(--surface-2)'};color:${v===tipo?(v==='comune'?'var(--blue-dark)':'#E8893A'):'var(--text-3)'};">${v==='comune'?'🤝 Comune':'📋 Consigliata'}</div>`).join('');
+    <div onclick="${S.userDoc?.role==='admin'?`App.changeTipo('${v}')`:'void(0)'}" style="border-radius:99px;padding:4px 12px;font-size:11px;font-weight:700;font-family:var(--font-h);cursor:${S.userDoc?.role==='admin'?'pointer':'default'};background:${v===tipo?(v==='comune'?'var(--orange-100)':'#fef3c7'):'var(--surface-2)'};color:${v===tipo?(v==='comune'?'var(--orange-dark)':'#92400e'):'var(--text-3)'};">${v==='comune'?'🤝 Comune':'📋 Consigliata'}</div>`).join('');
   const info = $id('items-tipo-info'); if(!info) return;
   info.innerHTML = tipo==='comune'
     ? '<div class="items-type-info comune">🤝 Lista comune — ogni voce è assegnata a una persona</div>'
@@ -1595,7 +1371,7 @@ function renderTipoPills(tipo) {
 }
 
 // ============================================================
-// 📅 EVENTI — RSVP
+// RSVP
 // ============================================================
 function renderRSVP(d, ev) {
   let yes=[], no=[], maybe=[];
@@ -1615,38 +1391,36 @@ function renderRSVP(d, ev) {
     <div class="rsvp-label">${r.label}</div>
   </div>`).join('');
   S._rsvpData = { yes, maybe, no };
-  // Fire-and-forget: aggiorna i contatori RSVP su Firestore in background
-  db.collection('events').doc(S.currentEventId).update({
-    rsvp_yes:yes.length, rsvp_maybe:maybe.length, rsvp_no:no.length,
-    rsvp_yes_ids:yes.map(x=>x.uid), rsvp_maybe_ids:maybe.map(x=>x.uid), rsvp_no_ids:no.map(x=>x.uid)
-  }).catch(() => {}); // errore non bloccante — il contatore si aggiornerà al prossimo reload
+  try {
+    db.collection('events').doc(S.currentEventId).update({
+      rsvp_yes:yes.length, rsvp_maybe:maybe.length, rsvp_no:no.length,
+      rsvp_yes_ids:yes.map(x=>x.uid), rsvp_maybe_ids:maybe.map(x=>x.uid), rsvp_no_ids:no.map(x=>x.uid)
+    });
+  } catch(e) {}
 }
 
 // ============================================================
-// 📅 EVENTI — lista cose da portare
+// ITEMS
 // ============================================================
 function renderItems(items, tipo) {
   renderTipoPills(tipo);
   const body = $id('items-list-body'); if(!body) return;
   if (!items.length) { body.innerHTML='<p style="padding:12px 16px;font-size:13px;color:var(--text-3);">Nessuna voce ancora.</p>'; return; }
   const uid = S.user?.uid;
-  const isComune = tipo === 'comune';
   body.innerHTML = items.map((it,i) => {
     const isMe = it.assignedTo === uid;
     return `<div class="item-row" style="${i===0?'border-top:none':''}">
       <span class="item-text">${escHtml(it.text)}</span>
-      ${isComune
-        ? (it.assignedTo
-          ? `<div class="item-assigned"><img src="${av(it.assignedPhoto,it.assignedName)}" alt="">${isMe?'Tu':escHtml(it.assignedName||'')}</div>
-             ${isMe?`<button class="btn-take mine" onclick="App.releaseItem('${it.id}')">Rilascia</button>`:''}`
-          : `<button class="btn-take free" onclick="App.takeItem('${it.id}','${escAttr(it.text)}')">Lo porto io</button>`)
-        : ''}
+      ${it.assignedTo
+        ? `<div class="item-assigned"><img src="${av(it.assignedPhoto,it.assignedName)}" alt="">${isMe?'Tu':escHtml(it.assignedName||'')}</div>
+           ${isMe?`<button class="btn-take mine" onclick="App.releaseItem('${it.id}')">Rilascia</button>`:''}`
+        : `<button class="btn-take free" onclick="App.takeItem('${it.id}','${escAttr(it.text)}')">Lo porto io</button>`}
     </div>`;
   }).join('');
 }
 
 // ============================================================
-// 📅 EVENTI — commenti & @mention
+// COMMENTS
 // ============================================================
 function renderComments(comments) {
   const c = $id('comments-list'); if(!c) return;
@@ -1669,50 +1443,41 @@ function handleMentionInput(e) {
   const at = val.lastIndexOf('@');
   if (at < 0) { hide('mention-dropdown'); return; }
   const q = val.slice(at + 1).toLowerCase();
+  // Mostra tutti i membri appena digiti @, filtra man mano che scrivi
   const matches = S.groupMembers.filter(m =>
     m.uid !== S.user?.uid && (!q || m.displayName?.toLowerCase().includes(q))
   );
   const dd = $id('mention-dropdown'); if (!dd) return;
   if (!matches.length) { hide('mention-dropdown'); return; }
   dd.innerHTML = matches.map(m => {
+    // Evidenzia la parte che corrisponde alla query
     const name = m.displayName || '';
     const highlighted = q
       ? name.replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi'),
-          '<strong style="color:var(--blue);">$1</strong>')
+          '<strong style="color:var(--orange);">$1</strong>')
       : escHtml(name);
-    return `<div class="mention-opt" onmousedown="event.preventDefault();App.insertMention('${escAttr(name)}')">
+    return `<div class="mention-opt" onclick="App.insertMention('${escAttr(name)}')">
       <img src="${av(m.photoURL, name)}" alt="">
       <span>${highlighted}</span>
       ${!q ? '<span style="font-size:11px;color:var(--text-3);margin-left:auto;">↵</span>' : ''}
     </div>`;
   }).join('');
-  // Position above the input using fixed coords
-  const rect = e.target.closest('.comment-input-wrap')?.getBoundingClientRect() || e.target.getBoundingClientRect();
-  const ddH = Math.min(matches.length * 46, 200);
-  dd.style.left = rect.left + 'px';
-  dd.style.width = rect.width + 'px';
-  dd.style.top = (rect.top - ddH - 8) + 'px';
   show('mention-dropdown');
 }
 
 // ============================================================
-// 📅 EVENTI — wizard creazione
+// WIZARD
 // ============================================================
 const WIZARD_STEPS = ['Dettagli','Luogo','Lista'];
 function initWizard() {
-  // If editMode is already set (from openEditEvent), don't reset
-  if (!S.wizard.editMode) {
-    S.wizard = { editMode:false, step:0, emoji:'🎉', title:'', date:'', time:'', desc:'', place:'', meetingPoint:'', deadline:'', thingsType:'comune', things:[], showEmojiPicker:false };
-  } else {
-    S.wizard.step = 0; S.wizard.showEmojiPicker = false;
-  }
+  S.wizard = { step:0, emoji:'🎉', title:'', date:'', time:'', desc:'', place:'', meetingPoint:'', deadline:'', thingsType:'comune', things:[], showEmojiPicker:false };
   renderWizardStep();
 }
 function renderWizardStep() {
   const step = S.wizard.step;
   $id('wizard-step-label').textContent = `${step+1}/${WIZARD_STEPS.length}`;
   $id('wizard-step-title').textContent = WIZARD_STEPS[step];
-  $id('wizard-next-btn').textContent = step<WIZARD_STEPS.length-1?'Avanti →':(S.wizard.editMode?'Salva modifiche ✓':'Crea evento 🎉');
+  $id('wizard-next-btn').textContent = step<WIZARD_STEPS.length-1?'Avanti →':'Crea evento 🎉';
   $id('wizard-back-btn').textContent = step===0?'Annulla':'← Indietro';
   $id('wizard-progress').innerHTML = WIZARD_STEPS.map((_,i)=>`<div class="wizard-bar${i<=step?' done':''}"></div>`).join('');
   const body = $id('wizard-body');
@@ -1753,24 +1518,18 @@ function renderWizardStep1() {
   return `<div class="field">
     <label class="field-label">Luogo</label>
     <div style="display:flex;gap:8px;">
-      <input type="text" id="w-place" value="${escHtml(S.wizard.place)}" placeholder="Es. Via Roma 1, Milano" style="flex:1" oninput="S.wizard.place=this.value">
-    </div>
-    <div style="margin-top:6px;display:flex;align-items:center;justify-content:space-between;">
-      <span style="font-size:12px;color:var(--text-3);">Scrivi l'indirizzo completo</span>
-      <a id="w-place-map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(S.wizard.place)}" target="_blank" rel="noreferrer" style="font-size:12px;font-weight:700;font-family:var(--font-h);color:var(--blue);text-decoration:none;display:${S.wizard.place?'inline-flex':'none'};align-items:center;gap:3px;">
-        Verifica su Maps ↗
+      <input type="text" id="w-place" value="${escHtml(S.wizard.place)}" placeholder="Es. Lago di Como" style="flex:1" oninput="S.wizard.place=this.value">
+      <a id="w-place-map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(S.wizard.place)}" target="_blank" rel="noreferrer" class="maps-btn" style="${S.wizard.place?'':'display:none'}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--orange)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
       </a>
     </div>
   </div>
   <div class="field">
     <label class="field-label">Punto di ritrovo</label>
     <div style="display:flex;gap:8px;">
-      <input type="text" id="w-meeting" value="${escHtml(S.wizard.meetingPoint)}" placeholder="Es. Parcheggio della stazione" style="flex:1" oninput="S.wizard.meetingPoint=this.value">
-    </div>
-    <div style="margin-top:6px;display:flex;align-items:center;justify-content:space-between;">
-      <span style="font-size:12px;color:var(--text-3);">Dove ci si trova prima di partire</span>
-      <a id="w-meeting-map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(S.wizard.meetingPoint)}" target="_blank" rel="noreferrer" style="font-size:12px;font-weight:700;font-family:var(--font-h);color:var(--blue);text-decoration:none;display:${S.wizard.meetingPoint?'inline-flex':'none'};align-items:center;gap:3px;">
-        Verifica su Maps ↗
+      <input type="text" id="w-meeting" value="${escHtml(S.wizard.meetingPoint)}" placeholder="Es. Parcheggio stazione" style="flex:1" oninput="S.wizard.meetingPoint=this.value">
+      <a id="w-meeting-map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(S.wizard.meetingPoint)}" target="_blank" rel="noreferrer" class="maps-btn" style="${S.wizard.meetingPoint?'':'display:none'}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--orange)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
       </a>
     </div>
   </div>
@@ -1805,339 +1564,114 @@ $id('wizard-next-btn').addEventListener('click', () => {
   const step = S.wizard.step;
   if(step===0){ if(!S.wizard.title.trim()||!S.wizard.date){toast('Titolo e data obbligatori');return;} S.wizard.step=1; }
   else if(step===1) { S.wizard.step=2; }
-  else { if(S.wizard.editMode) App.saveEditEvent(); else App.createEvent(); return; }
+  else { App.createEvent(); return; }
   renderWizardStep();
 });
 $id('wizard-back-btn').addEventListener('click', () => {
-  if(S.wizard.step===0) {
-    if(S.wizard.editMode) goTo('event', S.currentEventId);
-    else goTo('group', S.currentGroupId);
-  } else { S.wizard.step--; renderWizardStep(); }
+  if(S.wizard.step===0) goTo('group',S.currentGroupId);
+  else { S.wizard.step--; renderWizardStep(); }
 });
 document.addEventListener('input', e => {
-  if(e.target.id==='w-place'){
-    const a=$id('w-place-map');
-    if(a){ a.href=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.target.value)}`; a.style.display=e.target.value?'inline-flex':'none'; }
-  }
-  if(e.target.id==='w-meeting'){
-    const a=$id('w-meeting-map');
-    if(a){ a.href=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.target.value)}`; a.style.display=e.target.value?'inline-flex':'none'; }
-  }
+  if(e.target.id==='w-place'){ const a=$id('w-place-map'); if(a){a.href=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.target.value)}`;a.style.display=e.target.value?'':'none';} }
+  if(e.target.id==='w-meeting'){ const a=$id('w-meeting-map'); if(a){a.href=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.target.value)}`;a.style.display=e.target.value?'':'none';} }
 });
 
 // ============================================================
-// 👤 PROFILO
+// PROFILE
 // ============================================================
 async function loadProfile() {
+  $id('profile-avatar').src = av(S.user?.photoURL, displayName(S.userDoc));
+  $id('profile-name').textContent = displayName(S.userDoc);
+  $id('profile-email').textContent = S.user?.email || '';
+  $id('profile-badges').innerHTML = `<span class="badge badge-admin">${S.userDoc?.role==='admin'?'ADMIN':'MEMBER'}</span>`;
+  const groupCount = S.userDoc?.groups?.length || 0;
+  $id('profile-stats').innerHTML = `
+    <div class="stat-item"><div class="stat-num">${groupCount}</div><div class="stat-label">Gruppi</div></div>
+    <div class="stat-item"><div class="stat-num" id="stat-events">—</div><div class="stat-label">Eventi</div></div>
+    <div class="stat-item"><div class="stat-num" id="stat-yes">—</div><div class="stat-label">Ci sono</div></div>`;
   try {
-    $id('profile-avatar').src = av(S.user?.photoURL, displayName(S.userDoc));
-    $id('profile-name').textContent = displayName(S.userDoc);
-    $id('profile-email').textContent = S.user?.email || '';
-    $id('profile-badges').innerHTML = `<span class="badge badge-admin">${S.userDoc?.role==='admin'?'ADMIN':'MEMBER'}</span>`;
-    const groupCount = S.userDoc?.groups?.length || 0;
-    $id('profile-stats').innerHTML = `
-      <div class="stat-item"><div class="stat-num">${groupCount}</div><div class="stat-label">Gruppi</div></div>
-      <div class="stat-item"><div class="stat-num" id="stat-events">—</div><div class="stat-label">Eventi</div></div>
-      <div class="stat-item"><div class="stat-num" id="stat-yes">—</div><div class="stat-label">Ci sono</div></div>`;
-
-    // Render body immediately — no blocking awaits
-    const prefs = { ...DEFAULT_NOTIF_PREFS, ...(S.userDoc?.notifPrefs||{}) };
-    const body = $id('profile-body');
-    body.innerHTML = `
-      <div style="font-family:var(--font-h);font-weight:700;font-size:16px;color:var(--text);margin-bottom:10px;">Preferenze notifiche</div>
-      <div class="settings-list" id="notif-prefs-list"></div>
-      <div style="font-family:var(--font-h);font-weight:700;font-size:16px;color:var(--text);margin:18px 0 10px;">Account</div>
-      <div class="settings-list">
-        <div class="settings-item" onclick="App.changeNickname()">
-          <span style="font-size:15px;">Modifica nickname</span>
-          <svg width="7" height="12" viewBox="0 0 7 12"><path d="M1 1L6 6L1 11" stroke="var(--text-3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <div class="settings-item" id="notif-enable-btn" onclick="App.enableNotifications()">
-          <span style="font-size:15px;" id="notif-btn-label">${Notification.permission === 'granted' ? '✅ Notifiche attive' : '🔔 Attiva notifiche push'}</span>
-          ${Notification.permission !== 'granted' ? '<svg width="7" height="12" viewBox="0 0 7 12"><path d="M1 1L6 6L1 11" stroke="var(--text-3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
-        </div>
-        <div class="settings-item" onclick="showConfirm('Vuoi uscire da Crew?', handleSignOut)">
-          <span style="color:var(--red);font-weight:600;">Esci</span>
-        </div>
-        ${S.userDoc?.role==='admin' ? '<div class="settings-item" onclick="App.fixUserGroups()"><span style="font-size:15px;">🔧 Fix gruppi utenti</span></div>' : ''}
-      </div>`;
-
-    const prefList = $id('notif-prefs-list');
-    if (prefList && NOTIF_LABELS) {
-      prefList.innerHTML = Object.entries(NOTIF_LABELS).map(([key,info]) =>
-        `<div class="toggle-row">
-          <div>
-            <div class="toggle-label">${info.label}</div>
-            <div class="toggle-sub">${info.sub}</div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" ${prefs[key]?'checked':''} onchange="App.saveNotifPref('${key}',this.checked)">
-            <div class="toggle-track"></div>
-            <div class="toggle-thumb"></div>
-          </label>
-        </div>`).join('');
+    if(S.userDoc?.groups?.length){
+      const evSnap=await db.collection('events').where('groupId','in',S.userDoc.groups.slice(0,10)).get();
+      if($id('stat-events')) $id('stat-events').textContent=evSnap.size;
     }
+  } catch(e){}
 
-    // Load stats async without blocking render
-    if (S.userDoc?.groups?.length) {
-      db.collection('events').where('groupId','in',S.userDoc.groups.slice(0,10)).get()
-        .then(snap => { const el=$id('stat-events'); if(el) el.textContent=snap.size; })
-        .catch(()=>{});
-    }
+  // Notif prefs
+  const prefs = { ...DEFAULT_NOTIF_PREFS, ...(S.userDoc?.notifPrefs||{}) };
+  const body = $id('profile-body');
+  const pushGranted = ('Notification' in window) && Notification.permission === 'granted' && !!localStorage.getItem('crew_fcm_token');
+  body.innerHTML = `
+    <div style="font-family:var(--font-h);font-weight:700;font-size:16px;color:var(--text);margin-bottom:10px;">Notifiche push</div>
+    <div class="settings-list">
+      <div class="settings-item" ${pushGranted?'':'onclick="enablePush()"'}>
+        <div>
+          <div style="font-size:14px;color:var(--text);">Push su questo dispositivo</div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:1px;">${pushGranted?'Attive — riceverai avvisi anche ad app chiusa':'Tocca per attivarle'}</div>
+        </div>
+        <span style="font-size:13px;font-weight:700;font-family:var(--font-h);color:${pushGranted?'var(--green)':'var(--orange)'};">${pushGranted?'✅ Attive':'Attiva'}</span>
+      </div>
+    </div>
+    <div style="font-family:var(--font-h);font-weight:700;font-size:16px;color:var(--text);margin:18px 0 10px;">Preferenze notifiche</div>
+    <div class="settings-list" id="notif-prefs-list"></div>
+    <div style="font-family:var(--font-h);font-weight:700;font-size:16px;color:var(--text);margin:18px 0 10px;">Account</div>
+    <div class="settings-list">
+      <div class="settings-item" onclick="App.changeNickname()">
+        <span style="font-size:15px;">Modifica nickname</span>
+        <svg width="7" height="12" viewBox="0 0 7 12"><path d="M1 1L6 6L1 11" stroke="var(--text-3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="settings-item" onclick="doLogout()">
+        <span style="color:var(--red);font-weight:600;">Esci</span>
+      </div>
+    </div>`;
 
-  } catch(err) {
-    console.error('loadProfile error:', err);
-    const body = $id('profile-body');
-    if (body) body.innerHTML = `<div style="padding:20px;color:var(--red);">Errore: ${err.message}</div>`;
-  }
+  const prefList = $id('notif-prefs-list');
+  prefList.innerHTML = Object.entries(NOTIF_LABELS).map(([key,info]) => `
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">${info.label}</div>
+        <div class="toggle-sub">${info.sub}</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" ${prefs[key]?'checked':''} onchange="App.saveNotifPref('${key}',this.checked)">
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+    </div>`).join('');
 }
 
 // ============================================================
-// 📲 NOTIFICHE PUSH & IN-APP
+// NOTIFICATIONS
 // ============================================================
 function listenNotifications() {
   if (!S.user) return;
-  const _notifUnsub = db.collection('notifications').where('toUserId','==',S.user.uid).where('read','==',false)
+  db.collection('notifications').where('toUserId','==',S.user.uid).where('read','==',false)
     .onSnapshot(snap => {
       const count = snap.size;
       if (count > 0) { show('notif-dot'); $id('tab-notif-badge').textContent=count>9?'9+':count; show('tab-notif-badge'); }
       else { hide('notif-dot'); hide('tab-notif-badge'); }
-      // Sync badge con service worker
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({ type: 'SET_BADGE', count });
-      }
-      // App Badging API diretta (quando app è in foreground)
-      if ('setAppBadge' in navigator) {
-        if (count > 0) navigator.setAppBadge(count).catch(()=>{});
-        else navigator.clearAppBadge().catch(()=>{});
-      }
     });
-  S.unsubscribers.push(_notifUnsub);
-}
-
-// Flag globale: evita doppia registrazione di onMessage
-let _onMessageActive = false;
-
-async function setupPushNotifications() {
-  // Chiamata silente al login: aggiorna il token solo se il permesso è già stato concesso
-  // NON chiede il permesso all'utente — quello va fatto esplicitamente dal Profilo
-  if (!S.user) return;
-  try {
-    if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
-    if (Notification.permission !== 'granted') return; // ← nessuna richiesta automatica
-    const messaging = firebase.messaging();
-    const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-    const token = await messaging.getToken({
-      vapidKey: 'BBXUoAtQnTv7U1CaYSvzFYnNKFJJaiawDUAkdzibvk4F2_IT0PiaCoFGJ6uD-AIA5_lZxH8yBhrr1weg8tYnE6I',
-      serviceWorkerRegistration: swReg
-    });
-    if (!token) return;
-    const userRef = db.collection('users').doc(S.user.uid);
-    const userSnap = await userRef.get();
-    const existing = userSnap.data()?.fcmTokens || [];
-    if (!existing.includes(token)) {
-      await userRef.update({ fcmTokens: firebase.firestore.FieldValue.arrayUnion(token) });
-    }
-    // Registra onMessage una sola volta
-    if (!_onMessageActive) {
-      _onMessageActive = true;
-      messaging.onMessage(payload => {
-        const n = payload.notification || {};
-        toast((n.title || 'Crew') + (n.body ? ' — ' + n.body : ''));
-      });
-    }
-  } catch(err) {
-    console.log('Push non disponibili:', err.message);
-  }
 }
 $id('btn-notifications').addEventListener('click', () => App.openNotifications());
 
-// ── 📲 BANNER "APRI IN CHROME" (solo browser, non PWA standalone) ─────────────
-(function checkPWABanner() {
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-                    || window.navigator.standalone === true;
-  if (isStandalone) return; // già nell'app installata — niente banner
-  const hasJoin = new URLSearchParams(window.location.search).get('join');
-  if (!hasJoin) return; // nessun invito attivo
-  // L'utente ha cliccato un link invito da un browser non-PWA
-  // Su Android il browser predefinito intercetta i link prima della PWA
-  const isAndroid = /Android/i.test(navigator.userAgent);
-  const isIOS     = /iPhone|iPad/i.test(navigator.userAgent);
-  const hint = isAndroid
-    ? 'Per aprire Crew, usa Chrome → tocca ⋮ → "Aggiungi a schermata Home".'
-    : isIOS
-    ? 'Per aprire Crew, usa Safari → tocca ☐ → "Aggiungi a schermata Home".'
-    : 'Stai aprendo il link nel browser. Per la migliore esperienza usa Crew come app.';
-  const banner = document.createElement('div');
-  banner.id = 'pwa-banner';
-  banner.innerHTML = `<div id="pwa-banner-text">📲 ${hint}</div>`
-    + `<button id="pwa-banner-close" onclick="document.getElementById('pwa-banner').remove()">✕</button>`;
-  document.body.prepend(banner);
-})();
-
 // ============================================================
-// ⚡ APP ACTIONS
+// APP ACTIONS
 // ============================================================
 const App = {
 
   async saveNickname() {
-    try {
     const nick = $id('nickname-input')?.value?.trim();
     if (!nick) { toast('Inserisci un nickname'); return; }
     await db.collection('users').doc(S.user.uid).update({ nickname: nick });
     S.userDoc.nickname = nick;
     prefsCache[S.user.uid] = null; // invalidate cache
     initApp();
-    } catch(err) { toast('Errore nel salvataggio nickname ❌'); }
-},
+  },
 
   changeNickname() {
     const current = S.userDoc?.nickname || '';
     $id('nickname-input').value = current;
     $id('nickname-avatar-preview').src = av(S.user?.photoURL, displayName(S.userDoc));
     hide('app'); show('nickname-screen');
-  },
-
-  async checkEmail() {
-    const email = $id('magic-email-input')?.value?.trim();
-    if (!email) { toast('Inserisci la tua email'); return; }
-    // Mostra sempre il campo password — se l'utente non ha password
-    // il login fallirà e potrà richiedere il magic link
-    $id('email-display').textContent = email;
-    hide('email-step'); show('password-step');
-    setTimeout(() => $id('password-input')?.focus(), 100);
-  },
-
-  async loginWithPassword() {
-    const email = $id('magic-email-input')?.value?.trim();
-    const password = $id('password-input')?.value;
-    if (!email || !password) { toast('Inserisci email e password'); return; }
-    try {
-      await auth.signInWithEmailAndPassword(email, password);
-    } catch(err) {
-      if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        toast('Password errata ❌');
-      } else if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-email') {
-        toast('Email non trovata ❌');
-      } else if (err.code === 'auth/too-many-requests') {
-        toast('Troppi tentativi, riprova tra qualche minuto');
-      } else {
-        // Probably no password set — offer magic link
-        if (confirm('Non hai ancora impostato una password. Vuoi ricevere un link di accesso via email?')) {
-          const actionCodeSettings = {
-            url: window.location.origin + window.location.pathname + window.location.search, // FIX: preserva ?join=...
-            handleCodeInApp: true,
-          };
-          await auth.sendSignInLinkToEmail(email, actionCodeSettings);
-          localStorage.setItem('crew_magic_email', email);
-          hide('password-step'); show('magic-sent');
-        }
-      }
-    }
-  },
-
-  async resetPassword() {
-    const email = $id('magic-email-input')?.value?.trim();
-    if (!email) { toast('Email non trovata'); return; }
-    try {
-      await auth.sendPasswordResetEmail(email);
-      toast('📬 Email di reset inviata!');
-    } catch(err) { toast('Errore: ' + err.message); }
-  },
-
-  showRegister() {
-    hide('email-step'); hide('password-step'); hide('magic-sent');
-    show('register-step');
-    setTimeout(() => $id('register-email-input')?.focus(), 100);
-  },
-
-  async sendRegisterLink() {
-    const email = $id('register-email-input')?.value?.trim();
-    if (!email) { toast('Inserisci la tua email'); return; }
-    try {
-      const actionCodeSettings = {
-        url: window.location.origin + window.location.pathname + window.location.search, // FIX: preserva ?join=...
-        handleCodeInApp: true,
-      };
-      await auth.sendSignInLinkToEmail(email, actionCodeSettings);
-      localStorage.setItem('crew_magic_email', email);
-      localStorage.setItem('crew_show_set_password', '1');
-      hide('register-step'); show('magic-sent');
-    } catch(err) { toast('Errore: ' + err.message); }
-  },
-
-  backToEmail() {
-    hide('password-step'); hide('register-step'); hide('magic-sent');
-    show('email-step');
-    const pi = $id('password-input'); if (pi) pi.value = '';
-  },
-
-  async setPassword() {
-    const p1 = $id('new-password-input')?.value;
-    const p2 = $id('confirm-password-input')?.value;
-    if (!p1 || p1.length < 6) { toast('Password di almeno 6 caratteri'); return; }
-    if (p1 !== p2) { toast('Le password non coincidono ❌'); return; }
-    try {
-      await S.user.updatePassword(p1);
-      toast('✅ Password impostata!');
-      hide('set-password-screen'); show('app');
-      initApp();
-    } catch(err) {
-      if (err.code === 'auth/requires-recent-login') {
-        toast('Sessione scaduta, effettua di nuovo il login');
-        handleSignOut();
-      } else {
-        toast('Errore: ' + err.message);
-      }
-    }
-  },
-
-  skipPassword() {
-    hide('set-password-screen'); show('app');
-    initApp();
-  },
-
-  async fixUserGroups() {
-    if (!confirm('Avvia fix gruppi utenti? Potrebbe richiedere qualche secondo.')) return;
-    try {
-      toast('🔧 Fix in corso...');
-      const fixGroups = functions.httpsCallable('fixUserGroups');
-      const result = await fixGroups();
-      toast(`✅ Fix completato! ${result.data.fixed} utenti aggiornati`);
-    } catch(err) {
-      toast('Errore: ' + err.message);
-    }
-  },
-
-  async enableNotifications() {
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') { toast('Notifiche non autorizzate'); return; }
-      const messaging = firebase.messaging();
-      const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-      const token = await messaging.getToken({
-        vapidKey: 'BBXUoAtQnTv7U1CaYSvzFYnNKFJJaiawDUAkdzibvk4F2_IT0PiaCoFGJ6uD-AIA5_lZxH8yBhrr1weg8tYnE6I',
-        serviceWorkerRegistration: swReg
-      });
-      if (!token) { toast('Token non ottenuto'); return; }
-      const userRef = db.collection('users').doc(S.user.uid);
-      const snap = await userRef.get();
-      const existing = snap.data()?.fcmTokens || [];
-      if (!existing.includes(token)) {
-        await userRef.update({ fcmTokens: firebase.firestore.FieldValue.arrayUnion(token) });
-      }
-      // Registra onMessage una sola volta (guard contro doppia registrazione)
-      if (!_onMessageActive) {
-        _onMessageActive = true;
-        messaging.onMessage(payload => {
-          const n = payload.notification || {};
-          toast((n.title || 'Crew') + (n.body ? ' — ' + n.body : ''));
-        });
-      }
-      const btn = $id('notif-enable-btn');
-      if (btn) btn.innerHTML = '<span style="font-size:15px;color:var(--green);">✅ Notifiche attive</span>';
-      toast('✅ Notifiche push attivate!');
-    } catch(err) { toast('Errore: ' + err.message); }
   },
 
   async sendMagicLink() {
@@ -2148,29 +1682,27 @@ const App = {
       handleCodeInApp: true,
     };
     try {
-      await auth.sendSignInLinkToEmail(email, actionCodeSettings);
+      await firebase.auth().sendSignInLinkToEmail(email, actionCodeSettings);
       localStorage.setItem('crew_magic_email', email);
-      hide('email-step'); show('magic-sent');
+      hide('magic-form'); show('magic-sent');
     } catch(err) { toast('Errore: ' + err.message); }
   },
 
   async setRSVP(status) {
     if (!S.user || !S.currentEventId) return;
-    try {
-      await db.collection('events').doc(S.currentEventId).collection('rsvp').doc(S.user.uid).set({
-        status, name: displayName(S.userDoc), photoURL: S.user.photoURL||null,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      const eSnap = await db.collection('events').doc(S.currentEventId).get();
-      const ev = eSnap.data();
-      if (ev.createdBy !== S.user.uid) {
-      }
-    } catch(err) { toast('Errore nell\'invio RSVP ❌'); }
+    await db.collection('events').doc(S.currentEventId).collection('rsvp').doc(S.user.uid).set({
+      status, name: displayName(S.userDoc), photoURL: S.user.photoURL||null,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    const eSnap = await db.collection('events').doc(S.currentEventId).get();
+    const ev = eSnap.data();
+    if (ev.createdBy !== S.user.uid) {
+      await notify({ toUserId:ev.createdBy, type:'rsvp', eventId:S.currentEventId, eventTitle:ev.title,
+        text:`${displayName(S.userDoc)} ha risposto "${status==='yes'?'Ci sono':status==='no'?'Non vengo':'Forse'}" a "${ev.title}"` });
+    }
   },
 
   async addItem() {
-
-    try {
     const inp = $id('new-item-input');
     const text = inp?.value?.trim();
     if (!text || !S.currentEventId) return;
@@ -2182,7 +1714,8 @@ const App = {
     const eSnap = await db.collection('events').doc(S.currentEventId).get();
     const ev = eSnap.data();
     const gSnap = await db.collection('groups').doc(ev.groupId).get();
-    } catch(err) { toast("Errore nell'aggiunta ❌"); }
+    await notifyMany(gSnap.data().members||[], { type:'items', eventId:S.currentEventId, eventTitle:ev.title,
+      text:`${displayName(S.userDoc)} ha aggiunto "${text}" alla lista di "${ev.title}"` });
   },
 
   async takeItem(itemId, itemText) {
@@ -2193,8 +1726,14 @@ const App = {
     const eSnap = await db.collection('events').doc(S.currentEventId).get();
     const ev = eSnap.data();
     if (ev.createdBy !== S.user.uid) {
+      await notify({ toUserId:ev.createdBy, type:'items', eventId:S.currentEventId, eventTitle:ev.title,
+        text:`${displayName(S.userDoc)} si è assegnato "${itemText}" in "${ev.title}"` });
     }
-    toast(`🎒 "${itemText}" assegnato a te`);
+    // Reminder personale
+    await notify({ toUserId:S.user.uid, type:'reminder_item', eventId:S.currentEventId, eventTitle:ev.title,
+      itemText, eventDate:ev.date||null,
+      text:`Ricorda: devi portare "${itemText}" per "${ev.title}"${ev.date?' il '+ital(ev.date):''}` });
+    toast(`🎒 "${itemText}" aggiunto ai tuoi promemoria`);
   },
 
   async releaseItem(itemId) {
@@ -2205,8 +1744,6 @@ const App = {
   },
 
   async sendComment() {
-
-    try {
     const inp = $id('comment-input');
     const text = inp?.value?.trim();
     if (!text || !S.currentEventId) return;
@@ -2238,32 +1775,10 @@ const App = {
       await notify({ toUserId:uid, type:'comment', eventId:S.currentEventId, eventTitle:ev.title,
         text:`${displayName(S.userDoc)} ha commentato "${ev.title}": "${text.slice(0,60)}${text.length>60?'…':''}"` });
     }
-    } catch(err) { toast("Errore nell'invio commento ❌"); }
   },
-
-  openEditGroup(gid, name, emoji) {
-    $id('edit-group-id').value = gid;
-    $id('edit-group-name').value = name;
-    $id('edit-group-emoji').value = emoji;
-    App.openModal('modal-edit-group');
-  },
-
-  async saveEditGroup() {
-    try {
-    const gid = $id('edit-group-id').value;
-    const name = $id('edit-group-name').value.trim();
-    const emoji = $id('edit-group-emoji').value.trim() || '👥';
-    if (!name) { toast('Inserisci un nome'); return; }
-    await db.collection('groups').doc(gid).update({ name, emoji });
-    App.closeModal('modal-edit-group');
-    toast('✅ Gruppo aggiornato!');
-    loadHome();
-    } catch(err) { toast('Errore nel salvataggio gruppo ❌'); }
-},
 
   async createGroup() {
     if (S.userDoc?.role !== 'admin') return;
-    try {
     const name = $id('group-name-input').value.trim();
     const emoji = $id('group-emoji-input').value.trim() || '👥';
     if (!name) { toast('Inserisci il nome del gruppo'); return; }
@@ -2283,8 +1798,7 @@ const App = {
     $id('group-name-input').value=''; $id('group-emoji-input').value='';
     toast('✅ Gruppo creato!');
     goTo('group', ref.id);
-    } catch(err) { toast('Errore nella creazione gruppo ❌'); }
-},
+  },
 
   async createEvent() {
     const w = S.wizard;
@@ -2305,17 +1819,11 @@ const App = {
         createdBy:S.user.uid, createdAt:firebase.firestore.FieldValue.serverTimestamp()
       });
     }
-    // Notify ALL members
-    try {
-      const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
-      await notifyMany(gSnap.data().members||[], { type:'new_event', eventId:ref.id, eventTitle:w.title,
-        text:`${displayName(S.userDoc)} ha creato "${w.title}" — ${ital(w.date)}` });
-    } catch(e) {}
+    // Notify ALL members (not just if admin creates)
+    const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
+    await notifyMany(gSnap.data().members||[], { type:'new_event', eventId:ref.id, eventTitle:w.title,
+      text:`${displayName(S.userDoc)} ha creato "${w.title}" — ${ital(w.date)}` });
     toast('🎉 Evento creato!');
-    // Assicura che currentEventId e currentGroupId siano impostati prima di navigare
-    S.currentEventId = ref.id;
-    S.currentGroupId = data.groupId;
-    S.currentEventData = null;
     goTo('event', ref.id);
   },
 
@@ -2420,7 +1928,6 @@ const App = {
 
   async regenerateInvite() {
     if (!S.currentGroupId) return;
-    try {
     const days = this._selectedDuration || S.currentGroupData?.inviteDurationDays || 7;
     const newCode = uid8();
     const expiresAt = addDays(new Date(), days);
@@ -2435,8 +1942,7 @@ const App = {
     this.closeModal('modal-invite-settings');
     toast('🔄 Link rigenerato! Scade tra '+days+' giorni.');
     loadGroup(S.currentGroupId);
-    } catch(err) { toast('Errore nel rinnovo invito ❌'); }
-},
+  },
 
   copyCurrentLink() {
     const url = buildInviteUrl(S.currentGroupData?.inviteCode);
@@ -2449,34 +1955,25 @@ const App = {
     loadGroupEvents(S.currentGroupId, tab);
   },
 
-  async openEditEvent() {
-    if (!S.currentEventData) {
-      try {
-        const snap = await db.collection('events').doc(S.currentEventId).get();
-        if (!snap.exists) { toast('Evento non trovato'); return; }
-        S.currentEventData = { id:snap.id, ...snap.data() };
-      } catch(err) { toast('Errore nel caricamento evento ❌'); return; }
-    }
-    const ev = S.currentEventData;
+  openEditEvent() {
+    if (!S.currentEventData) return;
     S.wizard = {
-      editMode: true, eventId: ev.id, step: 0,
-      emoji: ev.emoji || '🎉',
-      title: ev.title || '',
-      date: ev.date || '',
-      time: ev.time || '',
-      desc: ev.description || '',
-      place: ev.place || '',
-      meetingPoint: ev.meetingPoint || '',
-      deadline: ev.deadline || '',
-      thingsType: ev.thingsType || 'comune',
+      editMode: true, eventId: S.currentEventData.id, step: 0,
+      emoji: S.currentEventData.emoji || '🎉',
+      title: S.currentEventData.title || '',
+      date: S.currentEventData.date || '',
+      time: S.currentEventData.time || '',
+      desc: S.currentEventData.description || '',
+      place: S.currentEventData.place || '',
+      meetingPoint: S.currentEventData.meetingPoint || '',
+      deadline: S.currentEventData.deadline || '',
+      thingsType: S.currentEventData.thingsType || 'comune',
       things: [], showEmojiPicker: false
     };
     goTo('create');
-},
+  },
 
   async saveEditEvent() {
-
-    try {
     const w = S.wizard;
     if (!w.title.trim() || !w.date) { toast('Titolo e data obbligatori'); return; }
     await db.collection('events').doc(w.eventId).update({
@@ -2488,11 +1985,9 @@ const App = {
     Object.assign(S.currentEventData, { emoji:w.emoji, title:w.title.trim(), date:w.date, time:w.time||null, description:w.desc.trim()||null, place:w.place.trim()||null, meetingPoint:w.meetingPoint.trim()||null, deadline:w.deadline||null, thingsType:w.thingsType });
     toast('✅ Evento aggiornato!');
     goTo('event', w.eventId);
-    } catch(err) { toast('Errore nel salvataggio ❌'); }
   },
 
   async addItemFromPage() {
-    try {
     const inp = $id('items-page-input');
     const text = inp?.value?.trim();
     if (!text || !S.currentEventId) return;
@@ -2506,17 +2001,16 @@ const App = {
     const gSnap = await db.collection('groups').doc(ev.groupId).get();
     for (const m of (gSnap.data().members || [])) {
       if (m.uid !== S.user.uid) {
+        await notify({ toUserId: m.uid, type:'items', eventId: S.currentEventId, eventTitle: ev.title,
+          text: dName(S.userDoc) + ' ha aggiunto "' + text + '" alla lista di "' + ev.title + '"' });
       }
     }
-    } catch(err) { toast("Errore nell'aggiunta voce ❌"); }
-},
+  },
 
   async deleteItem(itemId) {
     if (!S.currentEventId) return;
-    try {
     await db.collection('events').doc(S.currentEventId).collection('items').doc(itemId).delete();
-    } catch(err) { toast("Errore nell'eliminazione ❌"); }
-},
+  },
 
   async changeTipoFromPage(tipo) {
     if (!S.currentEventId || S.userDoc?.role !== 'admin') return;
@@ -2531,9 +2025,8 @@ const App = {
     c.innerHTML = '<div style="display:flex;justify-content:center;padding:24px"><div class="spinner"></div></div>';
     const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
     const members = gSnap.data().members || [];
-    const memberUids = members.map(m => m.uid);
     const isAdmin = S.userDoc?.role === 'admin';
-    let html = members.map(m =>
+    c.innerHTML = members.map(m =>
       '<div class="member-card">' +
       '<img src="' + av(m.photoURL, m.displayName) + '" alt="">' +
       '<div style="flex:1;"><div style="font-family:var(--font-h);font-weight:700;font-size:15px;color:var(--text);">' + escHtml(m.displayName||'') + '</div>' +
@@ -2541,105 +2034,28 @@ const App = {
       (isAdmin && m.uid !== S.user.uid ? '<button class="btn btn-danger btn-xs" onclick="App.removeMember(\'' + m.uid + '\',\'' + escAttr(m.displayName||'') + '\')">Rimuovi</button>' : '') +
       '</div>'
     ).join('');
-    // Admin: add member section
-    if (isAdmin) {
-      html += '<div style="margin-top:18px;border-top:1px solid var(--border);padding-top:14px;">' +
-        '<div style="font-family:var(--font-h);font-weight:700;font-size:14px;color:var(--text);margin-bottom:10px;">➕ Aggiungi utente</div>' +
-        '<div id="add-member-list"><div style="display:flex;justify-content:center;padding:12px"><div class="spinner"></div></div></div>' +
-        '</div>';
-    }
-    c.innerHTML = html;
-    // Load all users not already in group
-    if (isAdmin) {
-      const usersSnap = await db.collection('users').get();
-      const addList = $id('add-member-list');
-      const available = [];
-      usersSnap.forEach(doc => {
-        if (!memberUids.includes(doc.id)) available.push({uid:doc.id,...doc.data()});
-      });
-      if (!available.length) {
-        addList.innerHTML = '<div style="font-size:13px;color:var(--text-3);">Tutti gli utenti sono già nel gruppo</div>';
-        return;
-      }
-      addList.innerHTML = available.map(u =>
-        '<div class="member-card" style="margin-bottom:8px;">' +
-        '<img src="' + av(u.photoURL, u.displayName) + '" alt="">' +
-        '<div style="flex:1;"><div style="font-family:var(--font-h);font-weight:700;font-size:15px;color:var(--text);">' + escHtml(u.nickname||u.displayName||'') + '</div>' +
-        '<div style="font-size:12px;color:var(--text-3);">' + escHtml(u.email||'') + '</div></div>' +
-        '<button class="btn btn-primary btn-xs" onclick="App.addMemberToGroup(\'' + u.uid + '\',\'' + escAttr(u.nickname||u.displayName||'') + '\',\'' + escAttr(u.photoURL||'') + '\')">Aggiungi</button>' +
-        '</div>'
-      ).join('');
-    }
-  },
-
-  async addMemberToGroup(uid, displayNameVal, photoURL) {
-    try {
-      const addMember = functions.httpsCallable('addMemberToGroup');
-      await addMember({
-        groupId: S.currentGroupId,
-        uid,
-        displayName: displayNameVal,
-        photoURL: photoURL || null
-      });
-      const gData = S.currentGroupData;
-      await notify({
-        toUserId: uid, type: 'join_approved',
-        groupId: S.currentGroupId, groupName: gData?.name || '',
-        text: 'Sei stato aggiunto al gruppo "' + (gData?.name||'') + '"! 🎉'
-      });
-      toast('✅ ' + displayNameVal + ' aggiunto!');
-      this.openMembers();
-      loadGroup(S.currentGroupId);
-    } catch(err) {
-      toast('Errore: ' + err.message);
-    }
   },
 
   async removeMember(uid, name) {
-    showConfirm('Rimuovere ' + escHtml(name) + ' dal gruppo?', async () => {
-      const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
-      const members = gSnap.data().members.filter(m => m.uid !== uid);
-      const memberUids = members.map(m => m.uid);
-      await db.collection('groups').doc(S.currentGroupId).update({ members, memberUids });
-      await db.collection('users').doc(uid).update({ groups: firebase.firestore.FieldValue.arrayRemove(S.currentGroupId) });
-      toast(name + ' rimosso');
-      this.openMembers();
-      loadGroup(S.currentGroupId);
-    }, { danger: true });
+    if (!confirm('Rimuovere ' + name + ' dal gruppo?')) return;
+    const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
+    const members = gSnap.data().members.filter(m => m.uid !== uid);
+    await db.collection('groups').doc(S.currentGroupId).update({ members, memberUids: members.map(m => m.uid) });
+    await db.collection('users').doc(uid).update({ groups: firebase.firestore.FieldValue.arrayRemove(S.currentGroupId) });
+    toast(name + ' rimosso');
+    this.openMembers();
+    loadGroup(S.currentGroupId);
   },
 
   async leaveGroup() {
-    showConfirm('Vuoi lasciare questo gruppo?', async () => {
-      const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
-      const members = gSnap.data().members.filter(m => m.uid !== S.user.uid);
-      const memberUids = members.map(m => m.uid);
-      await db.collection('groups').doc(S.currentGroupId).update({ members, memberUids });
-      await db.collection('users').doc(S.user.uid).update({ groups: firebase.firestore.FieldValue.arrayRemove(S.currentGroupId) });
-      S.userDoc.groups = (S.userDoc.groups || []).filter(g => g !== S.currentGroupId);
-      toast('Hai lasciato il gruppo');
-      goTo('home');
-    }, { danger: true });
-  },
-
-  async deleteGroup() {
-    showConfirm('Eliminare il gruppo? Tutti gli eventi verranno cancellati. Azione irreversibile.', async () => {
-    const gid = S.currentGroupId;
-    // Remove group from all members' user docs
-    const gSnap = await db.collection('groups').doc(gid).get();
-    for (const m of (gSnap.data().members || [])) {
-      await db.collection('users').doc(m.uid).update({ groups: firebase.firestore.FieldValue.arrayRemove(gid) });
-    }
-    // Delete all events in group
-    const evSnap = await db.collection('events').where('groupId','==',gid).get();
-    for (const evDoc of evSnap.docs) {
-      await evDoc.ref.delete();
-    }
-    // Delete group doc
-    await db.collection('groups').doc(gid).delete();
-    S.userDoc.groups = (S.userDoc.groups || []).filter(g => g !== gid);
-    toast('Gruppo eliminato');
+    if (!confirm('Vuoi lasciare questo gruppo?')) return;
+    const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
+    const members = gSnap.data().members.filter(m => m.uid !== S.user.uid);
+    await db.collection('groups').doc(S.currentGroupId).update({ members, memberUids: members.map(m => m.uid) });
+    await db.collection('users').doc(S.user.uid).update({ groups: firebase.firestore.FieldValue.arrayRemove(S.currentGroupId) });
+    S.userDoc.groups = (S.userDoc.groups || []).filter(g => g !== S.currentGroupId);
+    toast('Hai lasciato il gruppo');
     goTo('home');
-  }, { danger: true });
   },
 
   copyLink(url) {
@@ -2675,39 +2091,27 @@ const App = {
   },
 
   async approveRequest(uid, displayNameVal, photoURL) {
-    try {
-      // Usa la Cloud Function per bypassare le security rules Firestore
-      const addMember = functions.httpsCallable('addMemberToGroup');
-      await addMember({
-        groupId: S.currentGroupId,
-        uid,
-        displayName: displayNameVal,
-        photoURL: photoURL || null
-      });
-      // Segna la richiesta come approvata
-      await db.collection('groups').doc(S.currentGroupId)
-        .collection('requests').doc(uid).update({ status:'approved' });
-      await notify({
-        toUserId: uid, type: 'join_approved',
-        groupId: S.currentGroupId, groupName: S.currentGroupData?.name || '',
-        text: `Sei stato approvato nel gruppo "${S.currentGroupData?.name || ''}"! 🎉`
-      });
-      toast(`✅ ${displayNameVal} approvato!`);
-      this.openRequests();
-      loadGroup(S.currentGroupId);
-    } catch(err) {
-      console.error('approveRequest error:', err);
-      toast('Errore approvazione ❌');
-    }
+    const mData = { uid, displayName:displayNameVal, photoURL:photoURL||null };
+    await db.collection('groups').doc(S.currentGroupId).update({
+      members: firebase.firestore.FieldValue.arrayUnion(mData),
+      memberUids: firebase.firestore.FieldValue.arrayUnion(uid)
+    });
+    await db.collection('users').doc(uid).update({ groups:firebase.firestore.FieldValue.arrayUnion(S.currentGroupId) });
+    await db.collection('groups').doc(S.currentGroupId).collection('requests').doc(uid).update({ status:'approved' });
+    await notify({ toUserId:uid, type:'join_approved', eventId:null, eventTitle:null,
+      groupId:S.currentGroupId, groupName:S.currentGroupData?.name||'',
+      text:`La tua richiesta di entrare in "${S.currentGroupData?.name||'un gruppo'}" è stata accettata! 🎉` });
+    toast(`✅ ${displayNameVal} approvato!`);
+    this.openRequests();
+    loadGroup(S.currentGroupId);
   },
 
   async rejectRequest(uid) {
     await db.collection('groups').doc(S.currentGroupId).collection('requests').doc(uid).update({ status:'rejected' });
-    await notify({
-      toUserId: uid, type: 'join_rejected',
-      groupId: S.currentGroupId, groupName: S.currentGroupData?.name || '',
-      text: `La tua richiesta per "${S.currentGroupData?.name || ''}" non è stata accettata.`
-    });
+    const rDoc = await db.collection('groups').doc(S.currentGroupId).collection('requests').doc(uid).get();
+    await notify({ toUserId:uid, type:'join_rejected', eventId:null, eventTitle:null,
+      groupId:S.currentGroupId, groupName:S.currentGroupData?.name||'',
+      text:`La tua richiesta di entrare in "${S.currentGroupData?.name||'un gruppo'}" non è stata accettata.` });
     toast('Richiesta rifiutata');
     this.openRequests();
   },
@@ -2715,25 +2119,28 @@ const App = {
   // ─── NOTIFICATIONS ───────────────────────────────────
   async openNotifications() {
     show('modal-notifications');
-    try {
-    // Azzera badge
-    if ('setAppBadge' in navigator) navigator.clearAppBadge().catch(()=>{});
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_BADGE' });
-    }
     const c = $id('notifications-list');
     c.innerHTML = '<div style="display:flex;justify-content:center;padding:24px"><div class="spinner"></div></div>';
-    const snap = await db.collection('notifications').where('toUserId','==',S.user.uid).orderBy('createdAt','desc').limit(60).get();
+    let snap;
+    try {
+      snap = await db.collection('notifications').where('toUserId','==',S.user.uid).orderBy('createdAt','desc').limit(60).get();
+    } catch(err) {
+      // Indice composito mancante → fallback senza orderBy, ordina lato client
+      console.error('[Notifiche] query con indice fallita, fallback:', err);
+      snap = await db.collection('notifications').where('toUserId','==',S.user.uid).limit(60).get();
+      const docs = snap.docs.slice().sort((a,b) => (b.data().createdAt?.toMillis?.()||0) - (a.data().createdAt?.toMillis?.()||0));
+      snap = { empty: docs.length===0, forEach: cb => docs.forEach(cb) };
+    }
     if (snap.empty) {
       c.innerHTML = '<div class="empty-state" style="padding:32px 0"><div class="empty-emoji">🔔</div><div class="empty-title">Nessuna notifica</div></div>';
       return;
     }
-    const ICONS = { new_event:'🎉', comment:'💬', mention:'💬', deadline_reminder:'⏰', day_before:'📅' };
+    const ICONS = { new_event:'🎉', mention:'💬', items:'🎒', rsvp:'✅', reminder_item:'🎒', comment:'💬', join_request:'👋', join_approved:'✅', join_rejected:'❌', deadline:'⏰' };
     const unread=[], read=[];
     snap.forEach(doc=>{ const n={id:doc.id,...doc.data()}; n.read?read.push(n):unread.push(n); });
     let html='';
     if (unread.length) {
-      html += `<div class="notif-section-title">${unread.length} non lett${unread.length===1?'o':'i'} — <span style="color:var(--blue);cursor:pointer;font-weight:700;" onclick="App.markAllRead()">Segna tutti letti</span></div>`;
+      html += `<div class="notif-section-title">${unread.length} non lett${unread.length===1?'o':'i'} — <span style="color:var(--orange);cursor:pointer;font-weight:700;" onclick="App.markAllRead()">Segna tutti letti</span></div>`;
       html += unread.map(n=>this._renderNotifItem(n,ICONS)).join('');
     }
     if (read.length) {
@@ -2742,7 +2149,6 @@ const App = {
     }
     c.innerHTML = html;
     unread.forEach(n=>db.collection('notifications').doc(n.id).update({read:true}));
-    } catch(err) { $id('notifications-list').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-3)">Errore nel caricamento</div>'; }
   },
 
   _renderNotifItem(n, ICONS) {
@@ -2752,7 +2158,7 @@ const App = {
       <div class="notif-icon">${ICONS[n.type]||'🔔'}</div>
       <div style="flex:1;min-width:0;">
         <div class="notif-text">${escHtml(n.text||'')}</div>
-        ${isReminder&&n.itemText?`<div style="font-size:12px;font-weight:700;color:var(--blue);font-family:var(--font-h);margin-top:3px;">🎒 ${escHtml(n.itemText)}</div>`:''}
+        ${isReminder&&n.itemText?`<div style="font-size:12px;font-weight:700;color:var(--orange);font-family:var(--font-h);margin-top:3px;">🎒 ${escHtml(n.itemText)}</div>`:''}
         ${n.eventTitle?`<div class="notif-event-name">${escHtml(n.eventTitle)}</div>`:''}
         ${isJoin&&n.groupName?`<div class="notif-event-name">${escHtml(n.groupName)}</div>`:''}
         <div class="notif-time">${ago(n.createdAt)}</div>
@@ -2786,7 +2192,7 @@ const App = {
 };
 
 // ============================================================
-// 🎧 EVENT LISTENERS
+// EVENT LISTENERS
 // ============================================================
 $id('btn-create-group').addEventListener('click', () => show('modal-create-group'));
 $id('btn-create-event').addEventListener('click', () => goTo('create'));
@@ -2795,51 +2201,7 @@ document.querySelectorAll('.modal-overlay').forEach(ov => {
 });
 $id('sheet-who').addEventListener('click', e => { if(e.target===$id('sheet-who')) App.closeWho(); });
 
-// ── 🎧 SWIPE DOWN TO DISMISS modals ─────────────────────────
-(function setupSwipeDismiss() {
-  let startY = 0, startScrollTop = 0, dragging = false;
-
-  document.addEventListener('touchstart', e => {
-    const sheet = e.target.closest('.modal-sheet');
-    if (!sheet) return;
-    startY = e.touches[0].clientY;
-    startScrollTop = sheet.scrollTop;
-    dragging = true;
-    sheet.style.transition = 'none';
-  }, { passive: true });
-
-  document.addEventListener('touchmove', e => {
-    if (!dragging) return;
-    const sheet = e.target.closest('.modal-sheet');
-    if (!sheet) return;
-    // Only drag if sheet is scrolled to top
-    if (startScrollTop > 0) return;
-    const dy = e.touches[0].clientY - startY;
-    if (dy > 0) sheet.style.transform = `translateY(${dy}px)`;
-  }, { passive: true });
-
-  document.addEventListener('touchend', e => {
-    if (!dragging) return;
-    const sheet = e.target.closest('.modal-sheet');
-    if (!sheet) { dragging = false; return; }
-    const dy = e.changedTouches[0].clientY - startY;
-    sheet.style.transition = 'transform .3s ease';
-    if (dy > 100) {
-      // Animate out then hide
-      sheet.style.transform = `translateY(110%)`;
-      setTimeout(() => {
-        sheet.style.transform = '';
-        const overlay = sheet.closest('.modal-overlay');
-        if (overlay) overlay.classList.add('hidden');
-      }, 300);
-    } else {
-      sheet.style.transform = '';
-    }
-    dragging = false;
-  }, { passive: true });
-})();
-
-// ── 🛠️  COUNTDOWN ───────────────────────────────────────────
+// ── COUNTDOWN ──────────────────────────────────────────────
 function countdownLabel(dateStr) {
   if (!dateStr) return { label: '', cls: '' };
   const today = new Date(); today.setHours(0,0,0,0);
@@ -2850,58 +2212,34 @@ function countdownLabel(dateStr) {
   if (diff === 1) return { label: 'Domani! 📅', cls: 'tomorrow' };
   return { label: 'Mancano ' + diff + ' giorni', cls: '' };
 }
-function todayStr() {
-  const d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-}
-function tomorrowStr() {
-  const d = new Date(); d.setDate(d.getDate()+1);
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-}
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+function tomorrowStr() { const d = new Date(); d.setDate(d.getDate()+1); return d.toISOString().split('T')[0]; }
 
-// ── ⏰ REMINDERS (giorno prima & scadenza) ──────────────────
+// ── DAY-BEFORE REMINDERS ──────────────────────────────────
 async function checkDayBeforeReminders() {
   if (!S.userDoc?.groups?.length) return;
   const checkKey = 'crew_reminder_' + todayStr();
   if (localStorage.getItem(checkKey)) return;
   const tom = tomorrowStr();
-  const today = todayStr();
   try {
-    const evSnap = await db.collection('events')
-      .where('groupId','in',S.userDoc.groups.slice(0,10))
-      .get();
+    const evSnap = await db.collection('events').where('groupId','in',S.userDoc.groups.slice(0,10)).where('date','==',tom).get();
     for (const evDoc of evSnap.docs) {
       const ev = evDoc.data();
-      // Day before reminder
-      if (ev.date === tom) {
-        const remKey = 'crew_daybefore_' + evDoc.id;
-        if (!localStorage.getItem(remKey)) {
-          await notify({ toUserId:S.user.uid, type:'day_before',
-            eventId:evDoc.id, eventTitle:ev.title,
-            text:'Domani c\'è "' + ev.title + '"! 📅' });
-          localStorage.setItem(remKey, '1');
-        }
-      }
-      // Deadline reminder — last day to respond, only if not responded
-      if (ev.deadline === today) {
-        const rsvpSnap = await db.collection('events').doc(evDoc.id)
-          .collection('rsvp').doc(S.user.uid).get();
-        if (!rsvpSnap.exists) {
-          const remKey = 'crew_deadline_' + evDoc.id;
-          if (!localStorage.getItem(remKey)) {
-            await notify({ toUserId:S.user.uid, type:'deadline_reminder',
-              eventId:evDoc.id, eventTitle:ev.title,
-              text:'Oggi scade la risposta per "' + ev.title + '" — hai risposto? ⏰' });
-            localStorage.setItem(remKey, '1');
-          }
-        }
+      const iSnap = await db.collection('events').doc(evDoc.id).collection('items').where('assignedTo','==',S.user.uid).get();
+      for (const iDoc of iSnap.docs) {
+        const remKey = 'crew_rem_sent_' + evDoc.id + '_' + iDoc.id;
+        if (localStorage.getItem(remKey)) continue;
+        await notify({ toUserId: S.user.uid, type: 'reminder_item', eventId: evDoc.id, eventTitle: ev.title,
+          itemText: iDoc.data().text, eventDate: ev.date,
+          text: 'Domani è "' + ev.title + '"! Ricorda di portare: "' + iDoc.data().text + '"' });
+        localStorage.setItem(remKey, '1');
       }
     }
     localStorage.setItem(checkKey, '1');
   } catch(e) {}
 }
 
-// ── 👥 GROUP TABS (prossimi / passati) ─────────────────────
+// ── GROUP TABS (prossimi / passati) ──────────────────────
 S._eventsUnsub = null;
 function loadGroupEvents(gid, tab) {
   if (S._eventsUnsub) { S._eventsUnsub(); S._eventsUnsub = null; }
@@ -2918,9 +2256,6 @@ function loadGroupEvents(gid, tab) {
     ec.innerHTML = '';
     const evs = []; snap.forEach(doc => evs.push({id:doc.id,...doc.data()}));
     evs.forEach((ev,i) => { ec.innerHTML += renderTimelineEventNew(ev, i, evs.length, tab==='passati'); });
-  }, err => {
-    console.error('loadGroupEvents error:', err);
-    ec.innerHTML = '<div class="empty-state"><div class="empty-emoji">⚠️</div><div class="empty-title">Errore caricamento</div><div class="empty-sub">' + err.message + '</div></div>';
   });
   S._eventsUnsub = unsub;
 }
@@ -2942,7 +2277,7 @@ function renderTimelineEventNew(ev, i, total, isPast) {
     '</div></div></div>';
 }
 
-// ── 📅 VIEWS (chi ha visto l'evento) ────────────────────────
+// ── VIEWS (chi ha visto l'evento) ──────────────────────────
 function renderViews(views) {
   const el = $id('views-row'); if (!el) return;
   if (!views.length) { el.innerHTML = '<span class="views-label">👁 Nessuna visualizzazione</span>'; return; }
@@ -2953,33 +2288,18 @@ function renderViews(views) {
     (views.length>2?' e altri '+(views.length-2):'') + '</span>';
 }
 
-// ── 📅 ITEMS PAGE ─────────────────────────────────────────
+// ── ITEMS PAGE ───────────────────────────────────────────
 function loadItemsPage() {
-  // Show spinner immediately
-  const body = $id('items-page-body');
-  if (body) body.innerHTML = '<div class="spinner" style="margin:32px auto;"></div>';
-
-  // If we don't have event data, load it first
-  if (!S.currentEventData) {
-    db.collection('events').doc(S.currentEventId).get().then(snap => {
-      if (snap.exists) { S.currentEventData = {id:snap.id,...snap.data()}; }
-      _doLoadItemsPage();
-    }).catch(() => _doLoadItemsPage());
-  } else {
-    _doLoadItemsPage();
-  }
-}
-
-function _doLoadItemsPage() {
-  const ev = S.currentEventData;
-  const tipo = ev?.thingsType || 'comune';
+  $id('app-header').style.display = 'none';
+  $id('tab-bar').style.display = 'none';
+  const ev = S.currentEventData; if (!ev) return;
+  const tipo = ev.thingsType || 'comune';
   const tipoEl = $id('items-page-tipo');
   if (tipoEl) tipoEl.innerHTML = ['consigliata','comune'].map(v =>
-    '<div onclick="' + (S.userDoc?.role==='admin' ? 'App.changeTipoFromPage(\''+v+'\')' : 'void(0)') + '" style="border-radius:99px;padding:4px 12px;font-size:11px;font-weight:700;font-family:var(--font-h);cursor:' + (S.userDoc?.role==='admin'?'pointer':'default') + ';background:' + (v===tipo?(v==='comune'?'var(--blue-soft)':'#FFF3E8'):'var(--surface-2)') + ';color:' + (v===tipo?(v==='comune'?'var(--blue-dark)':'#E8893A'):'var(--text-3)') + ';">' + (v==='comune'?'🤝 Comune':'📋 Consigliata') + '</div>'
+    '<div onclick="' + (S.userDoc?.role==='admin' ? 'App.changeTipoFromPage(\''+v+'\')' : 'void(0)') + '" style="border-radius:99px;padding:4px 12px;font-size:11px;font-weight:700;font-family:var(--font-h);cursor:' + (S.userDoc?.role==='admin'?'pointer':'default') + ';background:' + (v===tipo?(v==='comune'?'var(--orange-100)':'#fef3c7'):'var(--surface-2)') + ';color:' + (v===tipo?(v==='comune'?'var(--orange-dark)':'#92400e'):'var(--text-3)') + ';">' + (v==='comune'?'🤝 Comune':'📋 Consigliata') + '</div>'
   ).join('');
-  const canEdit = S.userDoc?.role==='admin' || S.currentEventData?.createdBy === S.user?.uid;
   const addRow = $id('items-add-row');
-  if (addRow) addRow.style.display = canEdit ? '' : 'none';
+  if (addRow) addRow.style.display = S.userDoc?.role==='admin' ? '' : 'none';
   const unsub = db.collection('events').doc(S.currentEventId).collection('items').orderBy('createdAt','asc').onSnapshot(snap => {
     const items = []; snap.forEach(s => items.push({id:s.id,...s.data()})); renderItemsPage(items);
   });
@@ -2989,18 +2309,15 @@ function _doLoadItemsPage() {
 function renderItemsPage(items) {
   const body = $id('items-page-body'); if (!body) return;
   const uid = S.user?.uid;
-  const isComune = (S.currentEventData?.thingsType || 'comune') === 'comune';
   if (!items.length) { body.innerHTML = '<div class="empty-state"><div class="empty-emoji">🎒</div><div class="empty-title">Lista vuota</div><div class="empty-sub">Aggiungi la prima voce!</div></div>'; return; }
   body.innerHTML = items.map(it => {
     const isMe = it.assignedTo === uid;
     return '<div class="item-full-row">' +
       '<span style="flex:1;font-size:14px;color:var(--text);">' + escHtml(it.text) + '</span>' +
-      (isComune
-        ? (it.assignedTo
-          ? '<div class="item-assigned"><img src="' + av(it.assignedPhoto,it.assignedName) + '" alt="">' + (isMe?'Tu':escHtml(it.assignedName||'')) + '</div>' + (isMe?'<button class="btn-take mine" onclick="App.releaseItem(\''+it.id+'\')">Rilascia</button>':'')
-          : '<button class="btn-take free" onclick="App.takeItem(\''+it.id+'\',\''+escAttr(it.text)+'\')">Porto io</button>')
-        : '') +
-      (S.userDoc?.role==='admin' || S.currentEventData?.createdBy === S.user?.uid ? '<button class="item-delete-btn" onclick="App.deleteItem(\''+it.id+'\')">×</button>' : '') +
+      (it.assignedTo
+        ? '<div class="item-assigned"><img src="' + av(it.assignedPhoto,it.assignedName) + '" alt="">' + (isMe?'Tu':escHtml(it.assignedName||'')) + '</div>' + (isMe?'<button class="btn-take mine" onclick="App.releaseItem(\''+it.id+'\')">Rilascia</button>':'')
+        : '<button class="btn-take free" onclick="App.takeItem(\''+it.id+'\',\''+escAttr(it.text)+'\')">Porto io</button>') +
+      (S.userDoc?.role==='admin' ? '<button class="item-delete-btn" onclick="App.deleteItem(\''+it.id+'\')">×</button>' : '') +
       '</div>';
   }).join('');
 }

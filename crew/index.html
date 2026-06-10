@@ -9,6 +9,8 @@
   <meta name="apple-mobile-web-app-title" content="Crew">
   <title>Crew</title>
   <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -806,6 +808,19 @@ const FCM_VAPID_KEY = 'BBXUoAtQnTv7U1CaYSvzFYnNKFJJaiawDUAkdzibvk4F2_IT0PiaCoFGJ
 
 let _swReg = null;
 
+// Rimuove eventuali vecchi service worker con cache (versioni precedenti dell'app)
+// Tiene solo firebase-messaging-sw.js, che serve per le push
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(r => {
+      const url = (r.active || r.waiting || r.installing)?.scriptURL || '';
+      if (!url.includes('firebase-messaging-sw.js')) {
+        r.unregister().then(() => console.log('[SW] vecchio service worker rimosso:', url));
+      }
+    });
+  }).catch(()=>{});
+}
+
 function pushSupported() {
   return 'serviceWorker' in navigator && 'Notification' in window &&
     firebase.messaging && firebase.messaging.isSupported();
@@ -1034,8 +1049,14 @@ function showView(id) {
   });
 }
 
+let _navFromPopstate = false;
 function goTo(view, id=null) {
   stopListeners();
+  // History API: il tasto "indietro" (Android/browser) naviga nell'app invece di chiuderla
+  if (!_navFromPopstate) {
+    if (view === 'home') history.replaceState({ view:'home', id:null }, '');
+    else history.pushState({ view, id }, '');
+  }
   $id('tab-bar').style.display = ['home','profile'].includes(view) ? '' : 'none';
   $id('app-header').style.display = view === 'create' ? 'none' : '';
 
@@ -1069,6 +1090,17 @@ function setTab(tab) {
     }
   });
 }
+
+window.addEventListener('popstate', e => {
+  // Se c'è un modal aperto, "indietro" lo chiude
+  const openModal = document.querySelector('.modal-overlay:not(.hidden), .sheet-bg:not(.hidden)');
+  if (openModal) { openModal.classList.add('hidden'); history.pushState({ view: S.activeTab, id: null }, ''); return; }
+  _navFromPopstate = true;
+  const st = e.state;
+  if (st && st.view) goTo(st.view, st.id || null);
+  else goTo('home');
+  _navFromPopstate = false;
+});
 
 document.querySelectorAll('.tab-item').forEach(item => {
   item.addEventListener('click', () => {
@@ -1564,7 +1596,7 @@ $id('wizard-next-btn').addEventListener('click', () => {
   const step = S.wizard.step;
   if(step===0){ if(!S.wizard.title.trim()||!S.wizard.date){toast('Titolo e data obbligatori');return;} S.wizard.step=1; }
   else if(step===1) { S.wizard.step=2; }
-  else { App.createEvent(); return; }
+  else { S.wizard.editMode ? App.saveEditEvent() : App.createEvent(); return; }
   renderWizardStep();
 });
 $id('wizard-back-btn').addEventListener('click', () => {

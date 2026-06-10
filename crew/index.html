@@ -372,17 +372,22 @@
       </button>
     </div>
     <div id="magic-login-section" class="hidden">
-      <div id="magic-form">
+      <div id="email-auth-form">
         <div class="field" style="margin-bottom:12px;">
-          <label class="field-label">La tua email</label>
-          <input type="email" id="magic-email-input" placeholder="nome@email.com">
+          <label class="field-label">Email</label>
+          <input type="email" id="email-auth-email" placeholder="nome@email.com">
         </div>
-        <button class="btn btn-primary btn-full" onclick="App.sendMagicLink()">Invia link di accesso</button>
-      </div>
-      <div id="magic-sent" class="magic-sent hidden">
-        <div class="magic-sent-icon">📬</div>
-        <div class="magic-sent-title">Link inviato!</div>
-        <div class="magic-sent-sub">Controlla la tua email e clicca il link per accedere. Puoi chiudere questa schermata.</div>
+        <div class="field" style="margin-bottom:14px;">
+          <label class="field-label">Password</label>
+          <input type="password" id="email-auth-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')App.emailAuthSubmit()">
+        </div>
+        <button class="btn btn-primary btn-full" id="email-auth-submit" onclick="App.emailAuthSubmit()">Accedi</button>
+        <div style="text-align:center;margin-top:14px;">
+          <span id="email-auth-toggle" style="font-size:13px;color:var(--orange);font-weight:600;cursor:pointer;" onclick="App.toggleEmailAuthMode()">Non hai un account? Registrati</span>
+        </div>
+        <div style="text-align:center;margin-top:8px;">
+          <span style="font-size:12px;color:var(--text-3);cursor:pointer;text-decoration:underline;" onclick="App.resetPassword()">Password dimenticata?</span>
+        </div>
       </div>
     </div>
   </div>
@@ -453,7 +458,7 @@
             <svg width="8" height="13" viewBox="0 0 8 13"><path d="M7 1L1.5 6.5L7 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Home
           </span>
-          <div id="group-admin-actions" class="hidden" style="display:flex;gap:6px;"></div>
+          <div id="group-admin-actions" class="hidden" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;"></div>
         </div>
         <div style="display:flex;align-items:center;gap:14px;">
           <div class="group-avatar" id="group-header-emoji" style="width:54px;height:54px;border-radius:16px;font-size:28px;"></div>
@@ -571,6 +576,20 @@
     <div class="field"><label class="field-label">Nome gruppo</label><input type="text" id="group-name-input" placeholder="Es: Amici del calcetto"></div>
     <div class="field"><label class="field-label">Emoji del gruppo</label><input type="text" id="group-emoji-input" placeholder="🎉" maxlength="2" style="font-size:22px;text-align:center;"></div>
     <button class="btn btn-primary btn-full" style="margin-top:4px" onclick="App.createGroup()">Crea gruppo</button>
+  </div>
+</div>
+
+<!-- MODAL: Modifica Gruppo -->
+<div class="modal-overlay hidden" id="modal-edit-group">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Modifica gruppo</div>
+      <button class="modal-close" onclick="App.closeModal('modal-edit-group')"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="field"><label class="field-label">Nome gruppo</label><input type="text" id="edit-group-name-input"></div>
+    <div class="field"><label class="field-label">Emoji del gruppo</label><input type="text" id="edit-group-emoji-input" maxlength="2" style="font-size:22px;text-align:center;"></div>
+    <button class="btn btn-primary btn-full" style="margin-top:4px" onclick="App.saveEditGroup()">Salva modifiche</button>
   </div>
 </div>
 
@@ -1202,6 +1221,7 @@ async function loadGroup(gid) {
   let actionsHtml = `<button class="btn btn-secondary btn-xs" onclick="App.openMembers()">👥 Membri</button>`;
   if (S.userDoc?.role === 'admin') {
     actionsHtml += `
+      <button class="btn btn-secondary btn-xs" onclick="App.openEditGroup()">✏️</button>
       <button class="btn btn-secondary btn-xs" onclick="App.openInviteSettings()">⚙️ Invito</button>
       <button class="btn btn-secondary btn-xs" id="btn-requests" onclick="App.openRequests()">✋ Richieste <span id="requests-count"></span></button>`;
   }
@@ -1337,14 +1357,18 @@ function renderEventHeader(ev) {
     <div style="flex:1;min-width:0;">
       <div class="event-hero-title">${escHtml(ev.title)}</div>
       ${ev.date?`<div class="event-meta-item">📅 ${ital(ev.date)}${ev.time?' alle '+ev.time:''}</div>`:''}
-      ${ev.place?`<div class="event-meta-item">📍 ${escHtml(ev.place)}</div>`:''}
-      ${ev.meetingPoint?`<div class="event-meta-link" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.meetingPoint)}')">🚩 ${escHtml(ev.meetingPoint)} ↗</div>`:''}
+      ${ev.place?`<a class="event-meta-link" style="display:block;text-decoration:none;" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.place).replace(/'/g,'%27')}" target="_blank" rel="noreferrer">📍 ${escHtml(ev.place)} ↗</a>`:''}
+      ${ev.meetingPoint?`<a class="event-meta-link" style="display:block;text-decoration:none;" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.meetingPoint).replace(/'/g,'%27')}" target="_blank" rel="noreferrer">🚩 ${escHtml(ev.meetingPoint)} ↗</a>`:''}
       ${ev.deadline?`<div class="event-deadline">⏰ Rispondi entro ${ital(ev.deadline)}</div>`:''}
     </div>`;
 }
 
 function renderEventBody(ev) {
   $id('event-body').innerHTML = `
+    ${ev.description?`<div class="card">
+      <div class="card-head"><div class="card-head-title">📝 Descrizione evento</div></div>
+      <div style="padding:12px 16px;font-size:14px;color:var(--text-2);line-height:1.6;">${escHtml(ev.description)}</div>
+    </div>`:''}
     <div class="card">
       <div class="card-head">
         <div class="card-head-title">🙋 Partecipazione</div>
@@ -1373,7 +1397,6 @@ function renderEventBody(ev) {
         <div class="add-item-row"><input type="text" id="new-item-input" placeholder="Aggiungi una cosa da portare..."><button class="btn btn-primary btn-sm" onclick="App.addItem()">+</button></div>
       </div>
     </div>
-    ${ev.description?`<div class="card"><div style="padding:14px 16px;font-size:14px;color:var(--text-2);line-height:1.6;">${escHtml(ev.description)}</div></div>`:''}
     <div class="card">
       <div class="card-head"><div class="card-head-title" id="comments-title">💬 Commenti</div></div>
       <div id="comments-list"></div>
@@ -1715,18 +1738,51 @@ const App = {
     hide('app'); show('nickname-screen');
   },
 
-  async sendMagicLink() {
-    const email = $id('magic-email-input')?.value?.trim();
+  // ─── EMAIL + PASSWORD AUTH ───────────────────────────
+  _emailAuthMode: 'login',
+
+  toggleEmailAuthMode() {
+    this._emailAuthMode = this._emailAuthMode === 'login' ? 'register' : 'login';
+    const isLogin = this._emailAuthMode === 'login';
+    $id('email-auth-submit').textContent = isLogin ? 'Accedi' : 'Crea account';
+    $id('email-auth-toggle').textContent = isLogin ? 'Non hai un account? Registrati' : 'Hai già un account? Accedi';
+  },
+
+  async emailAuthSubmit() {
+    const email = $id('email-auth-email')?.value?.trim();
+    const pass = $id('email-auth-pass')?.value || '';
     if (!email) { toast('Inserisci la tua email'); return; }
-    const actionCodeSettings = {
-      url: window.location.origin + window.location.pathname + window.location.search,
-      handleCodeInApp: true,
-    };
+    if (pass.length < 6) { toast('La password deve avere almeno 6 caratteri'); return; }
     try {
-      await firebase.auth().sendSignInLinkToEmail(email, actionCodeSettings);
-      localStorage.setItem('crew_magic_email', email);
-      hide('magic-form'); show('magic-sent');
-    } catch(err) { toast('Errore: ' + err.message); }
+      if (this._emailAuthMode === 'login') {
+        await auth.signInWithEmailAndPassword(email, pass);
+      } else {
+        await auth.createUserWithEmailAndPassword(email, pass);
+      }
+    } catch(err) {
+      const map = {
+        'auth/user-not-found': 'Nessun account con questa email. Tocca "Registrati".',
+        'auth/wrong-password': 'Password errata. Usa "Password dimenticata?" per recuperarla.',
+        'auth/invalid-credential': 'Email o password errati.',
+        'auth/invalid-login-credentials': 'Email o password errati.',
+        'auth/email-already-in-use': 'Esiste già un account con questa email. Torna ad "Accedi".',
+        'auth/weak-password': 'Password troppo debole: minimo 6 caratteri.',
+        'auth/invalid-email': 'Email non valida.',
+        'auth/too-many-requests': 'Troppi tentativi: riprova tra qualche minuto.',
+      };
+      toast(map[err.code] || ('Errore: ' + err.message), 4500);
+    }
+  },
+
+  async resetPassword() {
+    const email = $id('email-auth-email')?.value?.trim();
+    if (!email) { toast('Scrivi prima la tua email nel campo sopra'); return; }
+    try {
+      await auth.sendPasswordResetEmail(email);
+      toast('📬 Email di recupero inviata a ' + email, 5000);
+    } catch(err) {
+      toast(err.code === 'auth/user-not-found' ? 'Nessun account con questa email' : 'Errore: ' + err.message, 4500);
+    }
   },
 
   async setRSVP(status) {
@@ -1839,6 +1895,24 @@ const App = {
     $id('group-name-input').value=''; $id('group-emoji-input').value='';
     toast('✅ Gruppo creato!');
     goTo('group', ref.id);
+  },
+
+  openEditGroup() {
+    if (!S.currentGroupData || S.userDoc?.role !== 'admin') return;
+    $id('edit-group-name-input').value = S.currentGroupData.name || '';
+    $id('edit-group-emoji-input').value = S.currentGroupData.emoji || '';
+    show('modal-edit-group');
+  },
+
+  async saveEditGroup() {
+    const name = $id('edit-group-name-input').value.trim();
+    const emoji = $id('edit-group-emoji-input').value.trim() || '👥';
+    if (!name) { toast('Inserisci il nome del gruppo'); return; }
+    await db.collection('groups').doc(S.currentGroupId).update({ name, emoji });
+    Object.assign(S.currentGroupData, { name, emoji });
+    this.closeModal('modal-edit-group');
+    toast('✅ Gruppo aggiornato!');
+    loadGroup(S.currentGroupId);
   },
 
   async createEvent() {
@@ -2067,16 +2141,54 @@ const App = {
     const gSnap = await db.collection('groups').doc(S.currentGroupId).get();
     const members = gSnap.data().members || [];
     const isAdmin = S.userDoc?.role === 'admin';
-    c.innerHTML = members.map(m =>
+    let html = members.map(m =>
       '<div class="member-card">' +
       '<img src="' + av(m.photoURL, m.displayName) + '" alt="">' +
       '<div style="flex:1;"><div style="font-family:var(--font-h);font-weight:700;font-size:15px;color:var(--text);">' + escHtml(m.displayName||'') + '</div>' +
       '<div style="font-size:12px;color:var(--text-3);margin-top:2px;">' + (m.uid===gSnap.data().createdBy?'Admin':'Membro') + '</div></div>' +
       (isAdmin && m.uid !== S.user.uid ? '<button class="btn btn-danger btn-xs" onclick="App.removeMember(\'' + m.uid + '\',\'' + escAttr(m.displayName||'') + '\')">Rimuovi</button>' : '') +
       '</div>'
-    ).join('') +
-    (gSnap.data().createdBy !== S.user.uid
-      ? '<button class="btn btn-danger btn-full" style="margin-top:10px;" onclick="App.leaveGroup()">🚪 Esci dal gruppo</button>' : '');
+    ).join('');
+    // Admin: aggiungi direttamente chi ha già fatto accesso alla webapp
+    if (isAdmin) {
+      try {
+        const allSnap = await db.collection('users').get();
+        const memberIds = new Set(members.map(m => m.uid));
+        const others = [];
+        allSnap.forEach(d => { if (!memberIds.has(d.id)) others.push({ uid: d.id, ...d.data() }); });
+        if (others.length) {
+          html += '<div style="font-family:var(--font-h);font-weight:700;font-size:13px;color:var(--text-3);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.05em;">Aggiungi al gruppo</div>' +
+            others.map(u =>
+              '<div class="member-card">' +
+              '<img src="' + av(u.photoURL, dName(u)) + '" alt="">' +
+              '<div style="flex:1;min-width:0;"><div style="font-family:var(--font-h);font-weight:700;font-size:15px;color:var(--text);">' + escHtml(dName(u)) + '</div>' +
+              '<div style="font-size:12px;color:var(--text-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(u.email||'') + '</div></div>' +
+              '<button class="btn btn-primary btn-xs" onclick="App.addMemberDirect(\'' + u.uid + '\',\'' + escAttr(dName(u)) + '\',\'' + escAttr(u.photoURL||'') + '\')">+ Aggiungi</button>' +
+              '</div>'
+            ).join('');
+        }
+      } catch(e) { console.error('[Membri] lista utenti:', e); }
+    }
+    if (gSnap.data().createdBy !== S.user.uid) {
+      html += '<button class="btn btn-danger btn-full" style="margin-top:10px;" onclick="App.leaveGroup()">🚪 Esci dal gruppo</button>';
+    }
+    c.innerHTML = html;
+  },
+
+  async addMemberDirect(uid, name, photo) {
+    if (S.userDoc?.role !== 'admin') return;
+    const mData = { uid, displayName: name, photoURL: photo || null };
+    await db.collection('groups').doc(S.currentGroupId).update({
+      members: firebase.firestore.FieldValue.arrayUnion(mData),
+      memberUids: firebase.firestore.FieldValue.arrayUnion(uid)
+    });
+    await db.collection('users').doc(uid).update({ groups: firebase.firestore.FieldValue.arrayUnion(S.currentGroupId) });
+    await notify({ toUserId: uid, type: 'join_approved', eventId: null, eventTitle: null,
+      groupId: S.currentGroupId, groupName: S.currentGroupData?.name || '',
+      text: 'Sei stato aggiunto al gruppo "' + (S.currentGroupData?.name || '') + '"! 🎉' });
+    toast('✅ ' + name + ' aggiunto al gruppo!');
+    this.openMembers();
+    loadGroup(S.currentGroupId);
   },
 
   async removeMember(uid, name) {
